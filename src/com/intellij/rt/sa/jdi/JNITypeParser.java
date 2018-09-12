@@ -22,7 +22,7 @@
  *
  */
 
-package sun.jvm.hotspot.jdi;
+package com.intellij.rt.sa.jdi;
 
 import java.util.List;
 import java.util.ArrayList;

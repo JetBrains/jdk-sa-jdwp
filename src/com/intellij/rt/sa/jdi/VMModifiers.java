@@ -22,7 +22,7 @@
  *
  */
 
-package sun.jvm.hotspot.jdi;
+package com.intellij.rt.sa.jdi;
 
 import sun.jvm.hotspot.runtime.ClassConstants;
 import com.sun.jdi.*;

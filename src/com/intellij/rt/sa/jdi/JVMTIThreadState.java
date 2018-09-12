@@ -22,7 +22,7 @@
  *
  */
 
-package sun.jvm.hotspot.jdi;
+package com.intellij.rt.sa.jdi;
 
 // from JVMTI specification - refer to jvmti.xml
 public interface JVMTIThreadState {

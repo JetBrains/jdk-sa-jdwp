@@ -22,7 +22,7 @@
  *
  */
 
-package sun.jvm.hotspot.jdi;
+package com.intellij.rt.sa.jdi;
 
 import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.oops.Instance;

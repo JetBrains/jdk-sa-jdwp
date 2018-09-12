@@ -22,7 +22,7 @@
  *
  */
 
-package sun.jvm.hotspot.jdi;
+package com.intellij.rt.sa.jdi;
 
 import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.runtime.VMObject;

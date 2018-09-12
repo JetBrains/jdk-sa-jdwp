@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/classesHelper10/classesHelper10.iml" filepath="$PROJECT_DIR$/classesHelper10/classesHelper10.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/jdk-sa-jpda.iml" filepath="$PROJECT_DIR$/.idea/jdk-sa-jpda.iml" />
     </modules>
   </component>

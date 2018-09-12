@@ -12,4 +12,9 @@
       <entry name="!?*.clj" />
     </wildcardResourcePatterns>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="classesHelper10" options="--add-modules jdk.hotspot.agent --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.memory=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED" />
+    </option>
+  </component>
 </project>

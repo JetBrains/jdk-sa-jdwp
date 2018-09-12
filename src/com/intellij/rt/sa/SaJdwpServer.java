@@ -27,7 +27,7 @@ public class SaJdwpServer {
         final SocketTransportService socketTransportService = new SocketTransportService();
         final TransportService.ListenKey listenKey = socketTransportService.startListening(args.length > 1 ? args[1] : null);
 
-        System.err.println("Debugger attached and listening at: " + listenKey.address());
+        System.err.println("Waiting for debugger on: " + listenKey.address());
 
         // shutdown hook to clean-up the server in case of forced exit.
         Runtime.getRuntime().addShutdownHook(new Thread(

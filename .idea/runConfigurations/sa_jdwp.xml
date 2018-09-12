@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="sa-jdwp" type="JarApplication" factoryName="JAR Application">
+    <option name="JAR_PATH" value="$PROJECT_DIR$/out/artifacts/sa-jdwp.jar" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method v="2" />
+  </configuration>
+</component>

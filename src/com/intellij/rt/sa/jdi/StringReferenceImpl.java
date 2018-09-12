@@ -24,7 +24,9 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.StringReference;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Instance;
 import sun.jvm.hotspot.oops.OopUtilities;
 
@@ -33,7 +35,7 @@ public class StringReferenceImpl extends ObjectReferenceImpl
 {
     private String value;
 
-    StringReferenceImpl(VirtualMachine aVm, sun.jvm.hotspot.oops.Instance oRef) {
+    StringReferenceImpl(VirtualMachine aVm, Instance oRef) {
         super(aVm,oRef);
         value = OopUtilities.stringOopToString(oRef);
     }
@@ -44,5 +46,10 @@ public class StringReferenceImpl extends ObjectReferenceImpl
 
     public String toString() {
         return "\"" + value() + "\"";
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.STRING;
     }
 }

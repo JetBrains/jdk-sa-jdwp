@@ -25,23 +25,15 @@
 package com.intellij.rt.sa.jdi;
 
 import com.sun.jdi.*;
-import sun.jvm.hotspot.oops.ObjectHeap;
 import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.Array;
-import sun.jvm.hotspot.oops.ObjArray;
-import sun.jvm.hotspot.oops.TypeArray;
-import sun.jvm.hotspot.oops.Instance;
+import sun.jvm.hotspot.oops.ObjectHeap;
 import sun.jvm.hotspot.runtime.BasicType;
 import sun.jvm.hotspot.runtime.JavaVFrame;
-import sun.jvm.hotspot.runtime.StackValue;
 import sun.jvm.hotspot.runtime.StackValueCollection;
 import sun.jvm.hotspot.utilities.Assert;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Collections;
+
+import java.util.*;
 
 public class StackFrameImpl extends MirrorImpl
                             implements StackFrame
@@ -53,15 +45,16 @@ public class StackFrameImpl extends MirrorImpl
 
     private final ThreadReferenceImpl thread;
     private final JavaVFrame saFrame;
+    private int id;
     private final Location location;
     private Map visibleVariables =  null;
     private ObjectReference thisObject = null;
 
-    StackFrameImpl(VirtualMachine vm, ThreadReferenceImpl thread,
-                   JavaVFrame jvf) {
+    StackFrameImpl(VirtualMachine vm, ThreadReferenceImpl thread, JavaVFrame jvf, int id) {
         super(vm);
         this.thread = thread;
         this.saFrame = jvf;
+        this.id = id;
 
         sun.jvm.hotspot.oops.Method SAMethod = jvf.getMethod();
 
@@ -78,6 +71,14 @@ public class StackFrameImpl extends MirrorImpl
 
     JavaVFrame getJavaVFrame() {
         return saFrame;
+    }
+
+//    public long uniqueID() {
+//        return vm.saVM().getDebugger().getAddressValue(saFrame.getFrame().getID());
+//    }
+
+    public int id() {
+        return id;
     }
 
     /**
@@ -231,6 +232,11 @@ public class StackFrameImpl extends MirrorImpl
         return res;
     }
 
+    public ValueImpl getSlotValue(int slot, byte sigbyte) {
+        BasicType variableType = BasicType.charToBasicType((char) sigbyte);
+        return getSlotValue(saFrame.getLocals(), variableType, slot);
+    }
+
     private ValueImpl getSlotValue(StackValueCollection values,
                        BasicType variableType, int ss) {
         ValueImpl valueImpl = null;
@@ -288,7 +294,7 @@ public class StackFrameImpl extends MirrorImpl
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
             handle = values.oopHandleAt(ss);
-            valueImpl = (ObjectReferenceImpl) vm.objectMirror(heap.newOop(handle));
+            valueImpl = vm.objectMirror(heap.newOop(handle));
           } else if (variableType == BasicType.T_ARRAY) {
             handle = values.oopHandleAt(ss);
             valueImpl = vm.arrayMirror((Array)heap.newOop(handle));

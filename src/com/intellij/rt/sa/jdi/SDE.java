@@ -24,10 +24,9 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
-
-import java.util.*;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 class SDE {
     private static final int INIT_SIZE_FILE = 3;

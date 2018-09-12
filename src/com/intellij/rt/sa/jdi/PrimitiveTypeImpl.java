@@ -24,7 +24,10 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveType;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
 
 abstract class PrimitiveTypeImpl extends TypeImpl implements PrimitiveType {
 

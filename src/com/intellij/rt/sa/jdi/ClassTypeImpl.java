@@ -25,11 +25,11 @@
 package com.intellij.rt.sa.jdi;
 
 import com.sun.jdi.*;
-import sun.jvm.hotspot.oops.Klass;
+import com.intellij.rt.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.InstanceKlass;
 
-import java.util.*;
 import java.lang.ref.SoftReference;
+import java.util.*;
 
 public class ClassTypeImpl extends ReferenceTypeImpl
     implements ClassType
@@ -50,7 +50,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         return (ClassType) vm.referenceType(kk);
     }
 
-    public List interfaces()  {
+    public List<InterfaceType> interfaces()  {
         List interfaces = (interfacesCache != null)? (List) interfacesCache.get() : null;
         if (interfaces == null) {
             checkPrepared();
@@ -233,6 +233,11 @@ public class ClassTypeImpl extends ReferenceTypeImpl
             }
             return false;
         }
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.TypeTag.CLASS;
     }
 
     public String toString() {

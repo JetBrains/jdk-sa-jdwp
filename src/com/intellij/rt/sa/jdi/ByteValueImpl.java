@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.ByteValue;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class ByteValueImpl extends PrimitiveValueImpl
                            implements ByteValue {
@@ -106,5 +110,10 @@ public class ByteValueImpl extends PrimitiveValueImpl
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.BYTE;
     }
 }

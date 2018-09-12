@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.ShortType;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class ShortTypeImpl extends PrimitiveTypeImpl implements ShortType {
     ShortTypeImpl(VirtualMachine vm) {
@@ -34,6 +38,11 @@ public class ShortTypeImpl extends PrimitiveTypeImpl implements ShortType {
 
     public String signature() {
         return "S";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.SHORT;
     }
 
     PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {

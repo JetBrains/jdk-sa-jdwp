@@ -24,7 +24,10 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.BooleanValue;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
 
 public abstract class PrimitiveValueImpl extends ValueImpl
                                          implements PrimitiveValue {

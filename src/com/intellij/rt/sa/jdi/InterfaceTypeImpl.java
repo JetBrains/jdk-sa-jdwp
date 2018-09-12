@@ -25,14 +25,11 @@
 package com.intellij.rt.sa.jdi;
 
 import com.sun.jdi.*;
+import com.intellij.rt.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.InstanceKlass;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Collections;
 import java.lang.ref.SoftReference;
+import java.util.*;
 
 public class InterfaceTypeImpl extends ReferenceTypeImpl
                                implements InterfaceType {
@@ -188,6 +185,11 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
 
             return false;
         }
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.TypeTag.INTERFACE;
     }
 
     List inheritedTypes() {

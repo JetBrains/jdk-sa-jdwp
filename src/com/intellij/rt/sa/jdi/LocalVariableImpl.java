@@ -136,7 +136,7 @@ public class LocalVariableImpl extends MirrorImpl
         }
     }
 
-    int slot() {
+    public int slot() {
         return slot;
     }
 
@@ -166,4 +166,13 @@ public class LocalVariableImpl extends MirrorImpl
        return name() + " in " + method.toString() +
               "@" + scopeStart.toString();
     }
+
+    public long getStart() {
+        return scopeStart.codeIndex();
+    }
+
+    public int getLength() {
+        return (int) (scopeEnd.codeIndex() - scopeStart.codeIndex());
+    }
+
 }

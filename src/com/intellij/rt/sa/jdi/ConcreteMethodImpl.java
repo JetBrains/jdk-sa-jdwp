@@ -24,18 +24,15 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
-import sun.jvm.hotspot.oops.Symbol;
-import sun.jvm.hotspot.oops.LocalVariableTableElement;
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.LocalVariable;
+import com.sun.jdi.Location;
+import com.sun.jdi.VirtualMachine;
 import sun.jvm.hotspot.oops.LineNumberTableElement;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Comparator;
+import sun.jvm.hotspot.oops.LocalVariableTableElement;
+
 import java.lang.ref.SoftReference;
-import java.util.Collections;
+import java.util.*;
 
 public class ConcreteMethodImpl extends MethodImpl {
 
@@ -80,7 +77,7 @@ public class ConcreteMethodImpl extends MethodImpl {
         super(vm, declaringType, saMethod);
     }
 
-    int argSlotCount() throws AbsentInformationException {
+    public int argSlotCount() throws AbsentInformationException {
         return (int) saMethod.getSizeOfParameters();
     }
 
@@ -253,7 +250,7 @@ public class ConcreteMethodImpl extends MethodImpl {
         }
     }
 
-    public List allLineLocations(SDE.Stratum stratum, String sourceName)
+    public List<Location> allLineLocations(SDE.Stratum stratum, String sourceName)
         throws AbsentInformationException {
         List lineLocations = getLocations(stratum).lineLocations;
 
@@ -265,7 +262,7 @@ public class ConcreteMethodImpl extends MethodImpl {
           sourceNameFilter(lineLocations, stratum, sourceName));
     }
 
-    public List locationsOfLine(SDE.Stratum stratum, String sourceName,
+    public List<Location> locationsOfLine(SDE.Stratum stratum, String sourceName,
                          int lineNumber) throws AbsentInformationException {
         SoftLocationXRefs info = getLocations(stratum);
 

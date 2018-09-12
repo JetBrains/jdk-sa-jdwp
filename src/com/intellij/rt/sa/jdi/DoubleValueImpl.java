@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.DoubleValue;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class DoubleValueImpl extends PrimitiveValueImpl
                              implements DoubleValue {
@@ -155,5 +159,10 @@ public class DoubleValueImpl extends PrimitiveValueImpl
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.DOUBLE;
     }
 }

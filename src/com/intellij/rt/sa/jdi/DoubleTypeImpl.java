@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.DoubleType;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class DoubleTypeImpl extends PrimitiveTypeImpl implements DoubleType {
     DoubleTypeImpl(VirtualMachine vm) {
@@ -34,6 +38,11 @@ public class DoubleTypeImpl extends PrimitiveTypeImpl implements DoubleType {
 
     public String signature() {
         return "D";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.DOUBLE;
     }
 
     PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {

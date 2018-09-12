@@ -24,12 +24,21 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VoidValue;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class VoidValueImpl extends ValueImpl implements VoidValue {
 
     VoidValueImpl(VirtualMachine aVm) {
         super(aVm);
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.VOID;
     }
 
     public boolean equals(Object obj) {

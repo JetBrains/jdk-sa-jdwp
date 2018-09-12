@@ -24,7 +24,10 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.BooleanValue;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class BooleanValueImpl extends PrimitiveValueImpl
                               implements BooleanValue {
@@ -94,5 +97,10 @@ public class BooleanValueImpl extends PrimitiveValueImpl
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.BOOLEAN;
     }
 }

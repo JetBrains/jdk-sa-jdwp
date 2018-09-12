@@ -24,12 +24,9 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
-import sun.jvm.hotspot.oops.Symbol;
-import sun.jvm.hotspot.oops.Oop;
-import sun.jvm.hotspot.oops.InstanceKlass;
-
-import java.util.List;
+import com.sun.jdi.ReferenceType;
+import com.sun.jdi.TypeComponent;
+import com.sun.jdi.VirtualMachine;
 
 /**
  * There is no SA class that corresponds to this.  Therefore,

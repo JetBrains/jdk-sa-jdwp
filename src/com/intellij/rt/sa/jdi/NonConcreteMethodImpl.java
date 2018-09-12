@@ -24,15 +24,13 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.InternalException;
+import com.sun.jdi.Location;
+import com.sun.jdi.VirtualMachine;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * Represents non-concrete (that is, native or abstract) methods.
@@ -111,7 +109,7 @@ public class NonConcreteMethodImpl extends MethodImpl {
         return new byte[0];
     }
 
-    int argSlotCount() throws AbsentInformationException {
+    public int argSlotCount() throws AbsentInformationException {
         throw new InternalException("should not get here");
     }
 }

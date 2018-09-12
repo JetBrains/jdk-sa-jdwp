@@ -24,23 +24,18 @@
 
 package com.intellij.rt.sa.jdi;
 
-import java.io.*;
 import com.sun.jdi.*;
-
+import com.intellij.rt.sa.jdwp.JDWP;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.debugger.OopHandle;
-import sun.jvm.hotspot.oops.Oop;
-import sun.jvm.hotspot.oops.Mark;
-import sun.jvm.hotspot.oops.Instance;
-import sun.jvm.hotspot.oops.Array;
-import sun.jvm.hotspot.oops.OopUtilities;
-import sun.jvm.hotspot.oops.Klass;
 import sun.jvm.hotspot.oops.DefaultHeapVisitor;
+import sun.jvm.hotspot.oops.Klass;
+import sun.jvm.hotspot.oops.Mark;
+import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.runtime.JavaThread;
 import sun.jvm.hotspot.runtime.JavaVFrame;
 import sun.jvm.hotspot.runtime.MonitorInfo;
 import sun.jvm.hotspot.runtime.ObjectMonitor;
-import sun.jvm.hotspot.runtime.Threads;
 import sun.jvm.hotspot.utilities.Assert;
 
 import java.util.*;
@@ -50,15 +45,15 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     private long myID;
     private boolean monitorInfoCached = false;
     private ThreadReferenceImpl owningThread = null;
-    private List waitingThreads = null; // List<ThreadReferenceImpl>
+    private List<ThreadReference> waitingThreads = null;
     private int entryCount = 0;
 
     private static long nextID = 0L;
     private static synchronized long nextID() {
-        return nextID++;
+        return ++nextID;
     }
 
-    ObjectReferenceImpl(VirtualMachine aVm, sun.jvm.hotspot.oops.Oop oRef) {
+    ObjectReferenceImpl(VirtualMachine aVm, Oop oRef) {
         super(aVm);
         saObject = oRef;
         myID = nextID();
@@ -92,8 +87,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         List instanceFields = new ArrayList(size);
 
         for (int i=0; i<size; i++) {
-            sun.jvm.hotspot.jdi.FieldImpl field =
-                (sun.jvm.hotspot.jdi.FieldImpl)theFields.get(i);
+            FieldImpl field = (FieldImpl) theFields.get(i);
 
             // Make sure the field is valid
             ((ReferenceTypeImpl)referenceType()).validateFieldAccess(field);
@@ -158,7 +152,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         return myID;
     }
 
-    public List waitingThreads() throws IncompatibleThreadStateException {
+    public List<ThreadReference> waitingThreads() {
         if (vm.canGetMonitorInfo() == false) {
             throw new UnsupportedOperationException();
         }
@@ -170,7 +164,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     }
 
 
-    public ThreadReference owningThread() throws IncompatibleThreadStateException {
+    public ThreadReference owningThread() {
         if (vm.canGetMonitorInfo() == false) {
             throw new UnsupportedOperationException();
         }
@@ -182,7 +176,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     }
 
 
-    public int entryCount() throws IncompatibleThreadStateException {
+    public int entryCount() {
         if (vm.canGetMonitorInfo() == false) {
             throw new UnsupportedOperationException();
         }
@@ -195,7 +189,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
 
     // new method since 1.6.
     // Real body will be supplied later.
-    public List referringObjects(long maxReferrers) {
+    public List<ObjectReference> referringObjects(long maxReferrers) {
         if (!vm.canGetInstanceInfo()) {
             throw new UnsupportedOperationException(
                       "target does not support getting instances");
@@ -205,7 +199,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
                                               + maxReferrers);
         }
         final ObjectReference obj = this;
-        final List objects = new ArrayList(0);
+        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
         final long max = maxReferrers;
                 vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
                 private long refCount = 0;
@@ -322,7 +316,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         }
 
         // find the contenders & waiters
-        waitingThreads = new ArrayList();
+        waitingThreads = new ArrayList<ThreadReference>();
         if (mon != null) {
             // this object has a heavyweight monitor. threads could
             // be contenders or waiters
@@ -363,5 +357,10 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
 
     public String toString() {
         return  "instance of " + referenceType().name() + "(id=" + uniqueID() + ")";
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.OBJECT;
     }
 }

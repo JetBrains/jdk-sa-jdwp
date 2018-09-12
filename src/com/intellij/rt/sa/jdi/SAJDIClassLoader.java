@@ -24,8 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 /*
  * This class loader is used for two different reasons:

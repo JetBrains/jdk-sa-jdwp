@@ -27,41 +27,21 @@ package com.intellij.rt.sa.jdi;
 import com.sun.jdi.*;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.request.EventRequestManager;
-
 import sun.jvm.hotspot.HotSpotAgent;
-import sun.jvm.hotspot.types.TypeDataBase;
-import sun.jvm.hotspot.oops.Klass;
-import sun.jvm.hotspot.oops.InstanceKlass;
-import sun.jvm.hotspot.oops.ArrayKlass;
-import sun.jvm.hotspot.oops.ObjArrayKlass;
-import sun.jvm.hotspot.oops.TypeArrayKlass;
-import sun.jvm.hotspot.oops.Oop;
-import sun.jvm.hotspot.oops.Instance;
-import sun.jvm.hotspot.oops.Array;
-import sun.jvm.hotspot.oops.ObjArray;
-import sun.jvm.hotspot.oops.TypeArray;
-import sun.jvm.hotspot.oops.Symbol;
-import sun.jvm.hotspot.oops.ObjectHeap;
-import sun.jvm.hotspot.oops.DefaultHeapVisitor;
-import sun.jvm.hotspot.oops.JVMDIClassStatus;
-import sun.jvm.hotspot.runtime.VM;
-import sun.jvm.hotspot.runtime.JavaThread;
-import sun.jvm.hotspot.memory.SystemDictionary;
+import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SymbolTable;
+import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.memory.Universe;
+import sun.jvm.hotspot.oops.*;
+import sun.jvm.hotspot.runtime.JavaThread;
+import sun.jvm.hotspot.runtime.VM;
 import sun.jvm.hotspot.utilities.Assert;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Observer;
-import java.util.StringTokenizer;
-import java.lang.ref.SoftReference;
-import java.lang.ref.ReferenceQueue;
 import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Field;
+import java.util.*;
 
 public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtualMachine {
 
@@ -92,7 +72,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return saObjectHeap;
     }
 
-    com.sun.jdi.VirtualMachineManager vmmgr;
+    VirtualMachineManager vmmgr;
 
     private final ThreadGroup             threadGroupForJDI;
 
@@ -110,17 +90,18 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private VoidType    theVoidType;
 
     private VoidValue voidVal;
-    private Map       typesByID;             // Map<Klass, ReferenceTypeImpl>
-    private List      typesBySignature;      // List<ReferenceTypeImpl> - used in signature search
+    private Map<Klass, ReferenceTypeImpl> typesByKlass;
+    private Map<Long, ReferenceTypeImpl>  typesById;
+    private List<ReferenceTypeImpl>       typesBySignature;
     private boolean   retrievedAllTypes = false;
     private List      bootstrapClasses;      // all bootstrap classes
-    private ArrayList allThreads;
+    private ArrayList<ThreadReference> allThreads;
     private ArrayList topLevelGroups;
     final   int       sequenceNumber;
 
     // ObjectReference cache
     // "objectsByID" protected by "synchronized(this)".
-    private final Map            objectsByID = new HashMap();
+    private final Map<Oop, SoftObjectReference>            objectsByID = new HashMap<Oop, SoftObjectReference>();
     private final ReferenceQueue referenceQueue = new ReferenceQueue();
 
     // names of some well-known classes to jdi
@@ -303,9 +284,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return System.identityHashCode(this);
     }
 
-    public List classesByName(String className) {
+    public List<ReferenceType> classesByName(String className) {
         String signature = JNITypeParser.typeNameToSignature(className);
-        List list;
+        List<ReferenceType> list;
         if (!retrievedAllTypes) {
             retrieveAllClasses();
         }
@@ -313,13 +294,13 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return Collections.unmodifiableList(list);
     }
 
-    public List allClasses() {
+    public List<ReferenceType> allClasses() {
         if (!retrievedAllTypes) {
             retrieveAllClasses();
         }
-        ArrayList a;
+        ArrayList<ReferenceType> a;
         synchronized (this) {
-            a = new ArrayList(typesBySignature);
+            a = new ArrayList<ReferenceType>(typesBySignature);
         }
         return Collections.unmodifiableList(a);
     }
@@ -339,9 +320,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return bootstrapClasses;
     }
 
-    private synchronized List findReferenceTypes(String signature) {
-        if (typesByID == null) {
-            return new ArrayList(0);
+    public synchronized List<ReferenceType> findReferenceTypes(String signature) {
+        if (typesByKlass == null) {
+            return new ArrayList<ReferenceType>(0);
         }
 
         // we haven't sorted types by signatures. But we can take
@@ -363,11 +344,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         Symbol typeNameSym = saSymbolTable().probe(typeName);
         // if there is no symbol in VM, then we wouldn't have that type
         if (typeNameSym == null) {
-            return new ArrayList(0);
+            return new ArrayList<ReferenceType>(0);
         }
 
         Iterator iter = typesBySignature.iterator();
-        List list = new ArrayList();
+        List<ReferenceType> list = new ArrayList<ReferenceType>();
         while (iter.hasNext()) {
             // We have cached type name as symbol in reference type
             ReferenceTypeImpl type = (ReferenceTypeImpl)iter.next();
@@ -379,69 +360,40 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     private void retrieveAllClasses() {
-        final List saKlasses = new ArrayList();
-        SystemDictionary.ClassVisitor visitor = new SystemDictionary.ClassVisitor() {
-                public void visit(Klass k) {
-                    for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                        // for non-array classes filter out un-prepared classes
-                        // refer to 'allClasses' in share/back/VirtualMachineImpl.c
-                        if (l instanceof ArrayKlass) {
-                           saKlasses.add(l);
-                        } else {
-                           int status = l.getClassStatus();
-                           if ((status & JVMDIClassStatus.PREPARED) != 0) {
-                               saKlasses.add(l);
-                           }
-                        }
-                    }
-                }
-        };
-
-        // refer to jvmtiGetLoadedClasses.cpp - getLoadedClasses in VM code.
-
-        // classes from SystemDictionary
-        saSystemDictionary.classesDo(visitor);
-
-        // From SystemDictionary we do not get primitive single
-        // dimensional array classes. add primitive single dimensional array
-        // klasses from Universe.
-        saVM.getUniverse().basicTypeClassesDo(visitor);
+        final List<Klass> saKlasses = ClassesHelper.allClasses(saSystemDictionary, saVM);
 
         // Hold lock during processing to improve performance
         // and to have safe check/set of retrievedAllTypes
         synchronized (this) {
             if (!retrievedAllTypes) {
                 // Number of classes
-                int count = saKlasses.size();
-                for (int ii = 0; ii < count; ii++) {
-                    Klass kk = (Klass)saKlasses.get(ii);
-                    ReferenceTypeImpl type = referenceType(kk);
+                for (Klass saKlass : saKlasses) {
+                    referenceType(saKlass);
                 }
                 retrievedAllTypes = true;
             }
         }
     }
 
-    ReferenceTypeImpl referenceType(Klass kk) {
+    synchronized ReferenceTypeImpl referenceType(Klass kk) {
         ReferenceTypeImpl retType = null;
-        synchronized (this) {
-            if (typesByID != null) {
-                retType = (ReferenceTypeImpl)typesByID.get(kk);
-            }
-            if (retType == null) {
-                retType = addReferenceType(kk);
-            }
+        if (typesByKlass != null) {
+            retType = typesByKlass.get(kk);
+        }
+        if (retType == null) {
+            retType = addReferenceType(kk);
         }
         return retType;
     }
 
     private void initReferenceTypes() {
-        typesByID = new HashMap();
-        typesBySignature = new ArrayList();
+        typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
+        typesById = new HashMap<Long, ReferenceTypeImpl>();
+        typesBySignature = new ArrayList<ReferenceTypeImpl>();
     }
 
     private synchronized ReferenceTypeImpl addReferenceType(Klass kk) {
-        if (typesByID == null) {
+        if (typesByKlass == null) {
             initReferenceTypes();
         }
         ReferenceTypeImpl newRefType = null;
@@ -457,7 +409,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             throw new RuntimeException("should not reach here:" + kk);
         }
 
-        typesByID.put(kk, newRefType);
+        typesByKlass.put(kk, newRefType);
+        typesById.put(newRefType.uniqueID(), newRefType);
         typesBySignature.add(newRefType);
         return newRefType;
     }
@@ -470,12 +423,12 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         throwNotReadOnlyException("VirtualMachineImpl.redefineClasses()");
     }
 
-    private List getAllThreads() {
+    private List<ThreadReference> getAllThreads() {
         if (allThreads == null) {
             allThreads = new ArrayList(10);  // Might be enough, might not be
-            for (sun.jvm.hotspot.runtime.JavaThread thread =
-                     saVM.getThreads().first(); thread != null;
-                     thread = thread.next()) {
+            for (JavaThread thread =
+                 saVM.getThreads().first(); thread != null;
+                 thread = thread.next()) {
                 // refer to JvmtiEnv::GetAllThreads in jvmtiEnv.cpp.
                 // filter out the hidden-from-external-view threads.
                 if (thread.isHiddenFromExternalView() == false) {
@@ -487,7 +440,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return allThreads;
     }
 
-    public List allThreads() { //fixme jjh
+    public List<ThreadReference> allThreads() { //fixme jjh
         return Collections.unmodifiableList(getAllThreads());
     }
 
@@ -603,7 +556,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     public void dispose() {
         saAgent.detach();
-        notifyDispose();
+//        notifyDispose();
     }
 
     public void exit(int exitCode) {
@@ -733,14 +686,14 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
         final long[] retValue = new long[classes.size()] ;
 
-        final Klass [] klassArray = new Klass[classes.size()];
+        final Address[] klassArray = new Address[classes.size()];
 
         boolean allAbstractClasses = true;
         for (int i=0; i < classes.size(); i++) {
             ReferenceTypeImpl rti = (ReferenceTypeImpl)classes.get(i);
-            klassArray[i] = rti.ref();
+            klassArray[i] = rti.ref().getAddress();
             retValue[i]=0;
-            if (!(rti.isAbstract() || ((ReferenceType)rti instanceof InterfaceType))) {
+            if (!(rti.isAbstract() || (rti instanceof InterfaceType))) {
                 allAbstractClasses = false;
             }
         }
@@ -749,25 +702,59 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             return retValue;
         }
         final int size = classes.size();
+
+        final boolean compressedKlassPointersEnabled = saVM().isCompressedKlassPointersEnabled();
         saObjectHeap.iterate(new DefaultHeapVisitor() {
                 public boolean doObj(Oop oop) {
                     for (int i=0; i < size; i++) {
-                        if (klassArray[i].equals(oop.getKlass())) {
+                        if (klassArray[i].equals(OopHelper.getKlassAddress(compressedKlassPointersEnabled, oop))) {
                             retValue[i]++;
                             break;
                         }
                     }
-                                        return false;
+                    return false;
                 }
             });
 
         return retValue;
     }
 
-    private List getPath (String pathName) {
+    static class OopHelper {
+        private static final long compressedKlassOffset;
+        private static final long klassOffset;
+
+        static {
+            long coff = -1;
+            long koff = -1;
+            try {
+                Field field = Oop.class.getDeclaredField("klass");
+                field.setAccessible(true);
+                coff = ((MetadataField) field.get(null)).getOffset();
+                Field field1 = Oop.class.getDeclaredField("compressedKlass");
+                field1.setAccessible(true);
+                koff = ((MetadataField) field1.get(null)).getOffset();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+            compressedKlassOffset = coff;
+            klassOffset = koff;
+        }
+
+        static Address getKlassAddress(final boolean compressedKlassPointersEnabled, Oop oop) {
+            if (compressedKlassPointersEnabled) {
+                return oop.getHandle().getCompKlassAddressAt(compressedKlassOffset);
+            } else {
+                return oop.getHandle().getAddressAt(klassOffset);
+            }
+        }
+    }
+
+    private List<String> getPath (String pathName) {
         String cp = saVM.getSystemProperty(pathName);
         String pathSep = saVM.getSystemProperty("path.separator");
-        ArrayList al = new ArrayList();
+        ArrayList<String> al = new ArrayList<String>();
         StringTokenizer st = new StringTokenizer(cp, pathSep);
         while (st.hasMoreTokens()) {
             al.add(st.nextToken());
@@ -776,11 +763,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return al;
     }
 
-    public List classPath() {
+    public List<String> classPath() {
         return getPath("java.class.path");
     }
 
-    public List bootClassPath() {
+    public List<String> bootClassPath() {
         return getPath("sun.boot.class.path");
     }
 
@@ -797,8 +784,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     public String description() {
-        return java.text.MessageFormat.format(java.util.ResourceBundle.
-                                              getBundle("com.sun.tools.jdi.resources.jdi").getString("version_format"),
+//        String version_format = ResourceBundle.getBundle("com.sun.tools.jdi.resources.jdi").getString("version_format");
+        String version_format = "Java Debug Interface (Reference Implementation) version {0}.{1} \\n{2}";
+        return java.text.MessageFormat.format(version_format,
                                               "" + vmmgr.majorInterfaceVersion(),
                                               "" + vmmgr.minorInterfaceVersion(),
                                               name());
@@ -818,6 +806,14 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         sb.append(saVM.getSystemProperty("java.vm.info"));
         sb.append(")");
         return sb.toString();
+    }
+
+    public int jdwpMajor() {
+        return vmmgr.majorInterfaceVersion();
+    }
+
+    public int jdwpMinor() {
+        return vmmgr.minorInterfaceVersion();
     }
 
     // from interface Mirror
@@ -1066,8 +1062,20 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // Address value is used as uniqueID by ObjectReferenceImpl
-    long getAddressValue(Oop obj) {
-        return vm.saVM.getDebugger().getAddressValue(obj.getHandle());
+    long getAddressValue(Address address) {
+        return vm.saVM.getDebugger().getAddressValue(address);
+    }
+
+    public synchronized ObjectReferenceImpl objectMirror(long id) {
+        for (SoftObjectReference value : objectsByID.values()) {
+            if (value != null) {
+                ObjectReferenceImpl object = value.object();
+                if (object.uniqueID() == id) {
+                    return object;
+                }
+            }
+        }
+        throw new IllegalStateException("Object with id " + id + " not found");
     }
 
     synchronized ObjectReferenceImpl objectMirror(Oop key) {
@@ -1083,7 +1091,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         /*
          * Attempt to retrieve an existing object object reference
          */
-        SoftObjectReference ref = (SoftObjectReference)objectsByID.get(key);
+        SoftObjectReference ref = objectsByID.get(key);
         if (ref != null) {
             object = ref.object();
         }
@@ -1221,4 +1229,30 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
            return (ObjectReferenceImpl)get();
        }
    }
+
+    public ThreadReferenceImpl getThreadById(long id) {
+        for (ThreadReference thread : allThreads()) {
+            if (thread.uniqueID() == id) {
+                return (ThreadReferenceImpl) thread;
+            }
+        }
+        throw new IllegalStateException("Thread with id " + id + " not found");
+    }
+
+    public synchronized ReferenceTypeImpl getReferenceTypeById(long id) {
+        if (typesById != null) {
+            return typesById.get(id);
+        }
+        throw new IllegalStateException("ReferenceType with id " + id + " not found");
+    }
+
+    public ThreadGroupReferenceImpl getThreadGroupReferenceById(long id) {
+        for (ThreadReference thread : allThreads()) {
+            ThreadGroupReference threadGroup = thread.threadGroup();
+            if (threadGroup.uniqueID() == id) {
+                return (ThreadGroupReferenceImpl) threadGroup;
+            }
+        }
+        throw new IllegalStateException("ThreadGroup with id " + id + " not found");
+    }
 }

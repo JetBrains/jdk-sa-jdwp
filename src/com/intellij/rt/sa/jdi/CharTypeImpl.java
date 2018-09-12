@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.CharType;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class CharTypeImpl extends PrimitiveTypeImpl implements CharType {
     CharTypeImpl(VirtualMachine vm) {
@@ -34,6 +38,11 @@ public class CharTypeImpl extends PrimitiveTypeImpl implements CharType {
 
     public String signature() {
         return "C";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.CHAR;
     }
 
     PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {

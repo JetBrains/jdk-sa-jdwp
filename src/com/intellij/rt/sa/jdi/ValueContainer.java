@@ -24,7 +24,8 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.Type;
 
 /*
  * This interface allows us to pass fields, variables, and

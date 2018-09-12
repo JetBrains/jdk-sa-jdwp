@@ -24,15 +24,13 @@
 
 package com.intellij.rt.sa.jdi;
 
-import sun.jvm.hotspot.oops.Oop;
-import sun.jvm.hotspot.oops.Instance;
-import sun.jvm.hotspot.oops.Klass;
-import sun.jvm.hotspot.memory.SystemDictionary;
-import sun.jvm.hotspot.memory.Universe;
-import sun.jvm.hotspot.runtime.VM;
-
 import com.sun.jdi.*;
-import java.util.*;
+import com.intellij.rt.sa.jdwp.JDWP;
+import sun.jvm.hotspot.oops.Instance;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class ClassLoaderReferenceImpl
     extends ObjectReferenceImpl
@@ -40,8 +38,8 @@ public class ClassLoaderReferenceImpl
 {
      // because we work on process snapshot or core we can
      // cache visibleClasses & definedClasses always (i.e., no suspension)
-     private List visibleClassesCache;
-     private List definedClassesCache;
+     private List<ReferenceType> visibleClassesCache;
+     private List<ReferenceType> definedClassesCache;
 
      ClassLoaderReferenceImpl(VirtualMachine aVm, Instance oRef) {
          super(aVm, oRef);
@@ -51,12 +49,10 @@ public class ClassLoaderReferenceImpl
          return "ClassLoaderReference " + uniqueID();
      }
 
-     public List definedClasses() {
+     public List<ReferenceType> definedClasses() {
          if (definedClassesCache == null) {
-             definedClassesCache = new ArrayList();
-             Iterator iter = vm.allClasses().iterator();
-             while (iter.hasNext()) {
-                 ReferenceType type = (ReferenceType)iter.next();
+             definedClassesCache = new ArrayList<ReferenceType>();
+             for (ReferenceType type : vm.allClasses()) {
                  if (equals(type.classLoader())) {  /* thanks OTI */
                      definedClassesCache.add(type);
                  }
@@ -65,56 +61,10 @@ public class ClassLoaderReferenceImpl
          return definedClassesCache;
      }
 
-     private SystemDictionary getSystemDictionary() {
-         return vm.saSystemDictionary();
-     }
-
-     private Universe getUniverse() {
-         return vm.saUniverse();
-     }
-
-     public List visibleClasses() {
-         if (visibleClassesCache != null)
-            return visibleClassesCache;
-
-         visibleClassesCache = new ArrayList();
-
-         // refer to getClassLoaderClasses in jvmtiGetLoadedClasses.cpp
-         //  a. SystemDictionary::classes_do doesn't include arrays of primitive types (any dimensions)
-         SystemDictionary sysDict = getSystemDictionary();
-         sysDict.classesDo(
-                           new SystemDictionary.ClassAndLoaderVisitor() {
-                                public void visit(Klass k, Oop loader) {
-                                    if (ref().equals(loader)) {
-                                        for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                                            visibleClassesCache.add(vm.referenceType(l));
-                                        }
-                                    }
-                                }
-                           }
-                           );
-
-         // b. multi dimensional arrays of primitive types
-         sysDict.primArrayClassesDo(
-                                    new SystemDictionary.ClassAndLoaderVisitor() {
-                                         public void visit(Klass k, Oop loader) {
-                                             if (ref().equals(loader)) {
-                                                 visibleClassesCache.add(vm.referenceType(k));
-                                             }
-                                         }
-                                     }
-                                     );
-
-         // c. single dimensional primitive array klasses from Universe
-         // these are not added to SystemDictionary
-         getUniverse().basicTypeClassesDo(
-                            new SystemDictionary.ClassVisitor() {
-                                public void visit(Klass k) {
-                                    visibleClassesCache.add(vm.referenceType(k));
-                                }
-                            }
-                            );
-
+     public List<ReferenceType> visibleClasses() {
+         if (visibleClassesCache == null) {
+             visibleClassesCache = ClassesHelper.visibleClasses(ref(), vm);
+         }
          return visibleClassesCache;
      }
 
@@ -131,4 +81,9 @@ public class ClassLoaderReferenceImpl
          throw new ClassNotLoadedException(parser.typeName(),
                                           "Class " + parser.typeName() + " not loaded");
      }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.CLASS_LOADER;
+    }
 }

@@ -24,12 +24,16 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.connect.*;
 import com.sun.jdi.InternalException;
+import com.sun.jdi.connect.Connector;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.LaunchingConnector;
 
-import java.io.*;
-import java.lang.ref.*;
-import java.lang.reflect.*;
+import java.io.File;
+import java.io.Serializable;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 abstract class ConnectorImpl implements Connector {
@@ -234,7 +238,7 @@ abstract class ConnectorImpl implements Connector {
     protected static void setVMDisposeObserver(final Object vm) {
         try {
             Method setDisposeObserverMethod = vm.getClass().getDeclaredMethod("setDisposeObserver",
-                                                         new Class[] { java.util.Observer.class });
+                                                         new Class[] { Observer.class });
             setDisposeObserverMethod.setAccessible(true);
             setDisposeObserverMethod.invoke(vm,
                                          new Object[] {
@@ -349,7 +353,7 @@ abstract class ConnectorImpl implements Connector {
         return string  + ")";
     }
 
-    abstract class ArgumentImpl implements Connector.Argument, Cloneable, Serializable {
+    abstract class ArgumentImpl implements Argument, Cloneable, Serializable {
         private String name;
         private String label;
         private String description;
@@ -396,8 +400,8 @@ abstract class ConnectorImpl implements Connector {
         }
 
         public boolean equals(Object obj) {
-            if ((obj != null) && (obj instanceof Connector.Argument)) {
-                Connector.Argument other = (Connector.Argument)obj;
+            if ((obj != null) && (obj instanceof Argument)) {
+                Argument other = (Argument)obj;
                 return (name().equals(other.name())) &&
                        (description().equals(other.description())) &&
                        (mustSpecify() == other.mustSpecify()) &&
@@ -425,8 +429,8 @@ abstract class ConnectorImpl implements Connector {
         }
     }
 
-    class BooleanArgumentImpl extends ConnectorImpl.ArgumentImpl
-                              implements Connector.BooleanArgument {
+    class BooleanArgumentImpl extends ArgumentImpl
+                              implements BooleanArgument {
 
         BooleanArgumentImpl(String name, String label, String description,
                             boolean value,
@@ -480,8 +484,8 @@ abstract class ConnectorImpl implements Connector {
         }
     }
 
-    class IntegerArgumentImpl extends ConnectorImpl.ArgumentImpl
-                              implements Connector.IntegerArgument {
+    class IntegerArgumentImpl extends ArgumentImpl
+                              implements IntegerArgument {
 
         private final int min;
         private final int max;
@@ -581,8 +585,8 @@ abstract class ConnectorImpl implements Connector {
         }
     }
 
-    class StringArgumentImpl extends ConnectorImpl.ArgumentImpl
-                              implements Connector.StringArgument {
+    class StringArgumentImpl extends ArgumentImpl
+                              implements StringArgument {
 
         StringArgumentImpl(String name, String label, String description,
                            String value,
@@ -599,8 +603,8 @@ abstract class ConnectorImpl implements Connector {
         }
     }
 
-    class SelectedArgumentImpl extends ConnectorImpl.ArgumentImpl
-                              implements Connector.SelectedArgument {
+    class SelectedArgumentImpl extends ArgumentImpl
+                              implements SelectedArgument {
 
         private final List choices;
 

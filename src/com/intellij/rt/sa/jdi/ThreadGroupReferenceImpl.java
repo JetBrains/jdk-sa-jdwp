@@ -24,17 +24,22 @@
 
 package com.intellij.rt.sa.jdi;
 
-import sun.jvm.hotspot.oops.Oop;
+import com.sun.jdi.ThreadGroupReference;
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Instance;
+import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.oops.OopUtilities;
 import sun.jvm.hotspot.runtime.JavaThread;
-import com.sun.jdi.*;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ThreadGroupReferenceImpl extends ObjectReferenceImpl
     implements ThreadGroupReference
 {
-    ThreadGroupReferenceImpl(VirtualMachine aVm, sun.jvm.hotspot.oops.Oop oRef) {
+    ThreadGroupReferenceImpl(VirtualMachine aVm, Oop oRef) {
         super(aVm, oRef);
     }
 
@@ -59,31 +64,27 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl
         vm.throwNotReadOnlyException("ThreadGroupReference.resume()");
     }
 
-    public List threads() {
+    public List<ThreadReference> threads() {
         // Each element of this array is the Oop for a thread;
         // NOTE it is not the JavaThread that we need to create
         // a ThreadReferenceImpl.
         Oop[] myThreads = OopUtilities.threadGroupOopGetThreads(ref());
 
-        ArrayList myList = new ArrayList(myThreads.length);
-        for (int ii = 0; ii < myThreads.length; ii++) {
-            JavaThread jt = OopUtilities.threadOopGetJavaThread(myThreads[ii]);
+        ArrayList<ThreadReference> myList = new ArrayList<ThreadReference>(myThreads.length);
+        for (Oop myThread : myThreads) {
+            JavaThread jt = OopUtilities.threadOopGetJavaThread(myThread);
             if (jt != null) {
-                ThreadReferenceImpl xx = (ThreadReferenceImpl)vm.threadMirror(jt);
-                myList.add(xx);
+                myList.add(vm.threadMirror(jt));
             }
         }
         return myList;
     }
 
-    public List threadGroups() {
+    public List<ThreadGroupReference> threadGroups() {
         Oop[] myGroups = OopUtilities.threadGroupOopGetGroups(ref());
-        ArrayList myList = new ArrayList(myGroups.length);
-        for (int ii = 0; ii < myGroups.length; ii++) {
-            ThreadGroupReferenceImpl xx = (ThreadGroupReferenceImpl)vm.threadGroupMirror(
-                                          (Instance)myGroups[ii]);
-            myList.add(xx);
-
+        ArrayList<ThreadGroupReference> myList = new ArrayList<ThreadGroupReference>(myGroups.length);
+        for (Oop myGroup : myGroups) {
+            myList.add(vm.threadGroupMirror((Instance) myGroup));
         }
         return myList;
     }
@@ -91,5 +92,10 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl
     public String toString() {
         return "instance of " + referenceType().name() +
                "(name='" + name() + "', " + "id=" + uniqueID() + ")";
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.THREAD_GROUP;
     }
 }

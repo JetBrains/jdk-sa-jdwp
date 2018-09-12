@@ -24,7 +24,7 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
 
 class StratumLineInfo implements LineInfo {
     private final String stratumID;

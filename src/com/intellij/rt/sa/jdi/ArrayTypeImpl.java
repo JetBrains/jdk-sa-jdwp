@@ -24,18 +24,12 @@
 
 package com.intellij.rt.sa.jdi;
 
+import com.intellij.rt.sa.jdwp.JDWP;
 import com.sun.jdi.*;
+import sun.jvm.hotspot.oops.*;
 
-import sun.jvm.hotspot.oops.ArrayKlass;
-import sun.jvm.hotspot.oops.InstanceKlass;
-import sun.jvm.hotspot.oops.ObjArrayKlass;
-import sun.jvm.hotspot.oops.TypeArrayKlass;
-import sun.jvm.hotspot.oops.Klass;
-import sun.jvm.hotspot.oops.Instance;
-import sun.jvm.hotspot.oops.Symbol;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
@@ -153,6 +147,11 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
                 return typeName.equals(vm.javaLangObject());
             }
         }
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.TypeTag.ARRAY;
     }
 
     List inheritedTypes() {

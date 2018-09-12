@@ -24,8 +24,8 @@
 
 package com.intellij.rt.sa.jdi;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class JNITypeParser {
 

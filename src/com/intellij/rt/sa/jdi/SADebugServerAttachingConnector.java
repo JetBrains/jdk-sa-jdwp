@@ -24,15 +24,17 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.connect.*;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VirtualMachineManager;
+import com.sun.jdi.connect.AttachingConnector;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.Transport;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.net.*;
-import java.util.*;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Map;
 
 public class SADebugServerAttachingConnector extends ConnectorImpl implements AttachingConnector {
 
@@ -61,7 +63,7 @@ public class SADebugServerAttachingConnector extends ConnectorImpl implements At
     private VirtualMachine createVirtualMachine(Class vmImplClass,
                                                 String debugServerName)
         throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        java.lang.reflect.Method connectByServerMethod =
+        Method connectByServerMethod =
                             vmImplClass.getMethod(
                                    "createVirtualMachineForServer",
                                    new Class[] {

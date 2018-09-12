@@ -24,12 +24,24 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.Value;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
-abstract class ValueImpl extends MirrorImpl implements Value {
+public abstract class ValueImpl extends MirrorImpl implements Value {
     ValueImpl(VirtualMachine aVm) {
         super(aVm);
     }
 
     // type() is in the subclasses
+
+    public static byte typeValueKey(Value val) {
+        if (val == null) {
+            return JDWP.Tag.OBJECT;
+        } else {
+            return ((ValueImpl)val).typeValueKey();
+        }
+    }
+
+    abstract byte typeValueKey();
 }

@@ -26,8 +26,6 @@ package com.intellij.rt.sa.jdi;
 
 import com.sun.jdi.*;
 
-import java.util.*;
-
 public class LocationImpl extends MirrorImpl implements Location {
     private final ReferenceTypeImpl declaringType;
     private Method method;

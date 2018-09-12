@@ -25,7 +25,6 @@
 package com.intellij.rt.sa.jdi;
 
 import sun.jvm.hotspot.runtime.ClassConstants;
-import com.sun.jdi.*;
 
 public interface VMModifiers extends ClassConstants {
     int PUBLIC       = (int) JVM_ACC_PUBLIC;       /* visible to everyone */

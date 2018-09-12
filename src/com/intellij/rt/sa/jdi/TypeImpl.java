@@ -24,7 +24,8 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
 
 public abstract class TypeImpl extends MirrorImpl implements Type
 {
@@ -57,4 +58,6 @@ public abstract class TypeImpl extends MirrorImpl implements Type
     public int hashCode() {
         return signature().hashCode();
     }
+
+    public abstract byte tag();
 }

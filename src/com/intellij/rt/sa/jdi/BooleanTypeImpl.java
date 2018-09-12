@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.BooleanType;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class BooleanTypeImpl extends PrimitiveTypeImpl implements BooleanType {
     BooleanTypeImpl(VirtualMachine vm) {
@@ -33,6 +37,11 @@ public class BooleanTypeImpl extends PrimitiveTypeImpl implements BooleanType {
 
     public String signature() {
         return "Z";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.BOOLEAN;
     }
 
     PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {

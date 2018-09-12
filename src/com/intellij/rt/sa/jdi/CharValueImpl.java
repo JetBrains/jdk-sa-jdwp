@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.CharValue;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class CharValueImpl extends PrimitiveValueImpl
                            implements CharValue {
@@ -116,5 +120,10 @@ public class CharValueImpl extends PrimitiveValueImpl
         } else {
             return super.checkedShortValue();
         }
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.CHAR;
     }
 }

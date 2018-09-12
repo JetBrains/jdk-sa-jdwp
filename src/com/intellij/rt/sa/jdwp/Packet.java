@@ -118,7 +118,7 @@ public class Packet extends Object {
     Packet()
     {
         id = uniqID();
-        flags = NoFlags;
+        flags = Reply;
         data = nullData;
     }
 

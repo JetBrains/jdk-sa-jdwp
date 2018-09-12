@@ -24,7 +24,8 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.Mirror;
+import com.sun.jdi.VirtualMachine;
 
 abstract class MirrorImpl extends Object implements Mirror {
     protected VirtualMachineImpl vm;

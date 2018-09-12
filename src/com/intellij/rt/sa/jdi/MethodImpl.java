@@ -26,23 +26,20 @@ package com.intellij.rt.sa.jdi;
 
 import com.sun.jdi.*;
 import sun.jvm.hotspot.oops.Symbol;
-import sun.jvm.hotspot.oops.LocalVariableTableElement;
-import java.util.List;
-import java.util.Iterator;
+
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.lang.ref.SoftReference;
-import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 public abstract class MethodImpl extends TypeComponentImpl implements Method {
     private JNITypeParser signatureParser;
     protected sun.jvm.hotspot.oops.Method saMethod;
 
-    abstract int argSlotCount() throws AbsentInformationException;
-    abstract List allLineLocations(SDE.Stratum stratum,
+    public abstract int argSlotCount() throws AbsentInformationException;
+    abstract List<Location> allLineLocations(SDE.Stratum stratum,
                                    String sourceName)
                            throws AbsentInformationException;
-    abstract List locationsOfLine(SDE.Stratum stratum,
+    abstract List<Location> locationsOfLine(SDE.Stratum stratum,
                                   String sourceName,
                                   int lineNumber)
                            throws AbsentInformationException;
@@ -74,8 +71,12 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     }
 
     // Object ref() {
-    sun.jvm.hotspot.oops.Method ref() {
+    public sun.jvm.hotspot.oops.Method ref() {
         return saMethod;
+    }
+
+    public long uniqueID() {
+        return vm.getAddressValue(saMethod.getAddress());
     }
 
     public String genericSignature() {
@@ -152,12 +153,12 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         return saMethod.isObsolete();
     }
 
-    public final List allLineLocations()
+    public final List<Location> allLineLocations()
                            throws AbsentInformationException {
         return allLineLocations(vm.getDefaultStratum(), null);
     }
 
-    public List allLineLocations(String stratumID,
+    public List<Location> allLineLocations(String stratumID,
                                  String sourceName)
                            throws AbsentInformationException {
         return allLineLocations(declaringType.stratum(stratumID),

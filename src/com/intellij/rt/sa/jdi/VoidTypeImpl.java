@@ -24,7 +24,9 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.VoidType;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class VoidTypeImpl extends TypeImpl implements VoidType {
     VoidTypeImpl(VirtualMachine vm) {
@@ -33,6 +35,11 @@ public class VoidTypeImpl extends TypeImpl implements VoidType {
 
     public String signature() {
         return "V";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.VOID;
     }
 
     public String toString() {

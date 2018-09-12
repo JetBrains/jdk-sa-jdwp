@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.FloatType;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class FloatTypeImpl extends PrimitiveTypeImpl implements FloatType {
     FloatTypeImpl(VirtualMachine vm) {
@@ -34,6 +38,11 @@ public class FloatTypeImpl extends PrimitiveTypeImpl implements FloatType {
 
     public String signature() {
         return "F";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.FLOAT;
     }
 
     PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {

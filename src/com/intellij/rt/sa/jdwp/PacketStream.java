@@ -26,24 +26,25 @@
 package com.intellij.rt.sa.jdwp;
 
 import com.sun.jdi.*;
-import com.sun.tools.jdi.*;
+import com.intellij.rt.sa.jdi.*;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-class PacketStream {
+public class PacketStream {
     final VirtualMachineImpl vm;
     private int inCursor = 0;
     final Packet pkt;
-    private ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
     private boolean isCommitted = false;
 
-    PacketStream(VirtualMachineImpl vm, int cmdSet, int cmd) {
+    PacketStream(VirtualMachineImpl vm, int id, int cmdSet, int cmd) {
         this.vm = vm;
         this.pkt = new Packet();
-        pkt.cmdSet = (short)cmdSet;
-        pkt.cmd = (short)cmd;
+        pkt.id = id;
+        pkt.cmdSet = (short) cmdSet;
+        pkt.cmd = (short) cmd;
     }
 
     PacketStream(VirtualMachineImpl vm, Packet pkt) {
@@ -64,57 +65,57 @@ class PacketStream {
         }
     }
 
-    void waitForReply() throws JDWPException {
-        if (!isCommitted) {
-            throw new InternalException("waitForReply without send");
-        }
-
-        vm.waitForTargetReply(pkt);
-
-        if (pkt.errorCode != Packet.ReplyNoError) {
-            throw new JDWPException(pkt.errorCode);
-        }
-    }
+//    void waitForReply() throws JDWPException {
+//        if (!isCommitted) {
+//            throw new InternalException("waitForReply without send");
+//        }
+//
+//        vm.waitForTargetReply(pkt);
+//
+//        if (pkt.errorCode != Packet.ReplyNoError) {
+//            throw new JDWPException(pkt.errorCode);
+//        }
+//    }
 
     void writeBoolean(boolean data) {
-        if(data) {
-            dataStream.write( 1 );
+        if (data) {
+            dataStream.write(1);
         } else {
-            dataStream.write( 0 );
+            dataStream.write(0);
         }
     }
 
     void writeByte(byte data) {
-        dataStream.write( data );
+        dataStream.write(data);
     }
 
     void writeChar(char data) {
-        dataStream.write( (byte)((data >>> 8) & 0xFF) );
-        dataStream.write( (byte)((data >>> 0) & 0xFF) );
+        dataStream.write((byte) ((data >>> 8) & 0xFF));
+        dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
     void writeShort(short data) {
-        dataStream.write( (byte)((data >>> 8) & 0xFF) );
-        dataStream.write( (byte)((data >>> 0) & 0xFF) );
+        dataStream.write((byte) ((data >>> 8) & 0xFF));
+        dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
     void writeInt(int data) {
-        dataStream.write( (byte)((data >>> 24) & 0xFF) );
-        dataStream.write( (byte)((data >>> 16) & 0xFF) );
-        dataStream.write( (byte)((data >>> 8) & 0xFF) );
-        dataStream.write( (byte)((data >>> 0) & 0xFF) );
+        dataStream.write((byte) ((data >>> 24) & 0xFF));
+        dataStream.write((byte) ((data >>> 16) & 0xFF));
+        dataStream.write((byte) ((data >>> 8) & 0xFF));
+        dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
     void writeLong(long data) {
-        dataStream.write( (byte)((data >>> 56) & 0xFF) );
-        dataStream.write( (byte)((data >>> 48) & 0xFF) );
-        dataStream.write( (byte)((data >>> 40) & 0xFF) );
-        dataStream.write( (byte)((data >>> 32) & 0xFF) );
+        dataStream.write((byte) ((data >>> 56) & 0xFF));
+        dataStream.write((byte) ((data >>> 48) & 0xFF));
+        dataStream.write((byte) ((data >>> 40) & 0xFF));
+        dataStream.write((byte) ((data >>> 32) & 0xFF));
 
-        dataStream.write( (byte)((data >>> 24) & 0xFF) );
-        dataStream.write( (byte)((data >>> 16) & 0xFF) );
-        dataStream.write( (byte)((data >>> 8) & 0xFF) );
-        dataStream.write( (byte)((data >>> 0) & 0xFF) );
+        dataStream.write((byte) ((data >>> 24) & 0xFF));
+        dataStream.write((byte) ((data >>> 16) & 0xFF));
+        dataStream.write((byte) ((data >>> 8) & 0xFF));
+        dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
     void writeFloat(float data) {
@@ -131,10 +132,10 @@ class PacketStream {
                 writeLong(data);
                 break;
             case 4:
-                writeInt((int)data);
+                writeInt((int) data);
                 break;
             case 2:
-                writeShort((short)data);
+                writeShort((short) data);
                 break;
             default:
                 throw new UnsupportedOperationException("JDWP: ID size not supported: " + size);
@@ -169,6 +170,13 @@ class PacketStream {
         dataStream.write(data, 0, data.length);
     }
 
+    void writeStringOrEmpty(String string) {
+        if (string == null) {
+            string = "";
+        }
+        writeString(string);
+    }
+
     void writeString(String string) {
         try {
             byte[] stringBytes = string.getBytes("UTF8");
@@ -179,7 +187,7 @@ class PacketStream {
         }
     }
 
-    void writeLocation(Location location) {
+    void writeLocation(LocationImpl location) {
         ReferenceTypeImpl refType = (ReferenceTypeImpl)location.declaringType();
         byte tag;
         if (refType instanceof ClassType) {
@@ -191,17 +199,17 @@ class PacketStream {
             throw new InternalException("Invalid Location");
         }
         writeByte(tag);
-        writeClassRef(refType.ref());
-        writeMethodRef(((MethodImpl)location.method()).ref());
+        writeClassRef(refType.uniqueID());
+        writeMethodRef(((MethodImpl)location.method()).uniqueID());
         writeLong(location.codeIndex());
     }
-
+    //
     void writeValue(Value val) {
         try {
             writeValueChecked(val);
         } catch (InvalidTypeException exc) {  // should never happen
             throw new RuntimeException(
-                "Internal error: Invalid Tag/Type pair");
+                    "Internal error: Invalid Tag/Type pair");
         }
     }
 
@@ -215,7 +223,7 @@ class PacketStream {
             writeUntaggedValueChecked(val);
         } catch (InvalidTypeException exc) {  // should never happen
             throw new RuntimeException(
-                "Internal error: Invalid Tag/Type pair");
+                    "Internal error: Invalid Tag/Type pair");
         }
     }
 
@@ -223,12 +231,12 @@ class PacketStream {
         byte tag = ValueImpl.typeValueKey(val);
         if (isObjectTag(tag)) {
             if (val == null) {
-                 writeObjectRef(0);
+                writeObjectRef(0);
             } else {
                 if (!(val instanceof ObjectReference)) {
                     throw new InvalidTypeException();
                 }
-                writeObjectRef(((ObjectReferenceImpl)val).ref());
+                writeObjectRef(((ObjectReferenceImpl)val).uniqueID());
             }
         } else {
             switch (tag) {
@@ -292,7 +300,6 @@ class PacketStream {
     }
 
 
-
     /**
      * Read byte represented as one bytes.
      */
@@ -319,7 +326,7 @@ class PacketStream {
         b1 = pkt.data[inCursor++] & 0xff;
         b2 = pkt.data[inCursor++] & 0xff;
 
-        return (char)((b1 << 8) + b2);
+        return (char) ((b1 << 8) + b2);
     }
 
     /**
@@ -331,14 +338,14 @@ class PacketStream {
         b1 = pkt.data[inCursor++] & 0xff;
         b2 = pkt.data[inCursor++] & 0xff;
 
-        return (short)((b1 << 8) + b2);
+        return (short) ((b1 << 8) + b2);
     }
 
     /**
      * Read int represented as four bytes.
      */
     int readInt() {
-        int b1,b2,b3,b4;
+        int b1, b2, b3, b4;
 
         b1 = pkt.data[inCursor++] & 0xff;
         b2 = pkt.data[inCursor++] & 0xff;
@@ -352,8 +359,8 @@ class PacketStream {
      * Read long represented as eight bytes.
      */
     long readLong() {
-        long b1,b2,b3,b4;
-        long b5,b6,b7,b8;
+        long b1, b2, b3, b4;
+        long b5, b6, b7, b8;
 
         b1 = pkt.data[inCursor++] & 0xff;
         b2 = pkt.data[inCursor++] & 0xff;
@@ -393,7 +400,7 @@ class PacketStream {
 
         try {
             ret = new String(pkt.data, inCursor, len, "UTF8");
-        } catch(java.io.UnsupportedEncodingException e) {
+        } catch (java.io.UnsupportedEncodingException e) {
             System.err.println(e);
             ret = "Conversion error!";
         }
@@ -403,14 +410,14 @@ class PacketStream {
 
     private long readID(int size) {
         switch (size) {
-          case 8:
-              return readLong();
-          case 4:
-              return (long)readInt();
-          case 2:
-              return (long)readShort();
-          default:
-              throw new UnsupportedOperationException("JDWP: ID size not supported: " + size);
+            case 8:
+                return readLong();
+            case 4:
+                return (long) readInt();
+            case 2:
+                return (long) readShort();
+            default:
+                throw new UnsupportedOperationException("JDWP: ID size not supported: " + size);
         }
     }
 
@@ -425,49 +432,69 @@ class PacketStream {
         return readID(vm.sizeofClassRef);
     }
 
-    ObjectReferenceImpl readTaggedObjectReference() {
-        byte typeKey = readByte();
-        return vm.objectMirror(readObjectRef(), typeKey);
+    void writeTaggedObjectReference(ObjectReference ref) {
+        writeByte(ValueImpl.typeValueKey(ref));
+        writeObjectRef(ref.uniqueID());
     }
+
+//    ObjectReferenceImpl readTaggedObjectReference() {
+//        byte typeKey = readByte();
+//        return vm.objectMirror(readObjectRef(), typeKey);
+//    }
 
     ObjectReferenceImpl readObjectReference() {
-        return vm.objectMirror(readObjectRef());
+        return vm.vm.objectMirror(readObjectRef());
     }
-
-    StringReferenceImpl readStringReference() {
+    //
+//    StringReferenceImpl readStringReference() {
+//        long ref = readObjectRef();
+//        return vm.stringMirror(ref);
+//    }
+//
+    public ArrayReferenceImpl readArrayReference() {
         long ref = readObjectRef();
-        return vm.stringMirror(ref);
+        return (ArrayReferenceImpl) vm.vm.objectMirror(ref);
     }
-
-    ArrayReferenceImpl readArrayReference() {
-        long ref = readObjectRef();
-        return vm.arrayMirror(ref);
-    }
-
+    //
     ThreadReferenceImpl readThreadReference() {
-        long ref = readObjectRef();
-        return vm.threadMirror(ref);
+        return vm.vm.getThreadById(readObjectRef());
     }
 
+    void writeThreadReference(ThreadReference thread) {
+        writeObjectRef(thread.uniqueID());
+    }
+    //
     ThreadGroupReferenceImpl readThreadGroupReference() {
         long ref = readObjectRef();
-        return vm.threadGroupMirror(ref);
+        return vm.vm.getThreadGroupReferenceById(ref);
     }
 
+    void writeThreadGroupReference(ThreadGroupReference ref) {
+        writeObjectRef(ref.uniqueID());
+    }
+    //
     ClassLoaderReferenceImpl readClassLoaderReference() {
         long ref = readObjectRef();
-        return vm.classLoaderMirror(ref);
+        return (ClassLoaderReferenceImpl) vm.vm.objectMirror(ref);
     }
 
     ClassObjectReferenceImpl readClassObjectReference() {
         long ref = readObjectRef();
-        return vm.classObjectMirror(ref);
+        return (ClassObjectReferenceImpl) vm.vm.objectMirror(ref);
     }
 
     ReferenceTypeImpl readReferenceType() {
-        byte tag = readByte();
+//        byte tag = readByte();
         long ref = readObjectRef();
-        return vm.referenceType(ref, tag);
+        return vm.vm.getReferenceTypeById(ref);
+    }
+
+    void writeClassLoaderReference(ClassLoaderReferenceImpl ref) {
+        writeObjectRef(ref.uniqueID());
+    }
+
+    void writeClassObjectReference(ClassObjectReferenceImpl ref) {
+        writeObjectRef(ref.uniqueID());
     }
 
     /**
@@ -483,149 +510,155 @@ class PacketStream {
     long readFieldRef() {
         return readID(vm.sizeofFieldRef);
     }
-
-    /**
-     * Read field represented as vm specific byte sequence.
-     */
-    Field readField() {
-        ReferenceTypeImpl refType = readReferenceType();
-        long fieldRef = readFieldRef();
-        return refType.getFieldMirror(fieldRef);
-    }
-
-    /**
-     * Read frame represented as vm specific byte sequence.
-     */
+    //
+//    /**
+//     * Read field represented as vm specific byte sequence.
+//     */
+//    Field readField() {
+//        ReferenceTypeImpl refType = readReferenceType();
+//        long fieldRef = readFieldRef();
+//        return refType.getFieldMirror(fieldRef);
+//    }
+//
+//    /**
+//     * Read frame represented as vm specific byte sequence.
+//     */
     long readFrameRef() {
         return readID(vm.sizeofFrameRef);
     }
 
-    /**
-     * Read a value, first byte describes type of value to read.
-     */
-    ValueImpl readValue() {
-        byte typeKey = readByte();
-        return readUntaggedValue(typeKey);
-    }
-
-    ValueImpl readUntaggedValue(byte typeKey) {
-        ValueImpl val = null;
-
-        if (isObjectTag(typeKey)) {
-            val = vm.objectMirror(readObjectRef(), typeKey);
-        } else {
-            switch(typeKey) {
-                case JDWP.Tag.BYTE:
-                    val = new ByteValueImpl(vm, readByte());
-                    break;
-
-                case JDWP.Tag.CHAR:
-                    val = new CharValueImpl(vm, readChar());
-                    break;
-
-                case JDWP.Tag.FLOAT:
-                    val = new FloatValueImpl(vm, readFloat());
-                    break;
-
-                case JDWP.Tag.DOUBLE:
-                    val = new DoubleValueImpl(vm, readDouble());
-                    break;
-
-                case JDWP.Tag.INT:
-                    val = new IntegerValueImpl(vm, readInt());
-                    break;
-
-                case JDWP.Tag.LONG:
-                    val = new LongValueImpl(vm, readLong());
-                    break;
-
-                case JDWP.Tag.SHORT:
-                    val = new ShortValueImpl(vm, readShort());
-                    break;
-
-                case JDWP.Tag.BOOLEAN:
-                    val = new BooleanValueImpl(vm, readBoolean());
-                    break;
-
-                case JDWP.Tag.VOID:
-                    val = new VoidValueImpl(vm);
-                    break;
-            }
-        }
-        return val;
-    }
-
-    /**
-     * Read location represented as vm specific byte sequence.
-     */
-    Location readLocation() {
-        byte tag = readByte();
-        long classRef = readObjectRef();
-        long methodRef = readMethodRef();
-        long codeIndex = readLong();
-        if (classRef != 0) {
-            /* Valid location */
-            ReferenceTypeImpl refType = vm.referenceType(classRef, tag);
-            return new LocationImpl(vm, refType, methodRef, codeIndex);
-        } else {
-            /* Null location (example: uncaught exception) */
-           return null;
-        }
-    }
-
+    //    /**
+//     * Read a value, first byte describes type of value to read.
+//     */
+//    ValueImpl readValue() {
+//        byte typeKey = readByte();
+//        return readUntaggedValue(typeKey);
+//    }
+//
+//    ValueImpl readUntaggedValue(byte typeKey) {
+//        ValueImpl val = null;
+//
+//        if (isObjectTag(typeKey)) {
+//            val = vm.objectMirror(readObjectRef(), typeKey);
+//        } else {
+//            switch(typeKey) {
+//                case JDWP.Tag.BYTE:
+//                    val = new ByteValueImpl(vm, readByte());
+//                    break;
+//
+//                case JDWP.Tag.CHAR:
+//                    val = new CharValueImpl(vm, readChar());
+//                    break;
+//
+//                case JDWP.Tag.FLOAT:
+//                    val = new FloatValueImpl(vm, readFloat());
+//                    break;
+//
+//                case JDWP.Tag.DOUBLE:
+//                    val = new DoubleValueImpl(vm, readDouble());
+//                    break;
+//
+//                case JDWP.Tag.INT:
+//                    val = new IntegerValueImpl(vm, readInt());
+//                    break;
+//
+//                case JDWP.Tag.LONG:
+//                    val = new LongValueImpl(vm, readLong());
+//                    break;
+//
+//                case JDWP.Tag.SHORT:
+//                    val = new ShortValueImpl(vm, readShort());
+//                    break;
+//
+//                case JDWP.Tag.BOOLEAN:
+//                    val = new BooleanValueImpl(vm, readBoolean());
+//                    break;
+//
+//                case JDWP.Tag.VOID:
+//                    val = new VoidValueImpl(vm);
+//                    break;
+//            }
+//        }
+//        return val;
+//    }
+//
+//    /**
+//     * Read location represented as vm specific byte sequence.
+//     */
+//    Location readLocation() {
+//        byte tag = readByte();
+//        long classRef = readObjectRef();
+//        long methodRef = readMethodRef();
+//        long codeIndex = readLong();
+//        if (classRef != 0) {
+//            /* Valid location */
+//            ReferenceTypeImpl refType = vm.referenceType(classRef, tag);
+//            return new LocationImpl(vm, refType, methodRef, codeIndex);
+//        } else {
+//            /* Null location (example: uncaught exception) */
+//           return null;
+//        }
+//    }
+//
     byte[] readByteArray(int length) {
         byte[] array = new byte[length];
         System.arraycopy(pkt.data, inCursor, array, 0, length);
         inCursor += length;
         return array;
     }
+//
+//    List<Value> readArrayRegion() {
+//        byte typeKey = readByte();
+//        int length = readInt();
+//        List<Value> list = new ArrayList<Value>(length);
+//        boolean gettingObjects = isObjectTag(typeKey);
+//        for (int i = 0; i < length; i++) {
+//            /*
+//             * Each object comes back with a type key which might
+//             * identify a more specific type than the type key we
+//             * passed in, so we use it in the decodeValue call.
+//             * (For primitives, we just use the original one)
+//             */
+//            if (gettingObjects) {
+//                typeKey = readByte();
+//            }
+//            Value value = readUntaggedValue(typeKey);
+//            list.add(value);
+//        }
+//
+//        return list;
+//    }
 
-    List<Value> readArrayRegion() {
-        byte typeKey = readByte();
-        int length = readInt();
-        List<Value> list = new ArrayList<Value>(length);
-        boolean gettingObjects = isObjectTag(typeKey);
-        for (int i = 0; i < length; i++) {
-            /*
-             * Each object comes back with a type key which might
-             * identify a more specific type than the type key we
-             * passed in, so we use it in the decodeValue call.
-             * (For primitives, we just use the original one)
-             */
-            if (gettingObjects) {
-                typeKey = readByte();
-            }
-            Value value = readUntaggedValue(typeKey);
-            list.add(value);
-        }
-
-        return list;
-    }
-
-    void writeArrayRegion(List<Value> srcValues) {
+    void writeArrayRegion(List<Value> srcValues, byte typeTag) {
+        writeByte(typeTag);
         writeInt(srcValues.size());
-        for (int i = 0; i < srcValues.size(); i++) {
-            Value value = srcValues.get(i);
-            writeUntaggedValue(value);
+        boolean withTags = isObjectTag(typeTag);
+        for (Value value : srcValues) {
+            if (withTags) {
+                writeValue(value);
+            }
+            else {
+                writeUntaggedValue(value);
+            }
         }
     }
-
-    int skipBytes(int n) {
-        inCursor += n;
-        return n;
-    }
-
-    byte command() {
-        return (byte)pkt.cmd;
-    }
-
+    //
+//    int skipBytes(int n) {
+//        inCursor += n;
+//        return n;
+//    }
+//
+//    byte command() {
+//        return (byte)pkt.cmd;
+//    }
+//
     static boolean isObjectTag(byte tag) {
         return (tag == JDWP.Tag.OBJECT) ||
-               (tag == JDWP.Tag.ARRAY) ||
-               (tag == JDWP.Tag.STRING) ||
-               (tag == JDWP.Tag.THREAD) ||
-               (tag == JDWP.Tag.THREAD_GROUP) ||
-               (tag == JDWP.Tag.CLASS_LOADER) ||
-               (tag == JDWP.Tag.CLASS_OBJECT);
+                (tag == JDWP.Tag.ARRAY) ||
+                (tag == JDWP.Tag.STRING) ||
+                (tag == JDWP.Tag.THREAD) ||
+                (tag == JDWP.Tag.THREAD_GROUP) ||
+                (tag == JDWP.Tag.CLASS_LOADER) ||
+                (tag == JDWP.Tag.CLASS_OBJECT);
     }
 }

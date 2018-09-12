@@ -25,21 +25,18 @@
 package com.intellij.rt.sa.jdi;
 
 import com.sun.jdi.*;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import sun.jvm.hotspot.oops.Instance;
+import com.intellij.rt.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Array;
 import sun.jvm.hotspot.runtime.BasicType;
-import sun.jvm.hotspot.utilities.Assert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArrayReferenceImpl extends ObjectReferenceImpl
     implements ArrayReference
 {
     private int length;
-    ArrayReferenceImpl(VirtualMachine aVm, sun.jvm.hotspot.oops.Array aRef) {
+    ArrayReferenceImpl(VirtualMachine aVm, Array aRef) {
         super(aVm, aRef);
         length = (int) aRef.getLength();
     }
@@ -87,7 +84,7 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         }
     }
 
-    public List getValues(int index, int len) {
+    public List<Value> getValues(int index, int len) {
         if (len == -1) { // -1 means the rest of the array
            len = length() - index;
         }
@@ -167,5 +164,10 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
     public String toString() {
         return "instance of " + arrayType().componentTypeName() +
                "[" + length() + "] (id=" + uniqueID() + ")";
+    }
+
+    @Override
+    byte typeValueKey() {
+        return JDWP.Tag.ARRAY;
     }
 }

@@ -24,7 +24,7 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
 
 class BaseLineInfo implements LineInfo {
     private final int lineNumber;

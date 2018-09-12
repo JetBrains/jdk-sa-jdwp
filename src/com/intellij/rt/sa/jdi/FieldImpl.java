@@ -24,18 +24,14 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
-import sun.jvm.hotspot.oops.Oop;
-import sun.jvm.hotspot.oops.Instance;
+import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.Field;
+import com.sun.jdi.Type;
+import com.sun.jdi.VirtualMachine;
 import sun.jvm.hotspot.oops.Array;
-import sun.jvm.hotspot.oops.InstanceKlass;
-import sun.jvm.hotspot.oops.Symbol;
 import sun.jvm.hotspot.oops.FieldIdentifier;
-
-import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.Comparator;
+import sun.jvm.hotspot.oops.Oop;
+import sun.jvm.hotspot.oops.Symbol;
 
 public class FieldImpl extends TypeComponentImpl implements Field {
     private JNITypeParser signatureParser;
@@ -58,6 +54,10 @@ public class FieldImpl extends TypeComponentImpl implements Field {
 
     sun.jvm.hotspot.oops.Field ref() {
         return saField;
+    }
+
+    public long uniqueID() {
+        return hashCode(); // should be ok
     }
 
     // get the value of static field

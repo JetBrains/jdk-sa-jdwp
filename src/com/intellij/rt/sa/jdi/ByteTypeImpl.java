@@ -24,7 +24,11 @@
 
 package com.intellij.rt.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.ByteType;
+import com.sun.jdi.InvalidTypeException;
+import com.sun.jdi.PrimitiveValue;
+import com.sun.jdi.VirtualMachine;
+import com.intellij.rt.sa.jdwp.JDWP;
 
 public class ByteTypeImpl extends PrimitiveTypeImpl implements ByteType {
     ByteTypeImpl(VirtualMachine vm) {
@@ -34,6 +38,11 @@ public class ByteTypeImpl extends PrimitiveTypeImpl implements ByteType {
 
     public String signature() {
         return "B";
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.Tag.BYTE;
     }
 
     PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {

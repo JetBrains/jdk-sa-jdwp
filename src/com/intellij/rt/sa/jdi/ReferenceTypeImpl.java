@@ -24,24 +24,20 @@
 
 package com.intellij.rt.sa.jdi;
 
-import java.io.*;
-
+import com.sun.jdi.Field;
+import com.sun.jdi.Method;
 import com.sun.jdi.*;
-
+import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
-import sun.jvm.hotspot.oops.Instance;
-import sun.jvm.hotspot.oops.InstanceKlass;
-import sun.jvm.hotspot.oops.ArrayKlass;
-import sun.jvm.hotspot.oops.JVMDIClassStatus;
-import sun.jvm.hotspot.oops.Klass;
-import sun.jvm.hotspot.oops.ObjArray;
-import sun.jvm.hotspot.oops.Oop;
-import sun.jvm.hotspot.oops.Symbol;
-import sun.jvm.hotspot.oops.DefaultHeapVisitor;
+import sun.jvm.hotspot.oops.*;
 import sun.jvm.hotspot.utilities.Assert;
+import sun.jvm.hotspot.utilities.KlassArray;
 
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.util.*;
 
 public abstract class ReferenceTypeImpl extends TypeImpl
 implements ReferenceType {
@@ -60,7 +56,7 @@ implements ReferenceType {
     /* to mark when no info available */
     static final SDE NO_SDE_INFO_MARK = new SDE();
 
-    protected ReferenceTypeImpl(VirtualMachine aVm, sun.jvm.hotspot.oops.Klass klass) {
+    protected ReferenceTypeImpl(VirtualMachine aVm, Klass klass) {
         super(aVm);
         saKlass = klass;
         typeNameSymbol = saKlass.getName();
@@ -234,7 +230,16 @@ implements ReferenceType {
         }
     }
 
-    public final List fields() throws ClassNotPreparedException {
+    public final FieldImpl fieldById(long id) throws ClassNotPreparedException {
+        for (Field field : allFields()) {
+            if (((FieldImpl) field).uniqueID() == id) {
+                return (FieldImpl) field;
+            }
+        }
+        throw new IllegalStateException("Field with id " + id + " not found in " + name());
+    }
+
+    public final List<Field> fields() throws ClassNotPreparedException {
         List fields = (fieldsCache != null)? (List) fieldsCache.get() : null;
         if (fields == null) {
             checkPrepared();
@@ -260,26 +265,52 @@ implements ReferenceType {
         return fields;
     }
 
-    public final List allFields() throws ClassNotPreparedException {
-        List allFields = (allFieldsCache != null)? (List) allFieldsCache.get() : null;
+    public final List<Field> allFields() throws ClassNotPreparedException {
+        List<Field> allFields = (allFieldsCache != null)? (List) allFieldsCache.get() : null;
         if (allFields == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
                 // is 'length' a field of array klasses? To maintain
                 // consistency with JVMDI-JDI we return 0 size.
-                allFields = new ArrayList(0);
+                allFields = new ArrayList<Field>(0);
             } else {
-                List saFields;
 
                 // Get a list of the sa Field types
-                saFields = ((InstanceKlass)saKlass).getAllFields();
+
+                // getAllFields() is buggy and does not return all super classes
+//                saFields = ((InstanceKlass)saKlass).getAllFields();
+
+                InstanceKlass saKlass = (InstanceKlass) this.saKlass;
+                List saFields = saKlass.getImmediateFields();
+
+                // transitiveInterfaces contains all interfaces implemented
+                // by this class and its superclass chain with no duplicates.
+
+                KlassArray interfaces = saKlass.getTransitiveInterfaces();
+                int n = interfaces.length();
+                for (int i = 0; i < n; i++) {
+                    InstanceKlass intf1 = (InstanceKlass) interfaces.getAt(i);
+                    if (Assert.ASSERTS_ENABLED) {
+                        Assert.that(intf1.isInterface(), "just checking type");
+                    }
+                    saFields.addAll(intf1.getImmediateFields());
+                }
+
+                // Get all fields in the superclass, recursively.  But, don't
+                // include fields in interfaces implemented by superclasses;
+                // we already have all those.
+                if (!saKlass.isInterface()) {
+                    InstanceKlass supr = saKlass;
+                    while  ( (supr = (InstanceKlass) supr.getSuper()) != null) {
+                        saFields.addAll(supr.getImmediateFields());
+                    }
+                }
 
                 // Create a list of our Field types
-                int len = saFields.size();
-                allFields = new ArrayList(len);
-                for (int ii = 0; ii < len; ii++) {
-                    sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field)saFields.get(ii);
-                    if (! isThrowableBacktraceField(curField)) {
+                allFields = new ArrayList<Field>(saFields.size());
+                for (Object saField : saFields) {
+                    sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field) saField;
+                    if (!isThrowableBacktraceField(curField)) {
                         allFields.add(new FieldImpl(vm, vm.referenceType(curField.getFieldHolder()), curField));
                     }
                 }
@@ -357,7 +388,7 @@ implements ReferenceType {
     }
 
    public final Field fieldByName(String fieldName) throws ClassNotPreparedException {
-        java.util.List searchList;
+        List searchList;
         Field f;
 
         // visibleFields calls checkPrepared
@@ -374,12 +405,21 @@ implements ReferenceType {
         return null;
     }
 
-    public final List methods() throws ClassNotPreparedException {
-        List methods = (methodsCache != null)? (List) methodsCache.get() : null;
+    public final MethodImpl methodById(long id) throws ClassNotPreparedException {
+        for (Method method : methods()) {
+            if (((MethodImpl) method).uniqueID() == id) {
+                return (MethodImpl) method;
+            }
+        }
+        throw new IllegalStateException("Method with id " + id + " not found in " + name());
+    }
+
+    public final List<Method> methods() throws ClassNotPreparedException {
+        List<Method> methods = (methodsCache != null)? (List) methodsCache.get() : null;
         if (methods == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
-                methods = new ArrayList(0);
+                methods = new ArrayList<Method>(0);
             } else {
                 List saMethods;
                 // Get a list of the SA Method types
@@ -387,9 +427,9 @@ implements ReferenceType {
 
                 // Create a list of our MethodImpl types
                 int len = saMethods.size();
-                methods = new ArrayList(len);
-                for (int ii = 0; ii < len; ii++) {
-                    methods.add(MethodImpl.createMethodImpl(vm, this, (sun.jvm.hotspot.oops.Method)saMethods.get(ii)));
+                methods = new ArrayList<Method>(len);
+                for (Object saMethod : saMethods) {
+                    methods.add(MethodImpl.createMethodImpl(vm, this, (sun.jvm.hotspot.oops.Method) saMethod));
                 }
             }
             methods = Collections.unmodifiableList(methods);
@@ -509,7 +549,7 @@ implements ReferenceType {
     }
 
 
-    List getInterfaces() {
+    List<InterfaceTypeImpl> getInterfaces() {
         List myInterfaces;
         if (saKlass instanceof ArrayKlass) {
             // Actually, JLS says arrays implement Cloneable and Serializable
@@ -530,11 +570,11 @@ implements ReferenceType {
         return myInterfaces;
     }
 
-    public final List nestedTypes() {
-        List nestedTypes = (nestedTypesCache != null)? (List) nestedTypesCache.get() : null;
+    public final List<ReferenceType> nestedTypes() {
+        List<ReferenceType> nestedTypes = (nestedTypesCache != null)? (List) nestedTypesCache.get() : null;
         if (nestedTypes == null) {
             if (saKlass instanceof ArrayKlass) {
-                nestedTypes = new ArrayList(0);
+                nestedTypes = new ArrayList<ReferenceType>(0);
             } else {
                 ClassLoaderReference cl = classLoader();
                 List classes = null;
@@ -543,7 +583,7 @@ implements ReferenceType {
                 } else {
                    classes = vm.bootstrapClasses();
                 }
-                nestedTypes = new ArrayList();
+                nestedTypes = new ArrayList<ReferenceType>();
                 Iterator iter = classes.iterator();
                 while (iter.hasNext()) {
                     ReferenceTypeImpl refType = (ReferenceTypeImpl)iter.next();
@@ -554,7 +594,7 @@ implements ReferenceType {
                 }
             }
             nestedTypes = Collections.unmodifiableList(nestedTypes);
-            nestedTypesCache = new SoftReference(nestedTypes);
+            nestedTypesCache = new SoftReference<List<ReferenceType>>(nestedTypes);
         }
         return nestedTypes;
     }
@@ -637,7 +677,7 @@ implements ReferenceType {
         return stratum.sourcePaths(this);
     }
 
-    String baseSourceName() throws AbsentInformationException {
+    public String baseSourceName() throws AbsentInformationException {
       if (saKlass instanceof ArrayKlass) {
             throw new AbsentInformationException();
       }
@@ -661,7 +701,7 @@ implements ReferenceType {
 
         while ((nextIndex = typeName.indexOf('.', index)) > 0) {
             sb.append(typeName.substring(index, nextIndex));
-            sb.append(java.io.File.separatorChar);
+            sb.append(File.separatorChar);
             index = nextIndex + 1;
         }
         return sb.toString();
@@ -732,7 +772,7 @@ implements ReferenceType {
 
     // new method since 1.6.
     // Real body will be supplied later.
-    public List instances(long maxInstances) {
+    public List<ObjectReference> instances(long maxInstances) {
         if (!vm.canGetInstanceInfo()) {
             throw new UnsupportedOperationException(
                       "target does not support getting instances");
@@ -743,24 +783,22 @@ implements ReferenceType {
                                               + maxInstances);
         }
 
-        final List objects = new ArrayList(0);
+        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
         if (isAbstract() || (this instanceof InterfaceType)) {
             return objects;
         }
 
-        final Klass givenKls = this.ref();
+        final boolean compressedKlassPointersEnabled = vm.saVM().isCompressedKlassPointersEnabled();
+        final Address givenKls = saKlass.getAddress();
         final long max = maxInstances;
         vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
-                private long instCount=0;
+                private long instCount = 0;
                 public boolean doObj(Oop oop) {
-                    if (givenKls.equals(oop.getKlass())) {
+                    if (givenKls.equals(VirtualMachineImpl.OopHelper.getKlassAddress(compressedKlassPointersEnabled, oop))) {
                         objects.add(vm.objectMirror(oop));
-                                                instCount++;
+                        instCount++;
                     }
-                    if (max > 0 && instCount >= max) {
-                        return true;
-                                        }
-                                        return false;
+                    return max > 0 && instCount >= max;
                 }
             });
         return objects;
@@ -847,10 +885,9 @@ implements ReferenceType {
         return list;
     }
 
-    Klass ref() {
+    public Klass ref() {
         return saKlass;
     }
-
 
     /*
      * Return true if an instance of this type
@@ -931,8 +968,8 @@ implements ReferenceType {
         }
     }
 
-    long uniqueID() {
-        return vm.getAddressValue(ref().getJavaMirror());
+    public long uniqueID() {
+        return vm.getAddressValue(saKlass.getAddress());
     }
 
     // new method since 1.6
@@ -983,4 +1020,6 @@ implements ReferenceType {
             return bs.toByteArray();
         }
     }
+
+    public abstract byte tag();
 }

@@ -3,6 +3,13 @@
     <output-path>$PROJECT_DIR$/out/artifacts</output-path>
     <root id="archive" name="sa-jdwp.jar">
       <element id="module-output" name="jdk-sa-jpda" />
+      <element id="directory" name="META-INF">
+        <element id="directory" name="versions">
+          <element id="directory" name="10">
+            <element id="module-output" name="classesHelper10" />
+          </element>
+        </element>
+      </element>
     </root>
   </artifact>
 </component>

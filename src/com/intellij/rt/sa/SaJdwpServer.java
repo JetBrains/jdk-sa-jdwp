@@ -25,7 +25,7 @@ public class SaJdwpServer {
         final VirtualMachineImpl vm = VirtualMachineImpl.createVirtualMachineForPID(Bootstrap.virtualMachineManager(), Integer.parseInt(args[0]), 0);
 
         final SocketTransportService socketTransportService = new SocketTransportService();
-        final TransportService.ListenKey listenKey = socketTransportService.startListening("5555");
+        final TransportService.ListenKey listenKey = socketTransportService.startListening(args.length > 1 ? args[1] : null);
 
         System.err.println("Debugger attached and listening at: " + listenKey.address());
 

@@ -13,7 +13,7 @@ public class SaJdwp {
 
     private static void usage() {
         PrintStream out = System.out;
-        out.println("Usage: java -jar sa-jdwp.jar <pid>");
+        out.println("Usage: java -jar sa-jdwp.jar <pid> (port)");
         System.exit(1);
     }
 
@@ -22,6 +22,7 @@ public class SaJdwp {
             usage();
         }
         String pidString = args[0];
+        String port = args.length > 1 ? args[1] : "";
         VirtualMachine vm = VirtualMachine.attach(pidString);
         Properties systemProperties = vm.getSystemProperties();
         String javaHome = systemProperties.getProperty("java.home");
@@ -42,19 +43,19 @@ public class SaJdwp {
         }
 
         if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
-            start678(javaHome, pidString);
+            start678(javaHome, pidString, port);
             return;
         } else if (version.startsWith("9")) {
-            start9(javaHome, pidString);
+            start9(javaHome, pidString, port);
             return;
         } else if (version.startsWith("10")) {
-            start10(javaHome, pidString);
+            start10(javaHome, pidString, port);
             return;
         }
         System.out.println("Unable to start on version " + version);
     }
 
-    private static void start678(String javaHome, String pidString) throws Exception {
+    private static void start678(String javaHome, String pidString, String port) throws Exception {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {
@@ -74,12 +75,12 @@ public class SaJdwp {
         }
         ProcessBuilder builder = new ProcessBuilder(javaHome + "/bin/java",
                 "-cp", "\"" + toolsJar.getCanonicalPath() + ";" + saJdiJar.getCanonicalPath() + ";" + new File(SaJdwp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath() + "\"",
-                "SaJdwpServer", pidString);
+                SaJdwpServer.class.getName(), pidString, port);
         startServer(builder);
     }
 
 
-    private static void start9(String javaHome, String pidString) throws Exception {
+    private static void start9(String javaHome, String pidString, String port) throws Exception {
         ProcessBuilder builder = new ProcessBuilder(javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
@@ -89,11 +90,11 @@ public class SaJdwp {
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
                 "-cp", "\"" + new File(SaJdwp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath() + "\"",
-                "SaJdwpServer", pidString);
+                SaJdwpServer.class.getName(), pidString, port);
         startServer(builder);
     }
 
-    private static void start10(String javaHome, String pidString) throws Exception {
+    private static void start10(String javaHome, String pidString, String port) throws Exception {
         ProcessBuilder builder = new ProcessBuilder(javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
@@ -104,7 +105,7 @@ public class SaJdwp {
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED",
                 "-cp", "\"" + new File(SaJdwp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath() + "\"",
-                "SaJdwpServer", pidString);
+                SaJdwpServer.class.getName(), pidString, port);
         startServer(builder);
     }
 

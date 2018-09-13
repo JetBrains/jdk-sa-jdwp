@@ -44,11 +44,8 @@ public class SaJdwpServer {
                     }
                 }));
 
-
-        while (true) {
-            Connection connection = socketTransportService.accept(listenKey, 0, 0);
-            JDWPProxy.reply(connection, vm);
-        }
+        Connection connection = socketTransportService.accept(listenKey, 0, 0);
+        socketTransportService.stopListening(listenKey);
+        JDWPProxy.reply(connection, vm);
     }
-
 }

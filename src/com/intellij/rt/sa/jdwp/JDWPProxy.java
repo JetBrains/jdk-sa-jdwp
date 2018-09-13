@@ -69,7 +69,7 @@ public class JDWPProxy {
         } finally {
             connection.close();
             //todo: dispose breaks subsequent connections, need to investigate
-//            vm.dispose();
+            vm.dispose();
         }
     }
 

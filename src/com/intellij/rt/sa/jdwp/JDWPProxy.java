@@ -26,14 +26,10 @@ public class JDWPProxy {
                         try {
                             int commandId = (Integer) commandsClass.getDeclaredField("COMMAND").get(null);
                             commandsMap.put(commandId, (Command) commandsClass.newInstance());
-                        } catch (NoSuchFieldException e) {
-//                            System.out.println("class " + commandsClass);
-//                            e.printStackTrace();
+                        } catch (NoSuchFieldException ignored) {
                         }
                     }
-                } catch (NoSuchFieldException e) {
-//                    System.out.println("class " + declaredClass);
-//                    e.printStackTrace();
+                } catch (NoSuchFieldException ignored) {
                 }
             }
         } catch (Exception e) {

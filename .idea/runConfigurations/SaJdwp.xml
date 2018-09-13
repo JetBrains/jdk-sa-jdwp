@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="SaJdwp" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="com.intellij.rt.sa.SaJdwp" />
+    <option name="MAIN_CLASS_NAME" value="com.jetbrains.sa.SaJdwp" />
     <module name="jdk-sa-jpda" />
     <method v="2">
       <option name="Make" enabled="true" />

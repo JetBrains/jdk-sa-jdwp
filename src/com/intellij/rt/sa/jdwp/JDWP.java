@@ -3484,7 +3484,7 @@ public class JDWP {
 
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                notImplemented(answer);
+//                notImplemented(answer); // to allow jdb and other debuggers to initialize
             }
         }
 

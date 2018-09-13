@@ -753,6 +753,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     private List<String> getPath (String pathName) {
         String cp = saVM.getSystemProperty(pathName);
+        if (cp == null) {
+            return Collections.emptyList();
+        }
         String pathSep = saVM.getSystemProperty("path.separator");
         ArrayList<String> al = new ArrayList<String>();
         StringTokenizer st = new StringTokenizer(cp, pathSep);

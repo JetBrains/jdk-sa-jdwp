@@ -111,7 +111,12 @@ public class SaJdwp {
 //        return new File(SaJdwp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath(); // does not work in IDEA
         String path = "/" + SaJdwp.class.getName().replace('.', '/') + ".class";
         String classResource = SaJdwp.class.getResource(path).getFile();
-        String jarPath = classResource.substring(5, classResource.length() - path.length() - 1);
+        String jarPath;
+        if (classResource.startsWith("file:")) {
+            jarPath = classResource.substring(5, classResource.length() - path.length() - 1);
+        } else { //debug mode
+            jarPath = "out/artifacts/sa-jdwp.jar";
+        }
         return new File(jarPath).getAbsolutePath();
     }
 

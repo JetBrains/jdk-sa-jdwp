@@ -10,6 +10,8 @@ import com.sun.tools.jdi.SocketTransportService;
 import java.io.IOException;
 
 public class SaJdwpServer {
+    public static final String WAITING_FOR_DEBUGGER = "Waiting for debugger on: ";
+
     // do not allow instance creation
     private SaJdwpServer() {
     }
@@ -27,7 +29,7 @@ public class SaJdwpServer {
         final SocketTransportService socketTransportService = new SocketTransportService();
         final TransportService.ListenKey listenKey = socketTransportService.startListening(args.length > 1 ? args[1] : null);
 
-        System.err.println("Waiting for debugger on: " + listenKey.address());
+        System.err.println(WAITING_FOR_DEBUGGER + listenKey.address());
 
         // shutdown hook to clean-up the server in case of forced exit.
         Runtime.getRuntime().addShutdownHook(new Thread(

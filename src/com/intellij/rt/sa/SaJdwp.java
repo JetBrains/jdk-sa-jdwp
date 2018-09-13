@@ -3,6 +3,7 @@ package com.intellij.rt.sa;
 import com.sun.tools.attach.VirtualMachine;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -12,8 +13,7 @@ public class SaJdwp {
     }
 
     private static void usage() {
-        PrintStream out = System.out;
-        out.println("Usage: java -jar sa-jdwp.jar <pid> (port)");
+        System.out.println("Usage: java -jar sa-jdwp.jar <pid> (port)");
         System.exit(1);
     }
 
@@ -21,10 +21,10 @@ public class SaJdwp {
         if (args.length < 1) {
             usage();
         }
-        startServer(args[0], args.length > 1 ? args[1] : "");
+        startServer(args[0], args.length > 1 ? args[1] : "", true);
     }
 
-    static String startServer(String pidString, String port) throws Exception {
+    static String startServer(String pidString, String port, boolean console) throws Exception {
         VirtualMachine vm = VirtualMachine.attach(pidString);
         Properties systemProperties = vm.getSystemProperties();
         String javaHome = systemProperties.getProperty("java.home");
@@ -43,17 +43,24 @@ public class SaJdwp {
             }
         }
 
+        ProcessBuilder builder = null;
         if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
-            return start678(javaHome, pidString, port);
+            builder = prepare678(javaHome);
         } else if (version.startsWith("9")) {
-            return start9(javaHome, pidString, port);
+            builder = prepare9(javaHome);
         } else if (version.startsWith("10")) {
-            return start10(javaHome, pidString, port);
+            builder = prepare10(javaHome);
         }
+
+        if (builder != null) {
+            builder.command().addAll(Arrays.asList(SaJdwpServer.class.getName(), pidString, port));
+            return startServer(builder, console);
+        }
+
         throw new IllegalStateException("Unable to start on version " + version);
     }
 
-    private static String start678(String javaHome, String pidString, String port) throws Exception {
+    private static ProcessBuilder prepare678(String javaHome) throws Exception {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {
@@ -71,15 +78,13 @@ public class SaJdwp {
                 System.exit(1);
             }
         }
-        ProcessBuilder builder = new ProcessBuilder(javaHome + "/bin/java",
-                "-cp", "\"" + toolsJar.getCanonicalPath() + ";" + saJdiJar.getCanonicalPath() + ";" + getJarPath() + "\"",
-                SaJdwpServer.class.getName(), pidString, port);
-        return startServer(builder);
+        return new ProcessBuilder(javaHome + "/bin/java",
+                "-cp", "\"" + toolsJar.getCanonicalPath() + ";" + saJdiJar.getCanonicalPath() + ";" + getJarPath() + "\"");
     }
 
 
-    private static String start9(String javaHome, String pidString, String port) throws Exception {
-        ProcessBuilder builder = new ProcessBuilder(javaHome + "/bin/java",
+    private static ProcessBuilder prepare9(String javaHome) throws Exception {
+        return new ProcessBuilder(javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
@@ -87,13 +92,11 @@ public class SaJdwp {
                 "--add-opens", "jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
-                "-cp", "\"" + getJarPath() + "\"",
-                SaJdwpServer.class.getName(), pidString, port);
-        return startServer(builder);
+                "-cp", "\"" + getJarPath() + "\"");
     }
 
-    private static String start10(String javaHome, String pidString, String port) throws Exception {
-        ProcessBuilder builder = new ProcessBuilder(javaHome + "/bin/java",
+    private static ProcessBuilder prepare10(String javaHome) throws Exception {
+        return new ProcessBuilder(javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
@@ -102,12 +105,10 @@ public class SaJdwp {
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED",
-                "-cp", "\"" + getJarPath() + "\"",
-                SaJdwpServer.class.getName(), pidString, port);
-        return startServer(builder);
+                "-cp", "\"" + getJarPath() + "\"");
     }
 
-    private static String getJarPath() throws IOException {
+    private static String getJarPath() {
 //        return new File(SaJdwp.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath(); // does not work in IDEA
         String path = "/" + SaJdwp.class.getName().replace('.', '/') + ".class";
         String classResource = SaJdwp.class.getResource(path).getFile();
@@ -120,19 +121,23 @@ public class SaJdwp {
         return new File(jarPath).getAbsolutePath();
     }
 
-    private static String startServer(ProcessBuilder builder) throws IOException {
+    private static String startServer(ProcessBuilder builder, boolean console) throws IOException {
         builder.redirectErrorStream(true);
-        System.out.println("Running: ");
-        for (String s : builder.command()) {
-            System.out.print(s + " ");
+        if (console) {
+            System.out.println("Running: ");
+            for (String s : builder.command()) {
+                System.out.print(s + " ");
+            }
+            System.out.println();
         }
-        System.out.println();
         Process process = builder.start();
         BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String s;
         try {
             while ((s = stdOutput.readLine()) != null) {
-                System.out.println(s);
+                if (console) {
+                    System.out.println(s);
+                }
                 if (s.startsWith(SaJdwpServer.WAITING_FOR_DEBUGGER)) {
                     return s.substring(SaJdwpServer.WAITING_FOR_DEBUGGER.length());
                 }

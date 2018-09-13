@@ -39,7 +39,7 @@ public class SAJDWPAttachingConnector implements AttachingConnector {
         }
 
         try {
-            String address = SaJdwp.startServer(String.valueOf(pid), "");
+            String address = SaJdwp.startServer(String.valueOf(pid), "", false);
             Connection connection = transportService.attach(address, 0, 0);
             return Bootstrap.virtualMachineManager().createVirtualMachine(connection);
         } catch (Exception e) {

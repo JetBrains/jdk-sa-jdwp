@@ -26,10 +26,16 @@ public class SaJdwp {
 
     static String startServer(String pidString, String port, boolean console) throws Exception {
         VirtualMachine vm = VirtualMachine.attach(pidString);
-        Properties systemProperties = vm.getSystemProperties();
-        String javaHome = systemProperties.getProperty("java.home");
-        String version = systemProperties.getProperty("java.specification.version");
-        vm.detach();
+        String javaHome;
+        String version;
+        try {
+            Properties systemProperties = vm.getSystemProperties();
+            javaHome = systemProperties.getProperty("java.home");
+            version = systemProperties.getProperty("java.specification.version");
+        }
+        finally {
+            vm.detach();
+        }
 
         // todo: determine if this is a jdk or jre better
         boolean windows = System.getProperty("os.name").toLowerCase(Locale.US).startsWith("windows");

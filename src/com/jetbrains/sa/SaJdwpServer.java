@@ -10,7 +10,7 @@ import com.sun.tools.jdi.SocketTransportService;
 import java.io.IOException;
 
 public class SaJdwpServer {
-    public static final String WAITING_FOR_DEBUGGER = "Waiting for debugger on: ";
+    static final String WAITING_FOR_DEBUGGER = "Waiting for debugger on: ";
 
     // do not allow instance creation
     private SaJdwpServer() {
@@ -38,6 +38,7 @@ public class SaJdwpServer {
                         try {
                             vm.dispose();
                             socketTransportService.stopListening(listenKey);
+                        } catch (IllegalArgumentException ignored) {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

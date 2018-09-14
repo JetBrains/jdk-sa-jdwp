@@ -136,21 +136,33 @@ public class SaJdwp {
             }
             System.out.println();
         }
-        Process process = builder.start();
+        final Process process = builder.start();
+
+        if (console) {
+            Runtime.getRuntime().addShutdownHook(new Thread(
+                    new Runnable() {
+                        public void run() {
+                            process.destroy();
+                        }
+                    }));
+        }
+
         BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String s;
         try {
             while ((s = stdOutput.readLine()) != null) {
                 if (console) {
                     System.out.println(s);
-                }
-                if (s.startsWith(SaJdwpServer.WAITING_FOR_DEBUGGER)) {
+                } else if (s.startsWith(SaJdwpServer.WAITING_FOR_DEBUGGER)) {
                     return s.substring(SaJdwpServer.WAITING_FOR_DEBUGGER.length());
                 }
             }
         } finally {
             stdOutput.close();
         }
-        throw new IllegalStateException("Unable to determine the attach address");
+        if (!console) {
+            throw new IllegalStateException("Unable to determine the attach address");
+        }
+        return "";
     }
 }

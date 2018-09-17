@@ -216,7 +216,12 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
                 StackFrameImpl myFrame = new StackFrameImpl(vm, this, myvf, id++);
                 //fixme jjh null should be a Location
                 frames.add(myFrame);
-                myvf = (JavaVFrame)myvf.javaSender();
+                try {
+                    myvf = myvf.javaSender();
+                } catch (Exception e) {
+                    e.printStackTrace(); // skip
+                    break;
+                }
             }
         }
 

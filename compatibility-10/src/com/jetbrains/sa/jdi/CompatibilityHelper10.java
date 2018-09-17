@@ -13,18 +13,22 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 class CompatibilityHelper10 implements Compatibility {
+    @Override
     public Address getAddress(Method method) {
         return method.getAddress();
     }
 
+    @Override
     public Address getAddress(Klass klass) {
         return klass.getAddress();
     }
 
+    @Override
     public Klass asKlass(Oop ref) {
         return java_lang_Class.asKlass(ref);
     }
 
+    @Override
     public List<InstanceKlass> getTransitiveInterfaces(InstanceKlass saKlass) {
         List<InstanceKlass> res = new ArrayList<InstanceKlass>();
         KlassArray interfaces = saKlass.getTransitiveInterfaces();
@@ -35,10 +39,12 @@ class CompatibilityHelper10 implements Compatibility {
         return res;
     }
 
+    @Override
     public String getSourceDebugExtension(InstanceKlass saKlass) {
         return saKlass.getSourceDebugExtension();
     }
 
+    @Override
     public InstanceKlass getMethodHandleKlass() {
         return SystemDictionary.getMethodHandleKlass();
     }
@@ -68,6 +74,7 @@ class CompatibilityHelper10 implements Compatibility {
         klassOffset = koff;
     }
 
+    @Override
     public Address getKlassAddress(Oop oop) {
         if (VM.getVM().isCompressedKlassPointersEnabled()) {
             return oop.getHandle().getCompKlassAddressAt(compressedKlassOffset);
@@ -76,6 +83,7 @@ class CompatibilityHelper10 implements Compatibility {
         }
     }
 
+    @Override
     public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
         final List<Klass> saKlasses = new ArrayList<Klass>();
         ClassLoaderDataGraph.ClassVisitor visitor = new ClassLoaderDataGraph.ClassVisitor() {
@@ -118,6 +126,7 @@ class CompatibilityHelper10 implements Compatibility {
         return saKlasses;
     }
 
+    @Override
     public List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
         final List<ReferenceType> res = new ArrayList<ReferenceType>();
 

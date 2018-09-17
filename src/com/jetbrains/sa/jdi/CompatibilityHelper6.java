@@ -13,18 +13,22 @@ import java.util.List;
  * @author egor
  */
 class CompatibilityHelper6 implements Compatibility {
+    @Override
     public Address getAddress(Method method) {
         return method.getHandle();
     }
 
+    @Override
     public Address getAddress(Klass klass) {
         return klass.getHandle();
     }
 
+    @Override
     public Klass asKlass(Oop ref) {
         return OopUtilities.classOopToKlass(ref);// 42
     }
 
+    @Override
     public List<InstanceKlass> getTransitiveInterfaces(InstanceKlass saKlass) {
         List<InstanceKlass> res = new ArrayList<InstanceKlass>();
         ObjArray interfaces = saKlass.getTransitiveInterfaces();
@@ -35,14 +39,17 @@ class CompatibilityHelper6 implements Compatibility {
         return res;
     }
 
+    @Override
     public String getSourceDebugExtension(InstanceKlass saKlass) {
         return saKlass.getSourceDebugExtension().asString();
     }
 
+    @Override
     public InstanceKlass getMethodHandleKlass() {
         return null;//SystemDictionary.getMethodHandleKlass();
     }
 
+    @Override
     public Klass getMethodHolder(Method method) {
         return method.getMethodHolder();
     }
@@ -70,6 +77,7 @@ class CompatibilityHelper6 implements Compatibility {
         klassOffset = koff;
     }
 
+    @Override
     public Address getKlassAddress(Oop oop) {
         if (VM.getVM().isCompressedOopsEnabled()) {
             return oop.getHandle().getCompOopHandleAt(compressedKlassOffset);
@@ -78,6 +86,7 @@ class CompatibilityHelper6 implements Compatibility {
         }
     }
 
+    @Override
     public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
         final List<Klass> saKlasses = new ArrayList<Klass>();
         SystemDictionary.ClassVisitor visitor = new SystemDictionary.ClassVisitor() {
@@ -110,6 +119,7 @@ class CompatibilityHelper6 implements Compatibility {
         return saKlasses;
     }
 
+    @Override
     public List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
         final List<ReferenceType> res = new ArrayList<ReferenceType>();
 

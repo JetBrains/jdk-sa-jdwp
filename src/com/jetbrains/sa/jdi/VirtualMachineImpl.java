@@ -683,37 +683,38 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
                       "target does not support getting instances");
         }
 
-        final long[] retValue = new long[classes.size()] ;
-
-        final Address[] klassArray = new Address[classes.size()];
+        int size = classes.size();
+        final Map<Address, Long> instanceMap = new HashMap<Address, Long>(size);
 
         boolean allAbstractClasses = true;
-        for (int i=0; i < classes.size(); i++) {
-            ReferenceTypeImpl rti = (ReferenceTypeImpl)classes.get(i);
-            klassArray[i] = CompatibilityHelper.INSTANCE.getAddress(rti.ref());
-            retValue[i]=0;
+        for (Object aClass : classes) {
+            ReferenceTypeImpl rti = (ReferenceTypeImpl) aClass;
+            instanceMap.put(CompatibilityHelper.INSTANCE.getAddress(rti.ref()), 0L);
             if (!(rti.isAbstract() || (rti instanceof InterfaceType))) {
                 allAbstractClasses = false;
             }
         }
 
         if (allAbstractClasses) {
-            return retValue;
+            return new long[size];
         }
-        final int size = classes.size();
 
         final boolean compressedKlassPointersEnabled = CompatibilityHelper.INSTANCE.isCompressedKlassPointersEnabled(saVM());
         saObjectHeap.iterate(new DefaultHeapVisitor() {
-                public boolean doObj(Oop oop) {
-                    for (int i=0; i < size; i++) {
-                        if (klassArray[i].equals(CompatibilityHelper.INSTANCE.getKlassAddress(compressedKlassPointersEnabled, oop))) {
-                            retValue[i]++;
-                            break;
-                        }
-                    }
-                    return false;
+            public boolean doObj(Oop oop) {
+                Address klassAddress = CompatibilityHelper.INSTANCE.getKlassAddress(compressedKlassPointersEnabled, oop);
+                Long current = instanceMap.get(klassAddress);
+                if (current != null) {
+                    instanceMap.put(klassAddress, current + 1);
                 }
-            });
+                return false;
+            }
+        });
+
+        final long[] retValue = new long[size] ;
+        for (int i = 0; i < retValue.length; i++) {
+            retValue[i] = instanceMap.get(CompatibilityHelper.INSTANCE.getAddress(((ReferenceTypeImpl)classes.get(i)).ref()));
+        }
 
         return retValue;
     }

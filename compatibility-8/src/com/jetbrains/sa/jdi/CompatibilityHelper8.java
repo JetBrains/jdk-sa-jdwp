@@ -23,10 +23,6 @@ class CompatibilityHelper8 implements Compatibility {
         return klass.getAddress();
     }
 
-    public boolean isCompressedKlassPointersEnabled(VM vm) {
-        return vm.isCompressedKlassPointersEnabled();
-    }
-
     public Klass asKlass(Oop ref) {
         return java_lang_Class.asKlass(ref);
     }
@@ -74,8 +70,8 @@ class CompatibilityHelper8 implements Compatibility {
         klassOffset = koff;
     }
 
-    public Address getKlassAddress(final boolean compressedKlassPointersEnabled, Oop oop) {
-        if (compressedKlassPointersEnabled) {
+    public Address getKlassAddress(Oop oop) {
+        if (VM.getVM().isCompressedKlassPointersEnabled()) {
             return oop.getHandle().getCompKlassAddressAt(compressedKlassOffset);
         } else {
             return oop.getHandle().getAddressAt(klassOffset);

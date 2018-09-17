@@ -19,8 +19,6 @@ public interface Compatibility {
 
     Address getAddress(Klass klass);
 
-    boolean isCompressedKlassPointersEnabled(VM vm);
-
     Klass asKlass(Oop ref);
 
     List<InstanceKlass> getTransitiveInterfaces(InstanceKlass saKlass);
@@ -31,7 +29,7 @@ public interface Compatibility {
 
     Klass getMethodHolder(Method method);
 
-    Address getKlassAddress(boolean compressedKlassPointersEnabled, Oop oop);
+    Address getKlassAddress(Oop oop);
 
     List<Klass> allClasses(SystemDictionary systemDictionary, VM vm);
 

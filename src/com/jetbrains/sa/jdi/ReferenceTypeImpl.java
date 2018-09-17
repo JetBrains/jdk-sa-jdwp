@@ -783,13 +783,12 @@ implements ReferenceType {
             return objects;
         }
 
-        final boolean compressedKlassPointersEnabled = CompatibilityHelper.INSTANCE.isCompressedKlassPointersEnabled(vm.saVM());
         final Address givenKls = CompatibilityHelper.INSTANCE.getAddress(saKlass);
         final long max = maxInstances;
         vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
                 private long instCount = 0;
                 public boolean doObj(Oop oop) {
-                    if (givenKls.equals(CompatibilityHelper.INSTANCE.getKlassAddress(compressedKlassPointersEnabled, oop))) {
+                    if (givenKls.equals(CompatibilityHelper.INSTANCE.getKlassAddress(oop))) {
                         objects.add(vm.objectMirror(oop));
                         instCount++;
                     }

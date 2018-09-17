@@ -699,10 +699,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             return new long[size];
         }
 
-        final boolean compressedKlassPointersEnabled = CompatibilityHelper.INSTANCE.isCompressedKlassPointersEnabled(saVM());
         saObjectHeap.iterate(new DefaultHeapVisitor() {
             public boolean doObj(Oop oop) {
-                Address klassAddress = CompatibilityHelper.INSTANCE.getKlassAddress(compressedKlassPointersEnabled, oop);
+                Address klassAddress = CompatibilityHelper.INSTANCE.getKlassAddress(oop);
                 Long current = instanceMap.get(klassAddress);
                 if (current != null) {
                     instanceMap.put(klassAddress, current + 1);

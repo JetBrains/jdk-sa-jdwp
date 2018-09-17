@@ -30,7 +30,6 @@ import com.sun.jdi.VirtualMachine;
 import com.jetbrains.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Instance;
 import sun.jvm.hotspot.oops.Klass;
-import sun.jvm.hotspot.oops.java_lang_Class;
 
 public class ClassObjectReferenceImpl extends ObjectReferenceImpl
                                       implements ClassObjectReference {
@@ -42,7 +41,7 @@ public class ClassObjectReferenceImpl extends ObjectReferenceImpl
 
     public ReferenceType reflectedType() {
         if (reflectedType == null) {
-            Klass k = java_lang_Class.asKlass(ref());
+            Klass k = CompatibilityHelper.INSTANCE.asKlass(ref());
             reflectedType = vm.referenceType(k);
         }
         return reflectedType;

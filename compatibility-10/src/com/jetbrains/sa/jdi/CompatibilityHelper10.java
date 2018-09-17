@@ -5,12 +5,82 @@ import sun.jvm.hotspot.classfile.ClassLoaderDataGraph;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.*;
 import sun.jvm.hotspot.runtime.VM;
+import sun.jvm.hotspot.debugger.Address;
+import sun.jvm.hotspot.utilities.KlassArray;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class ClassesHelper {
-    static List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
+@SuppressWarnings("unused")
+class CompatibilityHelper10 implements Compatibility {
+    public Address getAddress(Method method) {
+        return method.getAddress();
+    }
+
+    public Address getAddress(Klass klass) {
+        return klass.getAddress();
+    }
+
+    public boolean isCompressedKlassPointersEnabled(VM vm) {
+        return vm.isCompressedKlassPointersEnabled();
+    }
+
+    public Klass asKlass(Oop ref) {
+        return java_lang_Class.asKlass(ref);
+    }
+
+    public List<InstanceKlass> getTransitiveInterfaces(InstanceKlass saKlass) {
+        List<InstanceKlass> res = new ArrayList<InstanceKlass>();
+        KlassArray interfaces = saKlass.getTransitiveInterfaces();
+        int n = interfaces.length();
+        for (int i = 0; i < n; i++) {
+            res.add((InstanceKlass) interfaces.getAt(i));
+        }
+        return res;
+    }
+
+    public String getSourceDebugExtension(InstanceKlass saKlass) {
+        return saKlass.getSourceDebugExtension();
+    }
+
+    public InstanceKlass getMethodHandleKlass() {
+        return SystemDictionary.getMethodHandleKlass();
+    }
+
+    @Override
+    public Klass getMethodHolder(Method method) {
+        return method.getMethodHolder();
+    }
+
+    private static final long compressedKlassOffset;
+    private static final long klassOffset;
+
+    static {
+        long coff = -1;
+        long koff = -1;
+        try {
+            java.lang.reflect.Field field = Oop.class.getDeclaredField("klass");
+            field.setAccessible(true);
+            coff = ((MetadataField) field.get(null)).getOffset();
+            java.lang.reflect.Field field1 = Oop.class.getDeclaredField("compressedKlass");
+            field1.setAccessible(true);
+            koff = ((MetadataField) field1.get(null)).getOffset();
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        compressedKlassOffset = coff;
+        klassOffset = koff;
+    }
+
+    public Address getKlassAddress(final boolean compressedKlassPointersEnabled, Oop oop) {
+        if (compressedKlassPointersEnabled) {
+            return oop.getHandle().getCompKlassAddressAt(compressedKlassOffset);
+        } else {
+            return oop.getHandle().getAddressAt(klassOffset);
+        }
+    }
+
+    public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
         final List<Klass> saKlasses = new ArrayList<Klass>();
         ClassLoaderDataGraph.ClassVisitor visitor = new ClassLoaderDataGraph.ClassVisitor() {
             public void visit(Klass k) {
@@ -52,7 +122,7 @@ class ClassesHelper {
         return saKlasses;
     }
 
-    static List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
+    public List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
         final List<ReferenceType> res = new ArrayList<ReferenceType>();
 
         // refer to getClassLoaderClasses in jvmtiGetLoadedClasses.cpp

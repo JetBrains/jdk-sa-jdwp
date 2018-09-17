@@ -63,7 +63,7 @@ public class ClassLoaderReferenceImpl
 
      public List<ReferenceType> visibleClasses() {
          if (visibleClassesCache == null) {
-             visibleClassesCache = ClassesHelper.visibleClasses(ref(), vm);
+             visibleClassesCache = CompatibilityHelper.INSTANCE.visibleClasses(ref(), vm);
          }
          return visibleClassesCache;
      }

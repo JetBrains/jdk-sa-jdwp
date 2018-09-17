@@ -28,10 +28,8 @@ import com.sun.jdi.Field;
 import com.sun.jdi.Method;
 import com.sun.jdi.*;
 import sun.jvm.hotspot.debugger.Address;
-import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.*;
 import sun.jvm.hotspot.utilities.Assert;
-import sun.jvm.hotspot.utilities.KlassArray;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -81,7 +79,7 @@ implements ReferenceType {
                 return method;
             }
         }
-        if (ref.getMethodHolder().equals(SystemDictionary.getMethodHandleKlass())) {
+        if (ref.getMethodHolder().equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
           // invoke methods are generated as needed, so make mirrors as needed
           List mis = null;
           if (methodInvokesCache == null) {
@@ -139,7 +137,7 @@ implements ReferenceType {
                 comp = vm.sequenceNumber -
                  ((VirtualMachineImpl)(other.virtualMachine())).sequenceNumber;
             } else {
-                comp = rf1.getAddress().minus(rf2.getAddress()) < 0? -1 : 1;
+                comp = CompatibilityHelper.INSTANCE.getAddress(rf1).minus(CompatibilityHelper.INSTANCE.getAddress(rf2)) < 0? -1 : 1;
             }
         }
         return comp;
@@ -286,10 +284,7 @@ implements ReferenceType {
                 // transitiveInterfaces contains all interfaces implemented
                 // by this class and its superclass chain with no duplicates.
 
-                KlassArray interfaces = saKlass.getTransitiveInterfaces();
-                int n = interfaces.length();
-                for (int i = 0; i < n; i++) {
-                    InstanceKlass intf1 = (InstanceKlass) interfaces.getAt(i);
+                for (InstanceKlass intf1 : CompatibilityHelper.INSTANCE.getTransitiveInterfaces(saKlass)) {
                     if (Assert.ASSERTS_ENABLED) {
                         Assert.that(intf1.isInterface(), "just checking type");
                     }
@@ -728,7 +723,7 @@ implements ReferenceType {
         if (sde == null) {
            String extension = null;
            if (saKlass instanceof InstanceKlass) {
-              extension = ((InstanceKlass)saKlass).getSourceDebugExtension();
+              extension = CompatibilityHelper.INSTANCE.getSourceDebugExtension((InstanceKlass)saKlass);
            }
            if (extension == null) {
               sde = NO_SDE_INFO_MARK;
@@ -788,13 +783,13 @@ implements ReferenceType {
             return objects;
         }
 
-        final boolean compressedKlassPointersEnabled = vm.saVM().isCompressedKlassPointersEnabled();
-        final Address givenKls = saKlass.getAddress();
+        final boolean compressedKlassPointersEnabled = CompatibilityHelper.INSTANCE.isCompressedKlassPointersEnabled(vm.saVM());
+        final Address givenKls = CompatibilityHelper.INSTANCE.getAddress(saKlass);
         final long max = maxInstances;
         vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
                 private long instCount = 0;
                 public boolean doObj(Oop oop) {
-                    if (givenKls.equals(VirtualMachineImpl.OopHelper.getKlassAddress(compressedKlassPointersEnabled, oop))) {
+                    if (givenKls.equals(CompatibilityHelper.INSTANCE.getKlassAddress(compressedKlassPointersEnabled, oop))) {
                         objects.add(vm.objectMirror(oop));
                         instCount++;
                     }
@@ -969,7 +964,7 @@ implements ReferenceType {
     }
 
     public long uniqueID() {
-        return vm.getAddressValue(saKlass.getAddress());
+        return vm.getAddressValue(CompatibilityHelper.INSTANCE.getAddress(saKlass));
     }
 
     // new method since 1.6

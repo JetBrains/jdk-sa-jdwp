@@ -40,7 +40,6 @@ import sun.jvm.hotspot.utilities.Assert;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtualMachine {
@@ -360,7 +359,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     private void retrieveAllClasses() {
-        final List<Klass> saKlasses = ClassesHelper.allClasses(saSystemDictionary, saVM);
+        final List<Klass> saKlasses = CompatibilityHelper.INSTANCE.allClasses(saSystemDictionary, saVM);
 
         // Hold lock during processing to improve performance
         // and to have safe check/set of retrievedAllTypes
@@ -691,7 +690,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         boolean allAbstractClasses = true;
         for (int i=0; i < classes.size(); i++) {
             ReferenceTypeImpl rti = (ReferenceTypeImpl)classes.get(i);
-            klassArray[i] = rti.ref().getAddress();
+            klassArray[i] = CompatibilityHelper.INSTANCE.getAddress(rti.ref());
             retValue[i]=0;
             if (!(rti.isAbstract() || (rti instanceof InterfaceType))) {
                 allAbstractClasses = false;
@@ -703,11 +702,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         }
         final int size = classes.size();
 
-        final boolean compressedKlassPointersEnabled = saVM().isCompressedKlassPointersEnabled();
+        final boolean compressedKlassPointersEnabled = CompatibilityHelper.INSTANCE.isCompressedKlassPointersEnabled(saVM());
         saObjectHeap.iterate(new DefaultHeapVisitor() {
                 public boolean doObj(Oop oop) {
                     for (int i=0; i < size; i++) {
-                        if (klassArray[i].equals(OopHelper.getKlassAddress(compressedKlassPointersEnabled, oop))) {
+                        if (klassArray[i].equals(CompatibilityHelper.INSTANCE.getKlassAddress(compressedKlassPointersEnabled, oop))) {
                             retValue[i]++;
                             break;
                         }
@@ -717,38 +716,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             });
 
         return retValue;
-    }
-
-    static class OopHelper {
-        private static final long compressedKlassOffset;
-        private static final long klassOffset;
-
-        static {
-            long coff = -1;
-            long koff = -1;
-            try {
-                Field field = Oop.class.getDeclaredField("klass");
-                field.setAccessible(true);
-                coff = ((MetadataField) field.get(null)).getOffset();
-                Field field1 = Oop.class.getDeclaredField("compressedKlass");
-                field1.setAccessible(true);
-                koff = ((MetadataField) field1.get(null)).getOffset();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            }
-            compressedKlassOffset = coff;
-            klassOffset = koff;
-        }
-
-        static Address getKlassAddress(final boolean compressedKlassPointersEnabled, Oop oop) {
-            if (compressedKlassPointersEnabled) {
-                return oop.getHandle().getCompKlassAddressAt(compressedKlassOffset);
-            } else {
-                return oop.getHandle().getAddressAt(klassOffset);
-            }
-        }
     }
 
     private List<String> getPath (String pathName) {

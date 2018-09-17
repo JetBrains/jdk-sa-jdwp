@@ -76,7 +76,7 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     }
 
     public long uniqueID() {
-        return vm.getAddressValue(saMethod.getAddress());
+        return vm.getAddressValue(CompatibilityHelper.INSTANCE.getAddress(saMethod));
     }
 
     public String genericSignature() {

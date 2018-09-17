@@ -58,7 +58,7 @@ public class StackFrameImpl extends MirrorImpl
 
         sun.jvm.hotspot.oops.Method SAMethod = jvf.getMethod();
 
-        ReferenceType rt = ((VirtualMachineImpl)vm).referenceType(SAMethod.getMethodHolder());
+        ReferenceType rt = ((VirtualMachineImpl)vm).referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
 
         this.location = new LocationImpl(vm, rt, SAMethod, (long)jvf.getBCI());
     }

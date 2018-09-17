@@ -50,8 +50,8 @@ public class SaJdwp {
         }
 
         ProcessBuilder builder = null;
-        if (version.startsWith("1.8")) {
-            builder = prepare8(javaHome);
+        if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
+            builder = prepare678(javaHome);
         } else if (version.startsWith("9")) {
             builder = prepare9(javaHome);
         } else if (version.startsWith("10")) {
@@ -66,7 +66,7 @@ public class SaJdwp {
         throw new IllegalStateException("Unable to start on version " + version);
     }
 
-    private static ProcessBuilder prepare8(String javaHome) throws Exception {
+    private static ProcessBuilder prepare678(String javaHome) throws Exception {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {

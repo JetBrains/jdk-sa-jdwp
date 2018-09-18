@@ -54,8 +54,13 @@ public class SaJdwp {
             builder = prepare678(javaHome);
         } else if (version.startsWith("9")) {
             builder = prepare9(javaHome);
-        } else if (version.startsWith("10")) {
-            builder = prepare10(javaHome);
+        }
+        try {
+            int v = Integer.parseInt(version);
+            if (v >= 10) {
+                builder = prepare10(javaHome);
+            }
+        } catch (NumberFormatException ignored) {
         }
 
         if (builder != null) {

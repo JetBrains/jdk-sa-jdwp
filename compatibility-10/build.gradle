@@ -13,6 +13,9 @@ targetCompatibility = '10'
 
 compileJava.options.fork = true
 def jdk10Home = System.getenv("JDK_10")
+if (hasProperty("JDK_10")) {
+    jdk10Home = JDK_10
+}
 if (jdk10Home == null) {
     throw new GradleException('JDK_10 environment variable is not defined')
 }

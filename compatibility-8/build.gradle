@@ -9,6 +9,9 @@ targetCompatibility = '1.8'
 
 compileJava.options.fork = true
 def jdk18Home = System.getenv("JDK_18")
+if (hasProperty("JDK_18")) {
+    jdk18Home = JDK_18
+}
 if (jdk18Home == null) {
     throw new GradleException('JDK_18 environment variable is not defined')
 }

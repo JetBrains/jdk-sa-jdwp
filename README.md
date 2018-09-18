@@ -9,4 +9,9 @@ sa-jdi was removed from jdk 9, this library should replace it and allow to attac
 * connect java debugger to the host/port provided
 
 ## Development prerequisites
-* Set up env variable `JDK_16`, `JDK_18` and `JDK_10` pointing to the correcponding jdk installations
+To be able to do local build, create `gradle.properties` file in the project root folder with paths to jdks installations like this:
+```
+JDK_16=c:\\Program Files\\Java\\jdk-10.0.1
+JDK_18=c:\\Program Files\\Java\\jdk1.8.0_181
+JDK_10=c:\\Program Files\\Java\\jdk-10.0.1
+```

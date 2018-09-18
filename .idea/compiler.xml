@@ -11,10 +11,9 @@
       <entry name="!?*.kt" />
       <entry name="!?*.clj" />
     </wildcardResourcePatterns>
-  </component>
-  <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="compatibility-10" options="--add-modules jdk.hotspot.agent --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.memory=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED --add-exports=jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED" />
-    </option>
+    <bytecodeTargetLevel>
+      <module name="jdk-sa-jpda_main" target="1.10" />
+      <module name="jdk-sa-jpda_test" target="1.10" />
+    </bytecodeTargetLevel>
   </component>
 </project>

@@ -1,0 +1,21 @@
+sourceSets {
+    main {
+        java.srcDirs += "src"
+    }
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+compileJava.options.fork = true
+def jdk18Home = System.getenv("JDK_18") ?: "c:\\Program Files\\Java\\jdk1.8.0_181"
+if (jdk18Home == null) {
+    throw new GradleException('JDK_18 environment variable is not defined')
+}
+compileJava.options.forkOptions.executable = "$jdk18Home/bin/javac"
+
+dependencies {
+    compile(project(":core"))
+    compile files("$jdk18Home/lib/tools.jar")
+    compile files("$jdk18Home/lib/sa-jdi.jar")
+}

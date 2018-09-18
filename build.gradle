@@ -1,0 +1,59 @@
+plugins {
+    id "com.jfrog.bintray" version "1.8.4"
+}
+apply plugin: 'maven-publish'
+
+allprojects {
+    apply plugin: 'java'
+}
+
+task mainJar(type: Jar) {
+    from project(':core').sourceSets.main.output
+    from project(':compatibility-8').sourceSets.main.output
+    from project(':compatibility-10').sourceSets.main.output
+    baseName 'sa-jdwp'
+}
+
+task sourceJar(type: Jar) {
+    from project(':core').sourceSets.main.java
+    from project(':compatibility-8').sourceSets.main.java
+    from project(':compatibility-10').sourceSets.main.java
+    baseName 'sa-jdwp-sources'
+}
+
+artifacts {
+    archives mainJar, sourceJar
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            artifactId 'sa-jdwp'
+            groupId 'org.jetbrains.intellij.deps'
+            version '1.0.0'
+            artifact mainJar
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+
+    publish = true
+
+    pkg {
+        repo = 'intellij-third-party-dependencies'
+        name = 'sa-jdwp'
+        userOrg = 'jetbrains'
+
+        version {
+            name = '1.0.0'
+        }
+    }
+
+    publications = ['MyPublication']
+}

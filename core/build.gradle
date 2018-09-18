@@ -1,0 +1,14 @@
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+compileJava.options.fork = true
+def jdk16Home = System.getenv("JDK_16") ?: "c:\\Program Files\\Java\\jdk1.6.0_45"
+if (jdk16Home == null) {
+    throw new GradleException('JDK_16 environment variable is not defined')
+}
+compileJava.options.forkOptions.executable = "$jdk16Home/bin/javac"
+
+dependencies {
+    compile files("$jdk16Home/lib/tools.jar")
+    compile files("$jdk16Home/lib/sa-jdi.jar")
+}

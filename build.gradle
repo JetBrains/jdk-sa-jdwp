@@ -8,6 +8,9 @@ allprojects {
 }
 
 task mainJar(type: Jar) {
+    manifest {
+        attributes("Main-Class": "com.jetbrains.sa.SaJdwp")
+    }
     from project(':core').sourceSets.main.output
     from project(':compatibility-8').sourceSets.main.output
     from project(':compatibility-10').sourceSets.main.output

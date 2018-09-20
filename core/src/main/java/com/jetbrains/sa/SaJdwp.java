@@ -90,7 +90,9 @@ public class SaJdwp {
             }
         }
         return new ProcessBuilder(javaHome + "/bin/java",
-                "-cp", "\"" + toolsJar.getCanonicalPath() + ";" + saJdiJar.getCanonicalPath() + ";" + getJarPath() + "\"");
+                "-cp", "\"" + toolsJar.getCanonicalPath() + File.pathSeparatorChar
+                + saJdiJar.getCanonicalPath() + File.pathSeparatorChar
+                + getJarPath() + "\"");
     }
 
 

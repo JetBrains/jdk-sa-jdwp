@@ -5,7 +5,9 @@ sourceSets {
 }
 
 dependencies {
-    compile(project(":core"))
+    compile(project(":core")) {
+        transitive = false // no need for parent jdk libs
+    }
 }
 
 sourceCompatibility = '10'

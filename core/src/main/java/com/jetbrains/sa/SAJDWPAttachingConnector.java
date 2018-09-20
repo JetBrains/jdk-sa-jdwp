@@ -42,8 +42,10 @@ public class SAJDWPAttachingConnector implements AttachingConnector {
             String address = SaJdwp.startServer(String.valueOf(pid), "", false);
             Connection connection = transportService.attach(address, 0, 0);
             return Bootstrap.virtualMachineManager().createVirtualMachine(connection);
+        } catch (IOException e) {
+            throw e;
         } catch (Exception e) {
-            throw new IOException("Exception while starting sa-jdwp server", e);
+            throw new IOException("Unable to start sa-jdwp server", e);
         }
     }
 

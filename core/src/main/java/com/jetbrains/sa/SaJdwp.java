@@ -155,20 +155,24 @@ public class SaJdwp {
         }
 
         BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        StringBuilder output = new StringBuilder();
         String s;
         try {
             while ((s = stdOutput.readLine()) != null) {
                 if (console) {
                     System.out.println(s);
-                } else if (s.startsWith(SaJdwpServer.WAITING_FOR_DEBUGGER)) {
-                    return s.substring(SaJdwpServer.WAITING_FOR_DEBUGGER.length());
+                } else {
+                    output.append('\n').append(s);
+                    if (s.startsWith(SaJdwpServer.WAITING_FOR_DEBUGGER)) {
+                        return s.substring(SaJdwpServer.WAITING_FOR_DEBUGGER.length());
+                    }
                 }
             }
         } finally {
             stdOutput.close();
         }
         if (!console) {
-            throw new IllegalStateException("Unable to determine the attach address");
+            throw new IllegalStateException("Unable to determine the attach address, server output is:" + output.toString());
         }
         return "";
     }

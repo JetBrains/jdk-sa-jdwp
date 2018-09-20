@@ -25,7 +25,7 @@ class CompatibilityHelper6 implements Compatibility {
 
     @Override
     public Klass asKlass(Oop ref) {
-        return OopUtilities.classOopToKlass(ref);// 42
+        return OopUtilities.classOopToKlass(ref);
     }
 
     @Override

@@ -30,7 +30,7 @@ class CompatibilityHelper10 implements Compatibility {
 
     @Override
     public List<InstanceKlass> getTransitiveInterfaces(InstanceKlass saKlass) {
-        List<InstanceKlass> res = new ArrayList<InstanceKlass>();
+        List<InstanceKlass> res = new ArrayList<>();
         KlassArray interfaces = saKlass.getTransitiveInterfaces();
         int n = interfaces.length();
         for (int i = 0; i < n; i++) {
@@ -85,19 +85,17 @@ class CompatibilityHelper10 implements Compatibility {
 
     @Override
     public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
-        final List<Klass> saKlasses = new ArrayList<Klass>();
-        ClassLoaderDataGraph.ClassVisitor visitor = new ClassLoaderDataGraph.ClassVisitor() {
-            public void visit(Klass k) {
-                for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                    // for non-array classes filter out un-prepared classes
-                    // refer to 'allClasses' in share/back/VirtualMachineImpl.c
-                    if (l instanceof ArrayKlass) {
+        final List<Klass> saKlasses = new ArrayList<>();
+        ClassLoaderDataGraph.ClassVisitor visitor = k -> {
+            for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
+                // for non-array classes filter out un-prepared classes
+                // refer to 'allClasses' in share/back/VirtualMachineImpl.c
+                if (l instanceof ArrayKlass) {
+                    saKlasses.add(l);
+                } else {
+                    int status = l.getClassStatus();
+                    if ((status & JVMDIClassStatus.PREPARED) != 0) {
                         saKlasses.add(l);
-                    } else {
-                        int status = l.getClassStatus();
-                        if ((status & JVMDIClassStatus.PREPARED) != 0) {
-                            saKlasses.add(l);
-                        }
                     }
                 }
             }
@@ -128,22 +126,18 @@ class CompatibilityHelper10 implements Compatibility {
 
     @Override
     public List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
-        final List<ReferenceType> res = new ArrayList<ReferenceType>();
+        final List<ReferenceType> res = new ArrayList<>();
 
         // refer to getClassLoaderClasses in jvmtiGetLoadedClasses.cpp
         //  a. SystemDictionary::classes_do doesn't include arrays of primitive types (any dimensions)
         SystemDictionary sysDict = vm.saSystemDictionary();
-        vm.saVM().getClassLoaderDataGraph().allEntriesDo(
-                new ClassLoaderDataGraph.ClassAndLoaderVisitor() {
-                    public void visit(Klass k, Oop loader) {
-                        if (ref.equals(loader)) {
-                            for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                                res.add(vm.referenceType(l));
-                            }
-                        }
-                    }
+        vm.saVM().getClassLoaderDataGraph().allEntriesDo((k, loader) -> {
+            if (ref.equals(loader)) {
+                for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
+                    res.add(vm.referenceType(l));
                 }
-        );
+            }
+        });
 
         // b. multi dimensional arrays of primitive types
 //        sysDict.primArrayClassesDo(

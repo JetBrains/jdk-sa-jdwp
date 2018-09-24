@@ -71,7 +71,9 @@ public class SaJdwp {
             if (commandsWithSudo.equals(commands)) {
                 throw e;
             }
-            System.out.println("Trying with sudo...");
+            if (console) {
+                System.out.println("Trying with sudo...");
+            }
             return startServer(commandsWithSudo, console);
         }
     }

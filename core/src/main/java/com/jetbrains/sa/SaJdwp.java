@@ -86,16 +86,14 @@ public class SaJdwp {
         if (!toolsJar.exists()) {
             toolsJar = new File(javaHome, "../lib/tools.jar");
             if (!toolsJar.exists()) {
-                System.out.println("Unable to find tools.jar in " + javaHome);
-                System.exit(1);
+                throw new IllegalStateException("Unable to find tools.jar in " + javaHome);
             }
         }
         File saJdiJar = new File(javaHome, "lib/sa-jdi.jar");
         if (!saJdiJar.exists()) {
             saJdiJar = new File(javaHome, "../lib/sa-jdi.jar");
             if (!saJdiJar.exists()) {
-                System.out.println("Unable to find sa-jdi.jar in " + javaHome);
-                System.exit(1);
+                throw new IllegalStateException("Unable to find sa-jdi.jar in " + javaHome);
             }
         }
         Collections.addAll(commands, javaHome + "/bin/java",

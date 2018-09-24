@@ -3,9 +3,7 @@ package com.jetbrains.sa;
 import com.sun.tools.attach.VirtualMachine;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Properties;
+import java.util.*;
 
 public class SaJdwp {
     // do not allow instance creation
@@ -38,9 +36,8 @@ public class SaJdwp {
         }
 
         // todo: determine if this is a jdk or jre better
-        boolean windows = System.getProperty("os.name").toLowerCase(Locale.US).startsWith("windows");
         String javac = "javac";
-        if (windows) {
+        if (isWindows()) {
             javac += ".exe";
         }
         if (!new File(javaHome, "bin/" + javac).exists()) {
@@ -49,29 +46,41 @@ public class SaJdwp {
             }
         }
 
-        ProcessBuilder builder = null;
+        List<String> commands = new ArrayList<String>();
         if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
-            builder = prepare678(javaHome);
-        } else if (version.startsWith("9")) {
-            builder = prepare9(javaHome);
-        }
-        try {
-            int v = Integer.parseInt(version);
-            if (v >= 10) {
-                builder = prepare10(javaHome);
+            prepare678(commands, javaHome);
+        } else {
+            try {
+                int v = Integer.parseInt(version);
+                if (v >= 9) {
+                    prepare9(commands, javaHome);
+                }
+            } catch (NumberFormatException ignored) {
             }
-        } catch (NumberFormatException ignored) {
         }
 
-        if (builder != null) {
-            builder.command().addAll(Arrays.asList(SaJdwpServer.class.getName(), pidString, port));
-            return startServer(builder, console);
+        if (commands.isEmpty()) {
+            throw new IllegalStateException("Unable to start on version " + version);
         }
 
-        throw new IllegalStateException("Unable to start on version " + version);
+        Collections.addAll(commands, SaJdwpServer.class.getName(), pidString, port);
+        try {
+            return startServer(commands, console);
+        } catch (Exception e) {
+            List<String> commandsWithSudo = SUDO_COMMAND_CREATOR.createSudoCommand(commands);
+            if (commandsWithSudo.equals(commands)) {
+                throw e;
+            }
+            System.out.println("Trying with sudo...");
+            return startServer(commandsWithSudo, console);
+        }
     }
 
-    private static ProcessBuilder prepare678(String javaHome) throws Exception {
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase(Locale.US).startsWith("windows");
+    }
+
+    private static void prepare678(List<String> commands, String javaHome) throws Exception {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {
@@ -89,15 +98,15 @@ public class SaJdwp {
                 System.exit(1);
             }
         }
-        return new ProcessBuilder(javaHome + "/bin/java",
+        Collections.addAll(commands, javaHome + "/bin/java",
                 "-cp", "\"" + toolsJar.getCanonicalPath() + File.pathSeparatorChar
-                + saJdiJar.getCanonicalPath() + File.pathSeparatorChar
-                + getJarPath() + "\"");
+                        + saJdiJar.getCanonicalPath() + File.pathSeparatorChar
+                        + getJarPath() + "\"");
     }
 
 
-    private static ProcessBuilder prepare9(String javaHome) throws Exception {
-        return new ProcessBuilder(javaHome + "/bin/java",
+    private static void prepare9(List<String> commands, String javaHome) {
+        Collections.addAll(commands,javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
@@ -105,19 +114,7 @@ public class SaJdwp {
                 "--add-opens", "jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
-                "-cp", "\"" + getJarPath() + "\"");
-    }
-
-    private static ProcessBuilder prepare10(String javaHome) throws Exception {
-        return new ProcessBuilder(javaHome + "/bin/java",
-                "--add-modules", "jdk.hotspot.agent",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.memory=ALL-UNNAMED",
-                "--add-opens", "jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED",
+                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
                 "-cp", "\"" + getJarPath() + "\"");
     }
 
@@ -129,20 +126,23 @@ public class SaJdwp {
         if (classResource.startsWith("file:")) {
             jarPath = classResource.substring(5, classResource.length() - path.length() - 1);
         } else { //debug mode
-            jarPath = "out/artifacts/sa-jdwp.jar";
+            jarPath = "build/libs/sa-jdwp.jar";
         }
         return new File(jarPath).getAbsolutePath();
     }
 
-    private static String startServer(ProcessBuilder builder, boolean console) throws IOException {
-        builder.redirectErrorStream(true);
+    private static String startServer(List<String> cmds, boolean console) throws Exception {
         if (console) {
             System.out.println("Running: ");
-            for (String s : builder.command()) {
+            for (String s : cmds) {
                 System.out.print(s + " ");
             }
             System.out.println();
         }
+
+        ProcessBuilder builder = new ProcessBuilder(cmds);
+        builder.redirectErrorStream(true);
+
         final Process process = builder.start();
 
         if (console) {
@@ -171,9 +171,34 @@ public class SaJdwp {
         } finally {
             stdOutput.close();
         }
-        if (!console) {
-            throw new IllegalStateException("Unable to determine the attach address, server output is:" + output.toString());
+        String error = "Unable to determine the attach address";
+        if (output.length() > 0) {
+            error += ", server output is:" + output.toString();
         }
-        return "";
+        throw new IllegalStateException(error);
+    }
+
+    // default sudo command for unix
+    private static SudoCommandCreator SUDO_COMMAND_CREATOR = new SudoCommandCreator() {
+        @Override
+        public List<String> createSudoCommand(List<String> command) {
+            if (isWindows()) {
+                return command;
+            }
+            ArrayList<String> res = new ArrayList<String>(command.size() + 1);
+            res.add("sudo");
+            res.add("--");
+            res.addAll(command);
+            return res;
+        }
+    };
+
+    public interface SudoCommandCreator {
+        List<String> createSudoCommand(List<String> command) throws Exception;
+    }
+
+    @SuppressWarnings("unused")
+    public static void setSudoCommandCreator(SudoCommandCreator creator) {
+        SUDO_COMMAND_CREATOR = creator;
     }
 }

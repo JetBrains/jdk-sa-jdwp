@@ -19,10 +19,10 @@ public class SaJdwp {
         if (args.length < 1) {
             usage();
         }
-        startServer(args[0], args.length > 1 ? args[1] : "", true);
+        startServer(args[0], args.length > 1 ? args[1] : "", true, true);
     }
 
-    static String startServer(String pidString, String port, boolean console) throws Exception {
+    static String startServer(String pidString, String port, boolean console, boolean server) throws Exception {
         VirtualMachine vm = VirtualMachine.attach(pidString);
         String javaHome;
         String version;
@@ -63,9 +63,10 @@ public class SaJdwp {
             throw new IllegalStateException("Unable to start on version " + version);
         }
 
-        Collections.addAll(commands, SaJdwpServer.class.getName(), pidString, port);
+        String serverClassName = server ? SaJdwpListeningServer.class.getName() : SaJdwpAttachingServer.class.getName();
+        Collections.addAll(commands, serverClassName, pidString, port);
         try {
-            return startServer(commands, console);
+            return startServer(commands, console, server);
         } catch (Exception e) {
             List<String> commandsWithSudo = SUDO_COMMAND_CREATOR.createSudoCommand(commands);
             if (commandsWithSudo.equals(commands)) {
@@ -74,7 +75,7 @@ public class SaJdwp {
             if (console) {
                 System.out.println("Trying with sudo...");
             }
-            return startServer(commandsWithSudo, console);
+            return startServer(commandsWithSudo, console, server);
         }
     }
 
@@ -131,7 +132,7 @@ public class SaJdwp {
         return new File(jarPath).getAbsolutePath();
     }
 
-    private static String startServer(List<String> cmds, boolean console) throws Exception {
+    private static String startServer(List<String> cmds, boolean console, boolean server) throws Exception {
         if (console) {
             System.out.println("Running: ");
             for (String s : cmds) {
@@ -154,6 +155,8 @@ public class SaJdwp {
                     }));
         }
 
+        if (!server) return "";
+
         BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
         StringBuilder output = new StringBuilder();
         String s;
@@ -163,8 +166,8 @@ public class SaJdwp {
                     System.out.println(s);
                 } else {
                     output.append('\n').append(s);
-                    if (s.startsWith(SaJdwpServer.WAITING_FOR_DEBUGGER)) {
-                        return s.substring(SaJdwpServer.WAITING_FOR_DEBUGGER.length());
+                    if (s.startsWith(SaJdwpListeningServer.WAITING_FOR_DEBUGGER)) {
+                        return s.substring(SaJdwpListeningServer.WAITING_FOR_DEBUGGER.length());
                     }
                 }
             }

@@ -4,16 +4,11 @@ import com.jetbrains.sa.jdi.VirtualMachineImpl;
 import com.jetbrains.sa.jdwp.JDWPProxy;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.connect.spi.Connection;
-import com.sun.jdi.connect.spi.TransportService;
 import com.sun.tools.jdi.SocketTransportService;
 
-import java.io.IOException;
-
-public class SaJdwpServer {
-    static final String WAITING_FOR_DEBUGGER = "Waiting for debugger on: ";
-
+public class SaJdwpAttachingServer {
     // do not allow instance creation
-    private SaJdwpServer() {
+    private SaJdwpAttachingServer() {
     }
 
     public static void main(String[] args) throws Exception {
@@ -26,10 +21,13 @@ public class SaJdwpServer {
 
         final VirtualMachineImpl vm = VirtualMachineImpl.createVirtualMachineForPID(Bootstrap.virtualMachineManager(), Integer.parseInt(args[0]), 0);
 
-        final SocketTransportService socketTransportService = new SocketTransportService();
-        final TransportService.ListenKey listenKey = socketTransportService.startListening(args.length > 1 ? args[1] : null);
+        String address = args[1];
+        System.out.println("Connecting to " + address);
 
-        System.err.println(WAITING_FOR_DEBUGGER + listenKey.address());
+        final SocketTransportService socketTransportService = new SocketTransportService();
+        final Connection connection = socketTransportService.attach(address, 0, 0);
+
+        System.out.println("Connected to " + address);
 
         // shutdown hook to clean-up the server in case of forced exit.
         Runtime.getRuntime().addShutdownHook(new Thread(
@@ -37,16 +35,13 @@ public class SaJdwpServer {
                     public void run() {
                         try {
                             vm.dispose();
-                            socketTransportService.stopListening(listenKey);
-                        } catch (IllegalArgumentException ignored) {
-                        } catch (IOException e) {
+                            connection.close();
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
                 }));
 
-        Connection connection = socketTransportService.accept(listenKey, 0, 0);
-        socketTransportService.stopListening(listenKey);
         JDWPProxy.reply(connection, vm);
     }
 }

@@ -1,69 +1,69 @@
 package com.jetbrains.sa;
 
-import com.sun.jdi.Bootstrap;
 import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-import com.sun.jdi.connect.Transport;
-import com.sun.jdi.connect.spi.Connection;
-import com.sun.tools.jdi.SocketTransportService;
+import com.sun.tools.jdi.SocketListeningConnector;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 /**
  * @author egor
  */
-public class SAJDWPAttachingConnector implements AttachingConnector {
-    private SocketTransportService transportService = new SocketTransportService();
+public class SAJDWPListeningConnector extends SocketListeningConnector {
+    private String myCurrentAddress;
 
-    public SAJDWPAttachingConnector() {
-        super();
+    @Override
+    public Map defaultArguments() {
+        Map map = super.defaultArguments();
+        Argument pidArgument = new PidArgument();
+        map.put(pidArgument.name(), pidArgument);
+        return map;
     }
 
     @Override
-    public Map<String, Argument> defaultArguments() {
-        Argument pidArgument = new PidArgument();
-        return Collections.singletonMap(pidArgument.name(), pidArgument);
+    public boolean supportsMultipleConnections() {
+        return false;
     }
 
-    public VirtualMachine attach(Map<String, ? extends Argument> arguments) throws IOException,
-            IllegalConnectorArgumentsException {
+    @Override
+    public String startListening(Map<String, ? extends Argument> arguments) throws IOException, IllegalConnectorArgumentsException {
+        myCurrentAddress = super.startListening(null, arguments);
+        return myCurrentAddress;
+    }
+
+    @Override
+    public VirtualMachine accept(Map<String, ? extends Argument> map) throws IOException, IllegalConnectorArgumentsException {
         int pid = 0;
         try {
-            pid = Integer.parseInt(arguments.get("pid").value());
+            pid = Integer.parseInt(map.get("pid").value());
         } catch (NumberFormatException nfe) {
             throw (IllegalConnectorArgumentsException) new IllegalConnectorArgumentsException
                     (nfe.getMessage(), "pid").initCause(nfe);
         }
 
         try {
-            String address = SaJdwp.startServer(String.valueOf(pid), "", false, true);
-            Connection connection = transportService.attach(address, 0, 0);
-            return Bootstrap.virtualMachineManager().createVirtualMachine(connection);
+            SaJdwp.startServer(String.valueOf(pid), myCurrentAddress, false, false);
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
             throw new IOException("Unable to start sa-jdwp server", e);
         }
+
+        return super.accept(map);
     }
 
     public String name() {
-        return SAJDWPAttachingConnector.class.getName();
+        return SAJDWPListeningConnector.class.getName();
     }
 
     public String description() {
         return "This connector allows you to attach to a Java process using the sa-jdwp";
     }
 
-    public Transport transport() {
-        return new Transport() {
-            @Override
-            public String name() {
-                return transportService.name();
-            }
-        };
+    @Override
+    public String toString() {
+        return super.toString();
     }
 
     private static class PidArgument implements StringArgument {

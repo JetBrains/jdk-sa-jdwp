@@ -99,9 +99,9 @@ public class SaJdwp {
             }
         }
         Collections.addAll(commands, javaHome + "/bin/java",
-                "-cp", "\"" + toolsJar.getCanonicalPath() + File.pathSeparatorChar
+                "-cp", toolsJar.getCanonicalPath() + File.pathSeparatorChar
                         + saJdiJar.getCanonicalPath() + File.pathSeparatorChar
-                        + getJarPath() + "\"");
+                        + getJarPath());
     }
 
 
@@ -115,7 +115,7 @@ public class SaJdwp {
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
-                "-cp", "\"" + getJarPath() + "\"");
+                "-cp", getJarPath());
     }
 
     private static String getJarPath() {

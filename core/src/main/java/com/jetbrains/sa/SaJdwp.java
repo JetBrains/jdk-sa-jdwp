@@ -66,7 +66,7 @@ public class SaJdwp {
         String serverClassName = server ? SaJdwpListeningServer.class.getName() : SaJdwpAttachingServer.class.getName();
         Collections.addAll(commands, serverClassName, pidString, port);
         try {
-            return startServer(commands, console, server);
+            return startServer(commands, console, server, false);
         } catch (Exception e) {
             List<String> commandsWithSudo = SUDO_COMMAND_CREATOR.createSudoCommand(commands);
             if (commandsWithSudo.equals(commands)) {
@@ -75,7 +75,7 @@ public class SaJdwp {
             if (console) {
                 System.out.println("Trying with sudo...");
             }
-            return startServer(commandsWithSudo, console, server);
+            return startServer(commandsWithSudo, console, server, true);
         }
     }
 
@@ -132,7 +132,7 @@ public class SaJdwp {
         return new File(jarPath).getAbsolutePath();
     }
 
-    private static String startServer(List<String> cmds, boolean console, boolean server) throws Exception {
+    private static String startServer(List<String> cmds, boolean console, boolean server, boolean sudo) throws Exception {
         if (console) {
             System.out.println("Running: ");
             for (String s : cmds) {
@@ -155,7 +155,7 @@ public class SaJdwp {
                     }));
         }
 
-        if (!server) return "";
+        if (!console && sudo) return ""; // sudo mode usually runs in a separate console
 
         BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
         StringBuilder output = new StringBuilder();
@@ -168,6 +168,8 @@ public class SaJdwp {
                     output.append('\n').append(s);
                     if (s.startsWith(SaJdwpListeningServer.WAITING_FOR_DEBUGGER)) {
                         return s.substring(SaJdwpListeningServer.WAITING_FOR_DEBUGGER.length());
+                    } else if (s.startsWith(SaJdwpAttachingServer.SERVER_READY)) {
+                        return "";
                     }
                 }
             }

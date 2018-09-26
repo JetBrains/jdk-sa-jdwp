@@ -7,6 +7,8 @@ import com.sun.jdi.connect.spi.Connection;
 import com.sun.tools.jdi.SocketTransportService;
 
 public class SaJdwpAttachingServer {
+    static final String SERVER_READY = "sa-jdwp server connected";
+
     // do not allow instance creation
     private SaJdwpAttachingServer() {
     }
@@ -22,6 +24,7 @@ public class SaJdwpAttachingServer {
         final VirtualMachineImpl vm = VirtualMachineImpl.createVirtualMachineForPID(Bootstrap.virtualMachineManager(), Integer.parseInt(args[0]), 0);
 
         String address = args[1];
+        System.out.println(SERVER_READY);
         System.out.println("Connecting to " + address);
 
         final SocketTransportService socketTransportService = new SocketTransportService();

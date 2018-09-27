@@ -22,7 +22,8 @@ public class SaJdwp {
         startServer(args[0], args.length > 1 ? args[1] : "", true, true);
     }
 
-    static String startServer(String pidString, String port, boolean console, boolean server) throws Exception {
+    @SuppressWarnings("WeakerAccess")
+    public static List<String> getServerProcessCommand(String pidString, String port, boolean server, String pathToJar) throws Exception {
         VirtualMachine vm = VirtualMachine.attach(pidString);
         String javaHome;
         String version;
@@ -48,12 +49,12 @@ public class SaJdwp {
 
         List<String> commands = new ArrayList<String>();
         if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
-            prepare678(commands, javaHome);
+            prepare678(commands, javaHome, pathToJar);
         } else {
             try {
                 int v = Integer.parseInt(version);
                 if (v >= 9) {
-                    prepare9(commands, javaHome);
+                    prepare9(commands, javaHome, pathToJar);
                 }
             } catch (NumberFormatException ignored) {
             }
@@ -65,17 +66,22 @@ public class SaJdwp {
 
         String serverClassName = server ? SaJdwpListeningServer.class.getName() : SaJdwpAttachingServer.class.getName();
         Collections.addAll(commands, serverClassName, pidString, port);
+        return commands;
+    }
+
+    static String startServer(String pidString, String port, boolean console, boolean server) throws Exception {
+        List<String> commands = getServerProcessCommand(pidString, port, server, getJarPath());
         try {
-            return startServer(commands, console, server, false);
+            return startServer(commands, console, false);
         } catch (Exception e) {
-            List<String> commandsWithSudo = SUDO_COMMAND_CREATOR.createSudoCommand(commands);
+            List<String> commandsWithSudo = createSudoCommand(commands);
             if (commandsWithSudo.equals(commands)) {
                 throw e;
             }
             if (console) {
                 System.out.println("Trying with sudo...");
             }
-            return startServer(commandsWithSudo, console, server, true);
+            return startServer(commandsWithSudo, console, true);
         }
     }
 
@@ -83,7 +89,7 @@ public class SaJdwp {
         return System.getProperty("os.name").toLowerCase(Locale.US).startsWith("windows");
     }
 
-    private static void prepare678(List<String> commands, String javaHome) throws Exception {
+    private static void prepare678(List<String> commands, String javaHome, String pathToJar) throws Exception {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {
@@ -102,11 +108,11 @@ public class SaJdwp {
         Collections.addAll(commands, javaHome + "/bin/java",
                 "-cp", toolsJar.getCanonicalPath() + File.pathSeparatorChar
                         + saJdiJar.getCanonicalPath() + File.pathSeparatorChar
-                        + getJarPath());
+                        + pathToJar);
     }
 
 
-    private static void prepare9(List<String> commands, String javaHome) {
+    private static void prepare9(List<String> commands, String javaHome, String pathToJar) {
         Collections.addAll(commands,javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
@@ -116,7 +122,7 @@ public class SaJdwp {
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
-                "-cp", getJarPath());
+                "-cp", pathToJar);
     }
 
     private static String getJarPath() {
@@ -132,7 +138,7 @@ public class SaJdwp {
         return new File(jarPath).getAbsolutePath();
     }
 
-    private static String startServer(List<String> cmds, boolean console, boolean server, boolean sudo) throws Exception {
+    private static String startServer(List<String> cmds, boolean console, boolean sudo) throws Exception {
         if (console) {
             System.out.println("Running: ");
             for (String s : cmds) {
@@ -183,27 +189,14 @@ public class SaJdwp {
         throw new IllegalStateException(error);
     }
 
-    // default sudo command for unix
-    private static SudoCommandCreator SUDO_COMMAND_CREATOR = new SudoCommandCreator() {
-        @Override
-        public List<String> createSudoCommand(List<String> command) {
-            if (isWindows()) {
-                return command;
-            }
-            ArrayList<String> res = new ArrayList<String>(command.size() + 1);
-            res.add("sudo");
-            res.add("--");
-            res.addAll(command);
-            return res;
+    private static List<String> createSudoCommand(List<String> command) {
+        if (isWindows()) {
+            return command;
         }
-    };
-
-    public interface SudoCommandCreator {
-        List<String> createSudoCommand(List<String> command) throws Exception;
-    }
-
-    @SuppressWarnings("unused")
-    public static void setSudoCommandCreator(SudoCommandCreator creator) {
-        SUDO_COMMAND_CREATOR = creator;
+        ArrayList<String> res = new ArrayList<String>(command.size() + 1);
+        res.add("sudo");
+        res.add("--");
+        res.addAll(command);
+        return res;
     }
 }

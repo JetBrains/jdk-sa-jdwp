@@ -19,7 +19,18 @@ public class SaJdwp {
         if (args.length < 1) {
             usage();
         }
-        startServer(args[0], args.length > 1 ? args[1] : "", true, true);
+        String port = args.length > 1 ? args[1] : "";
+        List<String> commands = getServerProcessCommand(args[0], port, true, getJarPath());
+        try {
+            startServer(commands);
+        } catch (Exception e) {
+            List<String> commandsWithSudo = createSudoCommand(commands);
+            if (commandsWithSudo.equals(commands)) {
+                throw e;
+            }
+            System.out.println("Trying with sudo...");
+            startServer(commandsWithSudo);
+        }
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -56,22 +67,6 @@ public class SaJdwp {
         String serverClassName = server ? SaJdwpListeningServer.class.getName() : SaJdwpAttachingServer.class.getName();
         Collections.addAll(commands, serverClassName, pidString, port);
         return commands;
-    }
-
-    static String startServer(String pidString, String port, boolean console, boolean server) throws Exception {
-        List<String> commands = getServerProcessCommand(pidString, port, server, getJarPath());
-        try {
-            return startServer(commands, console, false);
-        } catch (Exception e) {
-            List<String> commandsWithSudo = createSudoCommand(commands);
-            if (commandsWithSudo.equals(commands)) {
-                throw e;
-            }
-            if (console) {
-                System.out.println("Trying with sudo...");
-            }
-            return startServer(commandsWithSudo, console, true);
-        }
     }
 
     private static boolean isWindows() {
@@ -138,55 +133,41 @@ public class SaJdwp {
         return new File(jarPath).getAbsolutePath();
     }
 
-    private static String startServer(List<String> cmds, boolean console, boolean sudo) throws Exception {
-        if (console) {
-            System.out.println("Running: ");
-            for (String s : cmds) {
-                System.out.print(s + " ");
-            }
-            System.out.println();
+    private static void startServer(List<String> cmds) throws Exception {
+        System.out.println("Running: ");
+        for (String s : cmds) {
+            System.out.print(s + " ");
         }
+        System.out.println();
 
         ProcessBuilder builder = new ProcessBuilder(cmds);
         builder.redirectErrorStream(true);
 
         final Process process = builder.start();
 
-        if (console) {
-            Runtime.getRuntime().addShutdownHook(new Thread(
-                    new Runnable() {
-                        public void run() {
-                            process.destroy();
-                        }
-                    }));
-        }
+        Runtime.getRuntime().addShutdownHook(new Thread(
+                new Runnable() {
+                    public void run() {
+                        process.destroy();
+                    }
+                }));
 
-        if (!console && sudo) return ""; // sudo mode usually runs in a separate console
-
+        boolean success = false;
         BufferedReader stdOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        StringBuilder output = new StringBuilder();
         String s;
         try {
             while ((s = stdOutput.readLine()) != null) {
-                if (console) {
-                    System.out.println(s);
-                } else {
-                    output.append('\n').append(s);
-                    if (s.startsWith(SaJdwpListeningServer.WAITING_FOR_DEBUGGER)) {
-                        return s.substring(SaJdwpListeningServer.WAITING_FOR_DEBUGGER.length());
-                    } else if (s.startsWith(SaJdwpAttachingServer.SERVER_READY)) {
-                        return "";
-                    }
+                System.out.println(s);
+                if (s.startsWith(SaJdwpListeningServer.WAITING_FOR_DEBUGGER) || s.startsWith(SaJdwpAttachingServer.SERVER_READY)) {
+                    success = true;
                 }
             }
         } finally {
             stdOutput.close();
         }
-        String error = "Unable to determine the attach address";
-        if (output.length() > 0) {
-            error += ", server output is:" + output.toString();
+        if (!success) {
+            throw new IllegalStateException("Unable to start");
         }
-        throw new IllegalStateException(error);
     }
 
     private static List<String> createSudoCommand(List<String> command) {

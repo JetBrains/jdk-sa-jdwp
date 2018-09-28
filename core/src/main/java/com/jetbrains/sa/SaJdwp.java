@@ -36,20 +36,9 @@ public class SaJdwp {
             vm.detach();
         }
 
-        // todo: determine if this is a jdk or jre better
-        String javac = "javac";
-        if (isWindows()) {
-            javac += ".exe";
-        }
-        if (!new File(javaHome, "bin/" + javac).exists()) {
-            if (!new File(javaHome, "../bin/" + javac).exists()) {
-                throw new IllegalStateException("JDK not detected, unable to attach");
-            }
-        }
-
         List<String> commands = new ArrayList<String>();
         if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
-            prepare678(commands, javaHome, pathToJar);
+            prepare6(commands, javaHome, pathToJar);
         } else {
             try {
                 int v = Integer.parseInt(version);
@@ -89,20 +78,20 @@ public class SaJdwp {
         return System.getProperty("os.name").toLowerCase(Locale.US).startsWith("windows");
     }
 
-    private static void prepare678(List<String> commands, String javaHome, String pathToJar) throws Exception {
+    private static void prepare6(List<String> commands, String javaHome, String pathToJar) throws Exception {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {
             toolsJar = new File(javaHome, "../lib/tools.jar");
             if (!toolsJar.exists()) {
-                throw new IllegalStateException("Unable to find tools.jar in " + javaHome);
+                throw new IllegalStateException("JDK not detected, unable to find tools.jar in " + javaHome);
             }
         }
         File saJdiJar = new File(javaHome, "lib/sa-jdi.jar");
         if (!saJdiJar.exists()) {
             saJdiJar = new File(javaHome, "../lib/sa-jdi.jar");
             if (!saJdiJar.exists()) {
-                throw new IllegalStateException("Unable to find sa-jdi.jar in " + javaHome);
+                throw new IllegalStateException("JDK not detected, unable to find sa-jdi.jar in " + javaHome);
             }
         }
         Collections.addAll(commands, javaHome + "/bin/java",
@@ -113,6 +102,17 @@ public class SaJdwp {
 
 
     private static void prepare9(List<String> commands, String javaHome, String pathToJar) {
+        // todo: determine if this is a jdk or jre better
+        String javac = "javac";
+        if (isWindows()) {
+            javac += ".exe";
+        }
+        if (!new File(javaHome, "bin/" + javac).exists()) {
+            if (!new File(javaHome, "../bin/" + javac).exists()) {
+                throw new IllegalStateException("JDK not detected in " + javaHome + " , unable to attach");
+            }
+        }
+
         Collections.addAll(commands,javaHome + "/bin/java",
                 "--add-modules", "jdk.hotspot.agent",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",

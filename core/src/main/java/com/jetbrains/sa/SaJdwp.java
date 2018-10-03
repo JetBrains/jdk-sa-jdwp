@@ -35,17 +35,20 @@ public class SaJdwp {
 
     @SuppressWarnings("WeakerAccess")
     public static List<String> getServerProcessCommand(String pidString, String port, boolean server, String pathToJar) throws Exception {
+        Properties systemProperties;
         VirtualMachine vm = VirtualMachine.attach(pidString);
-        String javaHome;
-        String version;
         try {
-            Properties systemProperties = vm.getSystemProperties();
-            javaHome = systemProperties.getProperty("java.home");
-            version = systemProperties.getProperty("java.specification.version");
-        }
-        finally {
+            systemProperties = vm.getSystemProperties();
+        } finally {
             vm.detach();
         }
+        return getServerProcessCommand(systemProperties, pidString, port, server, pathToJar);
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static List<String> getServerProcessCommand(Properties systemProperties, String pidString, String port, boolean server, String pathToJar) throws Exception {
+        String javaHome = systemProperties.getProperty("java.home");
+        String version = systemProperties.getProperty("java.specification.version");
 
         List<String> commands = new ArrayList<String>();
         if (version.startsWith("1.6") || version.startsWith("1.7") || version.startsWith("1.8")) {
@@ -73,7 +76,7 @@ public class SaJdwp {
         return System.getProperty("os.name").toLowerCase(Locale.US).startsWith("windows");
     }
 
-    private static void prepare6(List<String> commands, String javaHome, String pathToJar) throws Exception {
+    private static void prepare6(List<String> commands, String javaHome, String pathToJar) throws IOException {
         // look for libs
         File toolsJar = new File(javaHome, "lib/tools.jar");
         if (!toolsJar.exists()) {

@@ -545,22 +545,20 @@ implements ReferenceType {
 
 
     List<InterfaceTypeImpl> getInterfaces() {
-        List myInterfaces;
         if (saKlass instanceof ArrayKlass) {
             // Actually, JLS says arrays implement Cloneable and Serializable
             // But, JVMDI-JDI just returns 0 interfaces for arrays. We follow
             // the same for consistency.
-            myInterfaces = new ArrayList(0);
-        } else {
-            // Get a list of the sa InstanceKlass types
-            List saInterfaces = ((InstanceKlass)saKlass).getDirectImplementedInterfaces();
+            return Collections.emptyList();
+        }
 
-            // Create a list of our InterfaceTypes
-            int len = saInterfaces.size();
-            myInterfaces = new ArrayList(len);
-            for (int ii = 0; ii < len; ii++) {
-                myInterfaces.add(new InterfaceTypeImpl(vm, (InstanceKlass)saInterfaces.get(ii)));
-            }
+        // Get a list of the sa InstanceKlass types
+        List saInterfaces = ((InstanceKlass)saKlass).getDirectImplementedInterfaces();
+
+        // Create a list of our InterfaceTypes
+        List<InterfaceTypeImpl> myInterfaces = new ArrayList<InterfaceTypeImpl>(saInterfaces.size());
+        for (Object saInterface : saInterfaces) {
+            myInterfaces.add((InterfaceTypeImpl) vm.referenceType((Klass) saInterface));
         }
         return myInterfaces;
     }

@@ -89,9 +89,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private VoidType    theVoidType;
 
     private VoidValue voidVal;
-    private Map<Klass, ReferenceTypeImpl> typesByKlass;
-    private Map<Long, ReferenceTypeImpl>  typesById;
-    private List<ReferenceTypeImpl>       typesBySignature;
+    private final Map<Klass, ReferenceTypeImpl> typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
+    private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
+    private final List<ReferenceTypeImpl>       typesBySignature = new ArrayList<ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
     private List      bootstrapClasses;      // all bootstrap classes
     private ArrayList<ThreadReference> allThreads;
@@ -320,10 +320,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     public synchronized List<ReferenceType> findReferenceTypes(String signature) {
-        if (typesByKlass == null) {
-            return new ArrayList<ReferenceType>(0);
-        }
-
         // we haven't sorted types by signatures. But we can take
         // advantage of comparing symbols instead of name. In the worst
         // case, we will be comparing N addresses rather than N strings
@@ -375,27 +371,15 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     synchronized ReferenceTypeImpl referenceType(Klass kk) {
-        ReferenceTypeImpl retType = null;
-        if (typesByKlass != null) {
-            retType = typesByKlass.get(kk);
-        }
+        ReferenceTypeImpl retType = typesByKlass.get(kk);
         if (retType == null) {
             retType = addReferenceType(kk);
         }
         return retType;
     }
 
-    private void initReferenceTypes() {
-        typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
-        typesById = new HashMap<Long, ReferenceTypeImpl>();
-        typesBySignature = new ArrayList<ReferenceTypeImpl>();
-    }
-
     private synchronized ReferenceTypeImpl addReferenceType(Klass kk) {
-        if (typesByKlass == null) {
-            initReferenceTypes();
-        }
-        ReferenceTypeImpl newRefType = null;
+        ReferenceTypeImpl newRefType;
         if (kk instanceof ObjArrayKlass || kk instanceof TypeArrayKlass) {
             newRefType = new ArrayTypeImpl(this, (ArrayKlass)kk);
         } else if (kk instanceof InstanceKlass) {
@@ -1210,10 +1194,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     public synchronized ReferenceTypeImpl getReferenceTypeById(long id) {
-        if (typesById != null) {
-            return typesById.get(id);
+        ReferenceTypeImpl res = typesById.get(id);
+        if (res == null) {
+            throw new IllegalStateException("ReferenceType with id " + id + " not found");
         }
-        throw new IllegalStateException("ReferenceType with id " + id + " not found");
+        return res;
     }
 
     public ThreadGroupReferenceImpl getThreadGroupReferenceById(long id) {

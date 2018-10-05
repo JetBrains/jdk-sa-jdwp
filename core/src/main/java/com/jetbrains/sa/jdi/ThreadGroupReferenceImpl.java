@@ -52,7 +52,7 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl
     }
 
     public ThreadGroupReference parent() {
-        return (ThreadGroupReferenceImpl)vm.threadGroupMirror(
+        return vm.threadGroupMirror(
                (Instance)OopUtilities.threadGroupOopGetParent(ref()));
     }
 

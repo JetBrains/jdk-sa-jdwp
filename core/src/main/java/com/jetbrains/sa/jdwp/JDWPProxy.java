@@ -44,7 +44,7 @@ public class JDWPProxy {
 
         try {
             while (true) {
-                byte b[] = connection.readPacket();
+                byte[] b = connection.readPacket();
                 Packet p = Packet.fromByteArray(b);
                 int cmdSet = p.cmdSet;
                 int cmd = p.cmd;

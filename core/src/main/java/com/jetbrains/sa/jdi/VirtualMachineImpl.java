@@ -256,7 +256,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     // is 1.4.2 and not 1.5.
     private static Class vmCannotBeModifiedExceptionClass = null;
     void throwNotReadOnlyException(String operation) {
-        RuntimeException re = null;
+        RuntimeException re;
         if (vmCannotBeModifiedExceptionClass == null) {
             try {
                 vmCannotBeModifiedExceptionClass = Class.forName("com.sun.jdi.VMCannotBeModifiedException");
@@ -309,11 +309,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         if (bootstrapClasses == null) {
             bootstrapClasses = new ArrayList();
             List all = allClasses();
-            for (Iterator itr = all.iterator(); itr.hasNext();) {
-               ReferenceType type = (ReferenceType) itr.next();
-               if (type.classLoader() == null) {
-                   bootstrapClasses.add(type);
-               }
+            for (Object o : all) {
+                ReferenceType type = (ReferenceType) o;
+                if (type.classLoader() == null) {
+                    bootstrapClasses.add(type);
+                }
             }
         }
         return bootstrapClasses;
@@ -329,7 +329,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         // If it is Lx/y/z; the internal type name is x/y/x
         // for array klasses internal type name is same as
         // signature
-        String typeName = null;
+        String typeName;
         if (signature.charAt(0) == 'L') {
             typeName = signature.substring(1, signature.length() - 1);
         } else {
@@ -414,7 +414,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
                  thread = thread.next()) {
                 // refer to JvmtiEnv::GetAllThreads in jvmtiEnv.cpp.
                 // filter out the hidden-from-external-view threads.
-                if (thread.isHiddenFromExternalView() == false) {
+                if (!thread.isHiddenFromExternalView()) {
                     ThreadReferenceImpl myThread = threadMirror(thread);
                     allThreads.add(myThread);
                 }
@@ -444,9 +444,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
         if (topLevelGroups == null) {
             topLevelGroups = new ArrayList(1);
-            Iterator myIt = getAllThreads().iterator();
-            while (myIt.hasNext()) {
-                ThreadReferenceImpl myThread = (ThreadReferenceImpl)myIt.next();
+            for (ThreadReference threadReference : getAllThreads()) {
+                ThreadReferenceImpl myThread = (ThreadReferenceImpl) threadReference;
                 ThreadGroupReference myGroup = myThread.threadGroup();
                 ThreadGroupReference myParent = myGroup.parent();
                 if (myGroup.parent() == null) {
@@ -751,15 +750,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     public String name() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("JVM version ");
-        sb.append(version());
-        sb.append(" (");
-        sb.append(saVM.getSystemProperty("java.vm.name"));
-        sb.append(", ");
-        sb.append(saVM.getSystemProperty("java.vm.info"));
-        sb.append(")");
-        return sb.toString();
+        return "JVM version " + version() +
+                " (" + saVM.getSystemProperty("java.vm.name") + ", " + saVM.getSystemProperty("java.vm.info") + ")";
     }
 
     public int jdwpMajor() {
@@ -830,7 +822,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         final ReferenceType givenType = type;
         saObjectHeap.iterate(new DefaultHeapVisitor() {
                 public boolean doObj(Oop oop) {
-                    ReferenceTypeImpl curType = (ReferenceTypeImpl) referenceType(oop.getKlass());
+                    ReferenceTypeImpl curType = referenceType(oop.getKlass());
                     if (curType.isAssignableTo(givenType)) {
                         objects.add(objectMirror(oop));
                     }
@@ -872,11 +864,10 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     Type findBootType(String signature) throws ClassNotLoadedException {
         List types = allClasses();
-        Iterator iter = types.iterator();
-        while (iter.hasNext()) {
-            ReferenceType type = (ReferenceType)iter.next();
+        for (Object type1 : types) {
+            ReferenceType type = (ReferenceType) type1;
             if ((type.classLoader() == null) &&
-                (type.signature().equals(signature))) {
+                    (type.signature().equals(signature))) {
                 return type;
             }
         }

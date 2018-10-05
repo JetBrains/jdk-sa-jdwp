@@ -57,7 +57,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         // for it.  JavaThread is a wrapper around a Thread Oop so we get
         // that Oop and give it to our super.
         // We can get it back again by calling ref().
-        super(aVm, (Instance)aRef.getThreadObj());
+        super(aVm, aRef.getThreadObj());
         myJavaThread = aRef;
     }
 
@@ -170,7 +170,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
     }
 
     public ThreadGroupReference threadGroup() {
-        return (ThreadGroupReferenceImpl)vm.threadGroupMirror(
+        return vm.threadGroupMirror(
                (Instance)OopUtilities.threadOopGetThreadGroup(ref()));
     }
 
@@ -240,7 +240,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
 
     // refer to JvmtiEnvBase::get_owned_monitors
     public List<ObjectReference> ownedMonitors()  throws IncompatibleThreadStateException {
-        if (vm.canGetOwnedMonitorInfo() == false) {
+        if (!vm.canGetOwnedMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
 
@@ -254,10 +254,10 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
 
         ownedMonitorsWithStackDepth();
 
-        for (Iterator omi = ownedMonitorsInfo.iterator(); omi.hasNext(); ) {
+        for (MonitorInfoImpl monitorInfo : ownedMonitorsInfo) {
             //FIXME : Change the MonitorInfoImpl cast to com.sun.jdi.MonitorInfo
             //        when hotspot start building with jdk1.6.
-            ownedMonitors.add(((MonitorInfoImpl)omi.next()).monitor());
+            ownedMonitors.add((monitorInfo).monitor());
         }
 
         return ownedMonitors;
@@ -305,10 +305,10 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         int depth=0;
         while (frame != null) {
             List frameMonitors = frame.getMonitors();  // List<MonitorInfo>
-            for (Iterator miItr = frameMonitors.iterator(); miItr.hasNext(); ) {
-                MonitorInfo mi = (MonitorInfo) miItr.next();
+            for (Object frameMonitor : frameMonitors) {
+                MonitorInfo mi = (MonitorInfo) frameMonitor;
                 if (mi.eliminated() && frame.isCompiledFrame()) {
-                  continue; // skip eliminated monitor
+                    continue; // skip eliminated monitor
                 }
                 OopHandle obj = mi.owner();
                 if (obj == null) {
@@ -327,9 +327,9 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
                 }
 
                 boolean found = false;
-                for (Iterator loItr = lockedObjects.iterator(); loItr.hasNext(); ) {
+                for (Object lockedObject : lockedObjects) {
                     // check for recursive locks
-                    if (obj.equals(loItr.next())) {
+                    if (obj.equals(lockedObject)) {
                         found = true;
                         break;
                     }
@@ -340,26 +340,26 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
                 }
                 // add the owning object to our list
                 lockedObjects.add(obj);
-                stackDepth.add(new Integer(depth));
+                stackDepth.add(depth);
             }
-            frame = (JavaVFrame) frame.javaSender();
+            frame = frame.javaSender();
             depth++;
         }
 
         // now convert List<OopHandle> to List<ObjectReference>
         ObjectHeap heap = vm.saObjectHeap();
         Iterator stk = stackDepth.iterator();
-        for (Iterator loItr = lockedObjects.iterator(); loItr.hasNext(); ) {
-            Oop obj = heap.newOop((OopHandle)loItr.next());
+        for (Object lockedObject : lockedObjects) {
+            Oop obj = heap.newOop((OopHandle) lockedObject);
             ownedMonitorsInfo.add(new MonitorInfoImpl(vm, vm.objectMirror(obj), this,
-                                                              ((Integer)stk.next()).intValue()));
+                    (Integer) stk.next()));
         }
     }
 
     // refer to JvmtiEnvBase::get_current_contended_monitor
     public ObjectReference currentContendedMonitor()
                               throws IncompatibleThreadStateException  {
-        if (vm.canGetCurrentContendedMonitor() == false) {
+        if (!vm.canGetCurrentContendedMonitor()) {
             throw new UnsupportedOperationException();
         }
 

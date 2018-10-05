@@ -40,7 +40,7 @@ public class BooleanValueImpl extends PrimitiveValueImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof BooleanValue)) {
+        if ((obj instanceof BooleanValue)) {
             return (value == ((BooleanValue)obj).value())
                    && super.equals(obj);
         } else {
@@ -80,7 +80,7 @@ public class BooleanValueImpl extends PrimitiveValueImpl
     }
 
     public int intValue() {
-        return(int)((value)?1:0);
+        return ((value)?1:0);
     }
 
     public long longValue() {
@@ -92,7 +92,7 @@ public class BooleanValueImpl extends PrimitiveValueImpl
     }
 
     public double doubleValue() {
-        return(double)((value)?1.0:0.0);
+        return ((value)?1.0:0.0);
     }
 
     public String toString() {

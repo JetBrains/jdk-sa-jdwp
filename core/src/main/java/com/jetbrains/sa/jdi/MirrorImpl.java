@@ -27,7 +27,7 @@ package com.jetbrains.sa.jdi;
 import com.sun.jdi.Mirror;
 import com.sun.jdi.VirtualMachine;
 
-abstract class MirrorImpl extends Object implements Mirror {
+abstract class MirrorImpl implements Mirror {
     protected VirtualMachineImpl vm;
 
     MirrorImpl(VirtualMachine aVm) {
@@ -44,7 +44,7 @@ abstract class MirrorImpl extends Object implements Mirror {
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof Mirror)) {
+        if ((obj instanceof Mirror)) {
             Mirror other = (Mirror)obj;
             return vm.equals(other.virtualMachine());
         } else {

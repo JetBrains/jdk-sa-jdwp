@@ -68,9 +68,8 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         list.clear();
         list.addAll(hashList);
 
-        Iterator iter = immediate.iterator();
-        while (iter.hasNext()) {
-            InterfaceTypeImpl interfaze = (InterfaceTypeImpl)iter.next();
+        for (Object o : immediate) {
+            InterfaceTypeImpl interfaze = (InterfaceTypeImpl) o;
             interfaze.addSuperinterfaces(list);
         }
 
@@ -97,11 +96,10 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         if (subclasses == null) {
             List all = vm.allClasses();
             subclasses = new ArrayList(0);
-            Iterator iter = all.iterator();
-            while (iter.hasNext()) {
-                ReferenceType refType = (ReferenceType)iter.next();
+            for (Object o : all) {
+                ReferenceType refType = (ReferenceType) o;
                 if (refType instanceof ClassType) {
-                    ClassType clazz = (ClassType)refType;
+                    ClassType clazz = (ClassType) refType;
                     ClassType superclass = clazz.superclass();
                     if ((superclass != null) && superclass.equals(this)) {
                         subclasses.add(refType);
@@ -118,17 +116,16 @@ public class ClassTypeImpl extends ReferenceTypeImpl
        checkPrepared();
        List methods = visibleMethods();
        Method method = null;
-       Iterator iter = methods.iterator();
-       while (iter.hasNext()) {
-           Method candidate = (Method)iter.next();
-           if (candidate.name().equals(name) &&
-               candidate.signature().equals(signature) &&
-               !candidate.isAbstract()) {
+        for (Object method1 : methods) {
+            Method candidate = (Method) method1;
+            if (candidate.name().equals(name) &&
+                    candidate.signature().equals(signature) &&
+                    !candidate.isAbstract()) {
 
-               method = candidate;
-               break;
-           }
-       }
+                method = candidate;
+                break;
+            }
+        }
        return method;
    }
 
@@ -143,11 +140,10 @@ public class ClassTypeImpl extends ReferenceTypeImpl
          * Avoid duplicate checking on each method by iterating through
          * duplicate-free allInterfaces() rather than recursing
          */
-        Iterator iter = allInterfaces().iterator();
-        while (iter.hasNext()) {
-            InterfaceType interfaze = (InterfaceType)iter.next();
-            list.addAll(interfaze.methods());
-        }
+       for (Object o : allInterfaces()) {
+           InterfaceType interfaze = (InterfaceType) o;
+           list.addAll(interfaze.methods());
+       }
         return list;
     }
 
@@ -202,9 +198,8 @@ public class ClassTypeImpl extends ReferenceTypeImpl
          * overwrite them in the hash table
          */
 
-        Iterator iter = interfaces().iterator();
-        while (iter.hasNext()) {
-            InterfaceTypeImpl interfaze = (InterfaceTypeImpl)iter.next();
+        for (InterfaceType interfaceType : interfaces()) {
+            InterfaceTypeImpl interfaze = (InterfaceTypeImpl) interfaceType;
             interfaze.addVisibleMethods(methodMap);
         }
 
@@ -224,9 +219,8 @@ public class ClassTypeImpl extends ReferenceTypeImpl
             return true;
         } else {
             List interfaces = interfaces();
-            Iterator iter = interfaces.iterator();
-            while (iter.hasNext()) {
-                InterfaceTypeImpl interfaze = (InterfaceTypeImpl)iter.next();
+            for (Object anInterface : interfaces) {
+                InterfaceTypeImpl interfaze = (InterfaceTypeImpl) anInterface;
                 if (interfaze.isAssignableTo(type)) {
                     return true;
                 }

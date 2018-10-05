@@ -3003,7 +3003,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
-                List<com.sun.jdi.ObjectReference> ownedMonitors = null;
+                List<com.sun.jdi.ObjectReference> ownedMonitors;
                 try {
                     ownedMonitors = thread.ownedMonitors();
                 } catch (IncompatibleThreadStateException e) {
@@ -3138,7 +3138,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
-                List list = null;
+                List list;
                 try {
                     list = thread.ownedMonitorsAndFrames();
                 } catch (IncompatibleThreadStateException e) {

@@ -59,7 +59,7 @@ public class LocationImpl extends MirrorImpl implements Location {
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof Location)) {
+        if ((obj instanceof Location)) {
             Location other = (Location)obj;
             return (method().equals(other.method())) &&
                    (codeIndex() == other.codeIndex()) &&

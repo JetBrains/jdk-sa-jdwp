@@ -43,7 +43,7 @@ public class JNITypeParser {
     }
 
     static String typeNameToSignature(String signature) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         int firstIndex = signature.indexOf('[');
         int index = firstIndex;
         while (index != -1) {

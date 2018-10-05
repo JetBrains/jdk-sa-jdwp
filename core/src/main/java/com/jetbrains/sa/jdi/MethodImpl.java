@@ -28,7 +28,6 @@ import com.sun.jdi.*;
 import sun.jvm.hotspot.oops.Symbol;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public abstract class MethodImpl extends TypeComponentImpl implements Method {
@@ -190,7 +189,7 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof MethodImpl)) {
+        if ((obj instanceof MethodImpl)) {
             MethodImpl other = (MethodImpl)obj;
             return (declaringType().equals(other.declaringType())) &&
                 (ref().equals(other.ref())) &&
@@ -213,17 +212,17 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
 
     // from interface Mirror
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(declaringType().name());
         sb.append(".");
         sb.append(name());
         sb.append("(");
         boolean first = true;
-        for (Iterator it = argumentTypeNames().iterator(); it.hasNext();) {
+        for (Object o : argumentTypeNames()) {
             if (!first) {
                 sb.append(", ");
             }
-            sb.append((String)it.next());
+            sb.append((String) o);
             first = false;
         }
         sb.append(")");

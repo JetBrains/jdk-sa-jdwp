@@ -100,13 +100,12 @@ public class ConcreteMethodImpl extends MethodImpl {
         SDE.LineStratum lastLineStratum = null;
         SDE.Stratum baseStratum =
             declaringType.stratum(SDE.BASE_STRATUM_NAME);
-        Iterator it = getBaseLocations().lineLocations.iterator();
-        while(it.hasNext()) {
-            LocationImpl loc = (LocationImpl)it.next();
+        for (Object lineLocation : getBaseLocations().lineLocations) {
+            LocationImpl loc = (LocationImpl) lineLocation;
             int baseLineNumber = loc.lineNumber(baseStratum);
             SDE.LineStratum lineStratum =
-                  stratum.lineStratum(declaringType,
-                                      baseLineNumber);
+                    stratum.lineStratum(declaringType,
+                            baseLineNumber);
 
             if (lineStratum == null) {
                 // location not mapped in this stratum
@@ -117,7 +116,7 @@ public class ConcreteMethodImpl extends MethodImpl {
 
             // remove unmapped and dup lines
             if ((lineNumber != -1) &&
-                          (!lineStratum.equals(lastLineStratum))) {
+                    (!lineStratum.equals(lastLineStratum))) {
                 lastLineStratum = lineStratum;
                 // Remember the largest/smallest line number
                 if (lineNumber > highestLine) {
@@ -128,17 +127,17 @@ public class ConcreteMethodImpl extends MethodImpl {
                 }
 
                 loc.addStratumLineInfo(
-                new StratumLineInfo(stratumID,
-                                      lineNumber,
-                                      lineStratum.sourceName(),
-                                      lineStratum.sourcePath()));
+                        new StratumLineInfo(stratumID,
+                                lineNumber,
+                                lineStratum.sourceName(),
+                                lineStratum.sourcePath()));
 
                 // Add to the location list
                 lineLocations.add(loc);
 
                 // Add to the line -> locations map
-                Integer key = new Integer(lineNumber);
-                List mappedLocs = (List)lineMapper.get(key);
+                Integer key = lineNumber;
+                List mappedLocs = (List) lineMapper.get(key);
                 if (mappedLocs == null) {
                     mappedLocs = new ArrayList(1);
                     lineMapper.put(key, mappedLocs);
@@ -213,7 +212,7 @@ public class ConcreteMethodImpl extends MethodImpl {
                 lineLocations.add(loc);
 
                 // Add to the line -> locations map
-                Integer key = new Integer(lineNumber);
+                Integer key = lineNumber;
                 List mappedLocs = (List)lineMapper.get(key);
                 if (mappedLocs == null) {
                     mappedLocs = new ArrayList(1);
@@ -239,9 +238,8 @@ public class ConcreteMethodImpl extends MethodImpl {
         } else {
             /* needs sourceName filteration */
             List locs = new ArrayList();
-            Iterator it = list.iterator();
-            while (it.hasNext()) {
-                LocationImpl loc = (LocationImpl)it.next();
+            for (Object o : list) {
+                LocationImpl loc = (LocationImpl) o;
                 if (loc.sourceName(stratum).equals(sourceName)) {
                     locs.add(loc);
                 }
@@ -275,7 +273,7 @@ public class ConcreteMethodImpl extends MethodImpl {
          * passed in.
          */
         List list = (List)info.lineMapper.get(
-                                  new Integer(lineNumber));
+                lineNumber);
 
         if (list == null) {
             list = new ArrayList(0);
@@ -350,9 +348,8 @@ public class ConcreteMethodImpl extends MethodImpl {
         List variables = getVariables();
 
         List retList = new ArrayList(2);
-        Iterator iter = variables.iterator();
-        while(iter.hasNext()) {
-            LocalVariable variable = (LocalVariable)iter.next();
+        for (Object variable1 : variables) {
+            LocalVariable variable = (LocalVariable) variable1;
             if (variable.name().equals(name)) {
                 retList.add(variable);
             }
@@ -366,9 +363,8 @@ public class ConcreteMethodImpl extends MethodImpl {
         }
         List variables = getVariables();
         List retList = new ArrayList(variables.size());
-        Iterator iter = variables.iterator();
-        while(iter.hasNext()) {
-            LocalVariable variable = (LocalVariable)iter.next();
+        for (Object variable1 : variables) {
+            LocalVariable variable = (LocalVariable) variable1;
             if (variable.isArgument()) {
                 retList.add(variable);
             }
@@ -388,7 +384,7 @@ public class ConcreteMethodImpl extends MethodImpl {
          * to return the cached bytecodes directly; instead, we
          * make a clone at the cost of using more memory.
          */
-        return (byte[])bytecodes.clone();
+        return bytecodes.clone();
     }
 
     public Location location() {
@@ -419,9 +415,9 @@ public class ConcreteMethodImpl extends MethodImpl {
         LocalVariableTableElement[] locals = saMethod.getLocalVariableTable();
         int localCount = locals.length;
         variables = new ArrayList(localCount);
-        for (int ii = 0; ii < localCount; ii++) {
+        for (LocalVariableTableElement local : locals) {
             String name =
-                saMethod.getConstants().getSymbolAt(locals[ii].getNameCPIndex()).asString();
+                    saMethod.getConstants().getSymbolAt(local.getNameCPIndex()).asString();
             /*
              * Skip "this$*", "this+*", "this" entries because they are never real
              * variables from the JLS perspective. "this+*" is new with 1.5.
@@ -429,29 +425,29 @@ public class ConcreteMethodImpl extends MethodImpl {
              * depending on javac's current choice of '+'.
              */
             boolean isInternalName = name.startsWith("this") &&
-                  (name.length() == 4 || name.charAt(4)=='$' || !Character.isJavaIdentifierPart(name.charAt(4)));
-            if (! isInternalName) {
-                int slot = locals[ii].getSlot();
-                long codeIndex = locals[ii].getStartBCI();
-                int length = locals[ii].getLength();
+                    (name.length() == 4 || name.charAt(4) == '$' || !Character.isJavaIdentifierPart(name.charAt(4)));
+            if (!isInternalName) {
+                int slot = local.getSlot();
+                long codeIndex = local.getStartBCI();
+                int length = local.getLength();
                 Location scopeStart = new LocationImpl(virtualMachine(),
-                                                       this, codeIndex);
+                        this, codeIndex);
                 Location scopeEnd =
-                    new LocationImpl(virtualMachine(), this,
-                                     codeIndex + length - 1);
+                        new LocationImpl(virtualMachine(), this,
+                                codeIndex + length - 1);
                 String signature =
-                    saMethod.getConstants().getSymbolAt(locals[ii].getDescriptorCPIndex()).asString();
+                        saMethod.getConstants().getSymbolAt(local.getDescriptorCPIndex()).asString();
 
-                int genericSigIndex = locals[ii].getSignatureCPIndex();
+                int genericSigIndex = local.getSignatureCPIndex();
                 String genericSignature = null;
                 if (genericSigIndex != 0) {
                     genericSignature = saMethod.getConstants().getSymbolAt(genericSigIndex).asString();
                 }
 
                 LocalVariable variable =
-                    new LocalVariableImpl(virtualMachine(), this,
-                                          slot, scopeStart, scopeEnd,
-                                          name, signature, genericSignature);
+                        new LocalVariableImpl(virtualMachine(), this,
+                                slot, scopeStart, scopeEnd,
+                                name, signature, genericSignature);
                 // Add to the variable list
                 variables.add(variable);
             }

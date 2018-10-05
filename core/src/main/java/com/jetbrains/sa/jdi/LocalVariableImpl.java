@@ -50,7 +50,7 @@ public class LocalVariableImpl extends MirrorImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof LocalVariableImpl)) {
+        if ((obj instanceof LocalVariableImpl)) {
             LocalVariableImpl other = (LocalVariableImpl)obj;
             return (method.equals(other.method) &&
                     slot() == other.slot() &&
@@ -64,7 +64,7 @@ public class LocalVariableImpl extends MirrorImpl
         /*
          * TO DO: Better hash code
          */
-        return (int)method.hashCode() + slot();
+        return method.hashCode() + slot();
     }
 
     public int compareTo(LocalVariable localVar) {

@@ -42,7 +42,7 @@ public class VoidValueImpl extends ValueImpl implements VoidValue {
     }
 
     public boolean equals(Object obj) {
-        return (obj != null) && (obj instanceof VoidValue) && super.equals(obj);
+        return (obj instanceof VoidValue) && super.equals(obj);
     }
 
     public int hashCode() {

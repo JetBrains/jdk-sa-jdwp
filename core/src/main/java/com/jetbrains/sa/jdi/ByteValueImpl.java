@@ -41,7 +41,7 @@ public class ByteValueImpl extends PrimitiveValueImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof ByteValue)) {
+        if ((obj instanceof ByteValue)) {
             return (value == ((ByteValue)obj).value())
                    && super.equals(obj);
         } else {

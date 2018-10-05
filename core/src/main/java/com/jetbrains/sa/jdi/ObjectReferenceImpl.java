@@ -153,7 +153,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     }
 
     public List<ThreadReference> waitingThreads() {
-        if (vm.canGetMonitorInfo() == false) {
+        if (!vm.canGetMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
 
@@ -165,7 +165,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
 
 
     public ThreadReference owningThread() {
-        if (vm.canGetMonitorInfo() == false) {
+        if (!vm.canGetMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
 
@@ -177,7 +177,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
 
 
     public int entryCount() {
-        if (vm.canGetMonitorInfo() == false) {
+        if (!vm.canGetMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
 
@@ -207,13 +207,13 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
                                         try {
                                                 ObjectReference objref = vm.objectMirror(oop);
                                                 List fields = objref.referenceType().allFields();
-                                                for (int i=0; i < fields.size(); i++) {
-                                                        Field fld = (Field)fields.get(i);
-                                                        if (objref.getValue(fld).equals(obj) && !objects.contains(objref)) {
-                                                                objects.add(objref);
-                                                                refCount++;
-                                                        }
+                                            for (Object field : fields) {
+                                                Field fld = (Field) field;
+                                                if (objref.getValue(fld).equals(obj) && !objects.contains(objref)) {
+                                                    objects.add(objref);
+                                                    refCount++;
                                                 }
+                                            }
                                                 if (max > 0 && refCount >= max) {
                                                         return true;
                                                 }
@@ -241,14 +241,14 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         while (frame != null) {
             List monitors = frame.getMonitors();
             OopHandle givenHandle = obj.getHandle();
-            for (Iterator itr = monitors.iterator(); itr.hasNext();) {
-                MonitorInfo mi = (MonitorInfo) itr.next();
+            for (Object monitor : monitors) {
+                MonitorInfo mi = (MonitorInfo) monitor;
                 if (mi.eliminated() && frame.isCompiledFrame()) continue; // skip eliminated monitor
                 if (givenHandle.equals(mi.owner())) {
                     res++;
                 }
             }
-            frame = (JavaVFrame) frame.javaSender();
+            frame = frame.javaSender();
         }
         return res;
     }
@@ -323,8 +323,8 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
             // add all contenders
             List pendingThreads = getPendingThreads(mon);
             // convert the JavaThreads to ThreadReferenceImpls
-            for (Iterator itrPend = pendingThreads.iterator(); itrPend.hasNext();) {
-                waitingThreads.add(vm.threadMirror((JavaThread) itrPend.next()));
+            for (Object pendingThread : pendingThreads) {
+                waitingThreads.add(vm.threadMirror((JavaThread) pendingThread));
             }
 
             // add all waiters (threads in Object.wait())
@@ -335,14 +335,14 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
             // pending threads list
             List objWaitingThreads = getWaitingThreads(mon);
             // convert the JavaThreads to ThreadReferenceImpls
-            for (Iterator itrWait = objWaitingThreads.iterator(); itrWait.hasNext();) {
-                waitingThreads.add(vm.threadMirror((JavaThread) itrWait.next()));
+            for (Object objWaitingThread : objWaitingThreads) {
+                waitingThreads.add(vm.threadMirror((JavaThread) objWaitingThread));
             }
         }
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof ObjectReferenceImpl)) {
+        if ((obj instanceof ObjectReferenceImpl)) {
             ObjectReferenceImpl other = (ObjectReferenceImpl)obj;
             return (ref().equals(other.ref())) &&
                    super.equals(obj);

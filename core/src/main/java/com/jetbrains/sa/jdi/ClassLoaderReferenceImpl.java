@@ -29,7 +29,6 @@ import com.sun.jdi.*;
 import sun.jvm.hotspot.oops.Instance;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class ClassLoaderReferenceImpl
@@ -70,9 +69,8 @@ public class ClassLoaderReferenceImpl
 
      Type findType(String signature) throws ClassNotLoadedException {
          List types = visibleClasses();
-         Iterator iter = types.iterator();
-         while (iter.hasNext()) {
-             ReferenceType type = (ReferenceType)iter.next();
+         for (Object type1 : types) {
+             ReferenceType type = (ReferenceType) type1;
              if (type.signature().equals(signature)) {
                  return type;
              }

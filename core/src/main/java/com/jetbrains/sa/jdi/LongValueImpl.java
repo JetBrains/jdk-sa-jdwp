@@ -41,7 +41,7 @@ public class LongValueImpl extends PrimitiveValueImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof LongValue)) {
+        if ((obj instanceof LongValue)) {
             return (value == ((LongValue)obj).value()) &&
                    super.equals(obj);
         } else {
@@ -96,7 +96,7 @@ public class LongValueImpl extends PrimitiveValueImpl
     }
 
     public long longValue() {
-        return(long)value;
+        return value;
     }
 
     public float floatValue() {

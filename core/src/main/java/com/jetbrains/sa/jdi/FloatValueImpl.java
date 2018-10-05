@@ -41,7 +41,7 @@ public class FloatValueImpl extends PrimitiveValueImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof FloatValue)) {
+        if ((obj instanceof FloatValue)) {
             return (value == ((FloatValue)obj).value()) &&
                    super.equals(obj);
         } else {
@@ -57,14 +57,7 @@ public class FloatValueImpl extends PrimitiveValueImpl
     }
 
     public int compareTo(FloatValue floatVal) {
-        float other = floatVal.value();
-        if (value() < other) {
-            return -1;
-        } else if (value() == other) {
-            return 0;
-        } else {
-            return 1;
-        }
+        return Float.compare(value(), floatVal.value());
     }
 
     public Type type() {
@@ -100,7 +93,7 @@ public class FloatValueImpl extends PrimitiveValueImpl
     }
 
     public float floatValue() {
-        return(float)value;
+        return value;
     }
 
     public double doubleValue() {

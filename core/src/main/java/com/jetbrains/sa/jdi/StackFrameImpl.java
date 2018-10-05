@@ -100,7 +100,7 @@ public class StackFrameImpl extends MirrorImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof StackFrameImpl)) {
+        if ((obj instanceof StackFrameImpl)) {
             StackFrameImpl other = (StackFrameImpl)obj;
             return (saFrame.equals(other.saFrame));
         } else {
@@ -143,14 +143,13 @@ public class StackFrameImpl extends MirrorImpl
             List allVariables = location.method().variables();
             Map map = new HashMap(allVariables.size());
 
-            Iterator iter = allVariables.iterator();
-            while (iter.hasNext()) {
-                LocalVariableImpl variable = (LocalVariableImpl)iter.next();
+            for (Object allVariable : allVariables) {
+                LocalVariableImpl variable = (LocalVariableImpl) allVariable;
                 String name = variable.name();
                 if (variable.isVisible(this)) {
-                    LocalVariable existing = (LocalVariable)map.get(name);
+                    LocalVariable existing = (LocalVariable) map.get(name);
                     if ((existing == null) ||
-                        variable.hides(existing)) {
+                            variable.hides(existing)) {
                         map.put(name, variable);
                     }
                 }
@@ -194,11 +193,11 @@ public class StackFrameImpl extends MirrorImpl
 
         int count = variables.size();
         Map map = new HashMap(count);
-        for (int ii=0; ii<count; ++ii) {
-            LocalVariableImpl variable = (LocalVariableImpl)variables.get(ii);
+        for (Object variable1 : variables) {
+            LocalVariableImpl variable = (LocalVariableImpl) variable1;
             if (!variable.isVisible(this)) {
                 throw new IllegalArgumentException(variable.name() +
-                                 " is not valid at this frame location");
+                        " is not valid at this frame location");
             }
             ValueImpl valueImpl;
             int ss = variable.slot();
@@ -239,8 +238,8 @@ public class StackFrameImpl extends MirrorImpl
 
     private ValueImpl getSlotValue(StackValueCollection values,
                        BasicType variableType, int ss) {
-        ValueImpl valueImpl = null;
-        OopHandle handle = null;
+        ValueImpl valueImpl;
+        OopHandle handle;
         ObjectHeap heap = vm.saObjectHeap();
         if (values.get(ss).getType() == BasicType.getTConflict()) {
           // Dead locals, so just represent them as a zero of the appropriate type
@@ -257,14 +256,14 @@ public class StackFrameImpl extends MirrorImpl
           } else if (variableType == BasicType.T_SHORT) {
             valueImpl = (ShortValueImpl) vm.mirrorOf((short)0);
           } else if (variableType == BasicType.T_INT) {
-            valueImpl = (IntegerValueImpl) vm.mirrorOf((int)0);
+            valueImpl = (IntegerValueImpl) vm.mirrorOf(0);
           } else if (variableType == BasicType.T_LONG) {
             valueImpl = (LongValueImpl) vm.mirrorOf((long)0);
           } else if (variableType == BasicType.T_OBJECT) {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
             handle = null;
-            valueImpl = (ObjectReferenceImpl) vm.objectMirror(heap.newOop(handle));
+            valueImpl = vm.objectMirror(heap.newOop(handle));
           } else if (variableType == BasicType.T_ARRAY) {
             handle = null;
             valueImpl = vm.arrayMirror((Array)heap.newOop(handle));

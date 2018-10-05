@@ -41,7 +41,7 @@ public class DoubleValueImpl extends PrimitiveValueImpl
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof DoubleValue)) {
+        if ((obj instanceof DoubleValue)) {
             return (value == ((DoubleValue)obj).value()) &&
                    super.equals(obj);
         } else {
@@ -50,14 +50,7 @@ public class DoubleValueImpl extends PrimitiveValueImpl
     }
 
     public int compareTo(DoubleValue doubleVal) {
-        double other = doubleVal.value();
-        if (value() < other) {
-            return -1;
-        } else if (value() == other) {
-            return 0;
-        } else {
-            return 1;
-        }
+        return Double.compare(value(), doubleVal.value());
     }
 
     public int hashCode() {
@@ -104,7 +97,7 @@ public class DoubleValueImpl extends PrimitiveValueImpl
     }
 
     public double doubleValue() {
-        return(double)value;
+        return value;
     }
 
     byte checkedByteValue() throws InvalidTypeException {

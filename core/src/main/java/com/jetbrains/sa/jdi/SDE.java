@@ -54,7 +54,7 @@ class SDE {
                 if (sourcePath == null) {
                     sourcePath = refType.baseSourceDir() + sourceName;
                 } else {
-                    StringBuffer buf = new StringBuffer();
+                    StringBuilder buf = new StringBuilder();
                     for (int i = 0; i < sourcePath.length(); ++i) {
                         char ch = sourcePath.charAt(i);
                         if (ch == '/') {
@@ -169,7 +169,7 @@ class SDE {
         }
 
         public boolean equals(Object obj) {
-            if ((obj != null) && (obj instanceof LineStratum)) {
+            if ((obj instanceof LineStratum)) {
                 LineStratum other = (LineStratum)obj;
                 return (lti == other.lti) &&
                        (sti == other.sti) &&
@@ -320,12 +320,12 @@ class SDE {
     }
 
     String readLine() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char ch;
 
         ignoreWhite();
         while (((ch = sdeRead()) != '\n') && (ch != '\r')) {
-            sb.append((char)ch);
+            sb.append(ch);
         }
         // check for CR LF
         if ((ch == '\r') && (sdePeek() == '\n')) {

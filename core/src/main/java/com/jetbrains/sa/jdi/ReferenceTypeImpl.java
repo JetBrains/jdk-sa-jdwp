@@ -72,29 +72,27 @@ implements ReferenceType {
         // that the incoming object might not be the same object as on our
         // even though it is the same method. So do an address compare by
         // calling equals rather than just reference compare.
-        Iterator it = methods().iterator();
-        while (it.hasNext()) {
-            MethodImpl method = (MethodImpl)it.next();
+        for (Method method1 : methods()) {
+            MethodImpl method = (MethodImpl) method1;
             if (ref.equals(method.ref())) {
                 return method;
             }
         }
         if (ref.getMethodHolder().equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
           // invoke methods are generated as needed, so make mirrors as needed
-          List mis = null;
+          List mis;
           if (methodInvokesCache == null) {
             mis = new ArrayList();
             methodInvokesCache = new SoftReference(mis);
           } else {
             mis = (List)methodInvokesCache.get();
           }
-          it = mis.iterator();
-          while (it.hasNext()) {
-            MethodImpl method = (MethodImpl)it.next();
-            if (ref.equals(method.ref())) {
-              return method;
+            for (Object mi : mis) {
+                MethodImpl method = (MethodImpl) mi;
+                if (ref.equals(method.ref())) {
+                    return method;
+                }
             }
-          }
 
           MethodImpl method = MethodImpl.createMethodImpl(vm, this, ref);
           mis.add(method);
@@ -104,7 +102,7 @@ implements ReferenceType {
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof ReferenceTypeImpl)) {
+        if ((obj instanceof ReferenceTypeImpl)) {
             ReferenceTypeImpl other = (ReferenceTypeImpl)obj;
             return (ref().equals(other.ref())) &&
                 (vm.equals(other.virtualMachine()));
@@ -163,7 +161,7 @@ implements ReferenceType {
 
     public ClassLoaderReference classLoader() {
       Instance xx = (Instance)(((InstanceKlass)saKlass).getClassLoader());
-      return (ClassLoaderReferenceImpl)vm.classLoaderMirror(xx);
+      return vm.classLoaderMirror(xx);
     }
 
     public boolean isPublic() {
@@ -220,12 +218,8 @@ implements ReferenceType {
         // refer to JvmtiEnv::GetClassFields in jvmtiEnv.cpp.
         // We want to filter out java.lang.Throwable.backtrace (see 4446677).
         // It contains some Method*s that aren't quite real Objects.
-        if (fld.getFieldHolder().getName().equals(vm.javaLangThrowable()) &&
-            fld.getID().getName().equals("backtrace")) {
-            return true;
-        } else {
-            return false;
-        }
+        return fld.getFieldHolder().getName().equals(vm.javaLangThrowable()) &&
+                fld.getID().getName().equals("backtrace");
     }
 
     public final FieldImpl fieldById(long id) throws ClassNotPreparedException {
@@ -250,9 +244,9 @@ implements ReferenceType {
                 // Create a list of our Field types
                 int len = saFields.size();
                 fields = new ArrayList(len);
-                for (int ii = 0; ii < len; ii++) {
-                    sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field)saFields.get(ii);
-                    if (! isThrowableBacktraceField(curField)) {
+                for (Object saField : saFields) {
+                    sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field) saField;
+                    if (!isThrowableBacktraceField(curField)) {
                         fields.add(new FieldImpl(vm, this, curField));
                     }
                 }
@@ -320,12 +314,11 @@ implements ReferenceType {
 
     void addVisibleFields(List visibleList, Map visibleTable, List ambiguousNames) {
         List list = visibleFields();
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            Field field = (Field)iter.next();
+        for (Object o : list) {
+            Field field = (Field) o;
             String name = field.name();
             if (!ambiguousNames.contains(name)) {
-                Field duplicate = (Field)visibleTable.get(name);
+                Field duplicate = (Field) visibleTable.get(name);
                 if (duplicate == null) {
                     visibleList.add(field);
                     visibleTable.put(name, field);
@@ -389,13 +382,13 @@ implements ReferenceType {
         // visibleFields calls checkPrepared
         searchList = visibleFields();
 
-        for (int i=0; i<searchList.size(); i++) {
-            f = (Field)searchList.get(i);
+       for (Object o : searchList) {
+           f = (Field) o;
 
-            if (f.name().equals(fieldName)) {
-                return f;
-            }
-        }
+           if (f.name().equals(fieldName)) {
+               return f;
+           }
+       }
         //throw new NoSuchFieldException("Field '" + fieldName + "' not found in " + name());
         return null;
     }
@@ -449,9 +442,8 @@ implements ReferenceType {
      * methods.
      */
     void addToMethodMap(Map methodMap, List methodList) {
-        Iterator iter = methodList.iterator();
-        while (iter.hasNext()) {
-            Method method = (Method)iter.next();
+        for (Object o : methodList) {
+            Method method = (Method) o;
             methodMap.put(method.name().concat(method.signature()), method);
         }
     }
@@ -489,7 +481,7 @@ implements ReferenceType {
     static Object prev;
 
     static public String jjstr(Collection cc) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("[");
         Iterator i = cc.iterator();
         boolean hasNext = i.hasNext();
@@ -501,7 +493,7 @@ implements ReferenceType {
                 System.out.println("prev == curr?" + prev.equals(o));
                 System.out.println("prev == curr?" + (prev == o));
             }
-            buf.append( o + "@" + o.hashCode());
+            buf.append(o).append("@").append(o.hashCode());
             //buf.append( ((Object)o).toString());
             hasNext = i.hasNext();
             if (hasNext)
@@ -516,9 +508,8 @@ implements ReferenceType {
         // visibleMethods calls checkPrepared
         List methods = visibleMethods();
         ArrayList retList = new ArrayList(methods.size());
-        Iterator iter = methods.iterator();
-        while (iter.hasNext()) {
-            Method candidate = (Method)iter.next();
+        for (Object method : methods) {
+            Method candidate = (Method) method;
             if (candidate.name().equals(name)) {
                 retList.add(candidate);
             }
@@ -531,11 +522,10 @@ implements ReferenceType {
         // visibleMethods calls checkPrepared
         List methods = visibleMethods();
         ArrayList retList = new ArrayList(methods.size());
-        Iterator iter = methods.iterator();
-        while (iter.hasNext()) {
-            Method candidate = (Method)iter.next();
+        for (Object method : methods) {
+            Method candidate = (Method) method;
             if (candidate.name().equals(name) &&
-                candidate.signature().equals(signature)) {
+                    candidate.signature().equals(signature)) {
                 retList.add(candidate);
             }
         }
@@ -570,18 +560,17 @@ implements ReferenceType {
                 nestedTypes = new ArrayList<ReferenceType>(0);
             } else {
                 ClassLoaderReference cl = classLoader();
-                List classes = null;
+                List classes;
                 if (cl != null) {
                    classes = cl.visibleClasses();
                 } else {
                    classes = vm.bootstrapClasses();
                 }
                 nestedTypes = new ArrayList<ReferenceType>();
-                Iterator iter = classes.iterator();
-                while (iter.hasNext()) {
-                    ReferenceTypeImpl refType = (ReferenceTypeImpl)iter.next();
+                for (Object aClass : classes) {
+                    ReferenceTypeImpl refType = (ReferenceTypeImpl) aClass;
                     Symbol candidateName = refType.ref().getName();
-                    if (((InstanceKlass)saKlass).isInnerOrLocalClassName(candidateName)) {
+                    if (((InstanceKlass) saKlass).isInnerOrLocalClassName(candidateName)) {
                         nestedTypes.add(refType);
                     }
                 }
@@ -606,15 +595,15 @@ implements ReferenceType {
         //validateMirrors();
         int size = theFields.size();
         Map map = new HashMap(size);
-        for (int ii=0; ii<size; ii++) {
-            FieldImpl fieldImpl = (FieldImpl)theFields.get(ii);
+        for (Object theField : theFields) {
+            FieldImpl fieldImpl = (FieldImpl) theField;
 
             validateFieldAccess(fieldImpl);
             // Do more validation specific to ReferenceType field getting
             if (!fieldImpl.isStatic()) {
                 throw new IllegalArgumentException(
-                     "Attempt to use non-static field with ReferenceType: " +
-                     fieldImpl.name());
+                        "Attempt to use non-static field with ReferenceType: " +
+                                fieldImpl.name());
             }
             map.put(fieldImpl, fieldImpl.getValue());
         }
@@ -688,12 +677,12 @@ implements ReferenceType {
 
     String baseSourceDir() {
         String typeName = name();
-        StringBuffer sb = new StringBuffer(typeName.length() + 10);
+        StringBuilder sb = new StringBuilder(typeName.length() + 10);
         int index = 0;
         int nextIndex;
 
         while ((nextIndex = typeName.indexOf('.', index)) > 0) {
-            sb.append(typeName.substring(index, nextIndex));
+            sb.append(typeName, index, nextIndex);
             sb.append(File.separatorChar);
             index = nextIndex + 1;
         }
@@ -716,7 +705,7 @@ implements ReferenceType {
         if (!vm.canGetSourceDebugExtension()) {
             return NO_SDE_INFO_MARK;
         }
-        SDE sde = null;
+        SDE sde;
         sde = (sdeRef == null) ?  null : (SDE)sdeRef.get();
         if (sde == null) {
            String extension = null;
@@ -812,12 +801,12 @@ implements ReferenceType {
         SDE.Stratum stratum = stratum(stratumID);
         List list = new ArrayList();  // location list
 
-        for (Iterator iter = methods().iterator(); iter.hasNext(); ) {
-            MethodImpl method = (MethodImpl)iter.next();
+        for (Method method1 : methods()) {
+            MethodImpl method = (MethodImpl) method1;
             try {
                 list.addAll(
-                   method.allLineLocations(stratum.id(), sourceName));
-            } catch(AbsentInformationException exc) {
+                        method.allLineLocations(stratum.id(), sourceName));
+            } catch (AbsentInformationException exc) {
                 someAbsent = true;
             }
         }
@@ -853,20 +842,19 @@ implements ReferenceType {
 
         List list = new ArrayList();
 
-        Iterator iter = methods.iterator();
-        while(iter.hasNext()) {
-            MethodImpl method = (MethodImpl)iter.next();
+        for (Object method1 : methods) {
+            MethodImpl method = (MethodImpl) method1;
             // eliminate native and abstract to eliminate
             // false positives
             if (!method.isAbstract() &&
-                !method.isNative()) {
+                    !method.isNative()) {
                 try {
                     list.addAll(
-                       method.locationsOfLine(stratum.id(),
-                                              sourceName,
-                                              lineNumber));
+                            method.locationsOfLine(stratum.id(),
+                                    sourceName,
+                                    lineNumber));
                     somePresent = true;
-                } catch(AbsentInformationException exc) {
+                } catch (AbsentInformationException exc) {
                     someAbsent = true;
                 }
             }
@@ -988,7 +976,7 @@ implements ReferenceType {
         if (saKlass instanceof ArrayKlass) {
             return 0;
         } else {
-            return (int)((InstanceKlass)saKlass).getConstants().getLength();
+            return ((InstanceKlass)saKlass).getConstants().getLength();
         }
     }
 
@@ -998,16 +986,14 @@ implements ReferenceType {
             throw new UnsupportedOperationException("Cannot get constant pool");
         }
         if (this instanceof ArrayType || this instanceof PrimitiveType) {
-                        byte bytes[] = new byte[0];
-            return bytes;
+            return new byte[0];
         } else {
             ByteArrayOutputStream bs = new ByteArrayOutputStream();
             try {
                 ((InstanceKlass)saKlass).getConstants().writeBytes(bs);
             } catch (IOException ex) {
                                 ex.printStackTrace();
-                                byte bytes[] = new byte[0];
-                                return bytes;
+                return new byte[0];
             }
             return bs.toByteArray();
         }

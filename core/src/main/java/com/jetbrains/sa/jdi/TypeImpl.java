@@ -46,7 +46,7 @@ public abstract class TypeImpl extends MirrorImpl implements Type
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof Type)) {
+        if ((obj instanceof Type)) {
             Type other = (Type)obj;
             return signature().equals(other.signature()) &&
                    super.equals(obj);

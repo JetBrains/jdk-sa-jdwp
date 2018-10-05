@@ -68,14 +68,14 @@ public class FieldImpl extends TypeComponentImpl implements Field {
     // get the value of this Field from a specific Oop
     ValueImpl getValue(Oop target) {
         ValueImpl valueImpl;
-        sun.jvm.hotspot.oops.Field saField = (sun.jvm.hotspot.oops.Field) ref();
+        sun.jvm.hotspot.oops.Field saField = ref();
         sun.jvm.hotspot.oops.FieldType ft = saField.getFieldType();
         if (ft.isArray()) {
             sun.jvm.hotspot.oops.OopField of = (sun.jvm.hotspot.oops.OopField)saField;
-            valueImpl = (ArrayReferenceImpl) vm.arrayMirror((Array)of.getValue(target));
+            valueImpl = vm.arrayMirror((Array)of.getValue(target));
         } else if (ft.isObject()) {
             sun.jvm.hotspot.oops.OopField of = (sun.jvm.hotspot.oops.OopField)saField;
-            valueImpl = (ObjectReferenceImpl) vm.objectMirror(of.getValue(target));
+            valueImpl = vm.objectMirror(of.getValue(target));
         } else if (ft.isByte()) {
             sun.jvm.hotspot.oops.ByteField bf = (sun.jvm.hotspot.oops.ByteField)saField;
             valueImpl = (ByteValueImpl) vm.mirrorOf(bf.getValue(target));
@@ -107,7 +107,7 @@ public class FieldImpl extends TypeComponentImpl implements Field {
     }
 
     public boolean equals(Object obj) {
-        if ((obj != null) && (obj instanceof FieldImpl)) {
+        if ((obj instanceof FieldImpl)) {
             FieldImpl other = (FieldImpl)obj;
             return (declaringType().equals(other.declaringType())) &&
                 (ref().equals(other.ref())) &&
@@ -157,12 +157,7 @@ public class FieldImpl extends TypeComponentImpl implements Field {
 
     // from interface Mirror
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-
-        buf.append(declaringType().name());
-        buf.append('.');
-        buf.append(name());
-        return buf.toString();
+        return declaringType().name() + '.' + name();
     }
 
     public String name() {

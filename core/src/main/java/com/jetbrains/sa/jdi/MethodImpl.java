@@ -34,14 +34,9 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     private JNITypeParser signatureParser;
     protected sun.jvm.hotspot.oops.Method saMethod;
 
-    public abstract int argSlotCount() throws AbsentInformationException;
-    abstract List<Location> allLineLocations(SDE.Stratum stratum,
-                                   String sourceName)
-                           throws AbsentInformationException;
-    abstract List<Location> locationsOfLine(SDE.Stratum stratum,
-                                  String sourceName,
-                                  int lineNumber)
-                           throws AbsentInformationException;
+    public abstract int argSlotCount();
+    abstract List<Location> allLineLocations(SDE.Stratum stratum, String sourceName) throws AbsentInformationException;
+    abstract List<Location> locationsOfLine(SDE.Stratum stratum, String sourceName, int lineNumber) throws AbsentInformationException;
 
     static MethodImpl createMethodImpl(VirtualMachine vm, ReferenceTypeImpl declaringType,
                                        sun.jvm.hotspot.oops.Method saMethod) {
@@ -96,23 +91,23 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         return enclosing.findType(signature);
     }
 
-    public List argumentTypeNames() {
+    public List<String> argumentTypeNames() {
         return getParser().argumentTypeNames();
     }
 
-    List argumentSignatures() {
+    List<String> argumentSignatures() {
         return getParser().argumentSignatures();
     }
 
     Type argumentType(int index) throws ClassNotLoadedException {
         ReferenceTypeImpl enclosing = (ReferenceTypeImpl)declaringType();
-        String signature = (String)argumentSignatures().get(index);
+        String signature = argumentSignatures().get(index);
         return enclosing.findType(signature);
     }
 
-    public List argumentTypes() throws ClassNotLoadedException {
+    public List<Type> argumentTypes() throws ClassNotLoadedException {
         int size = argumentSignatures().size();
-        ArrayList types = new ArrayList(size);
+        ArrayList<Type> types = new ArrayList<Type>(size);
         for (int i = 0; i < size; i++) {
             Type type = argumentType(i);
             types.add(type);
@@ -160,22 +155,19 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     public List<Location> allLineLocations(String stratumID,
                                  String sourceName)
                            throws AbsentInformationException {
-        return allLineLocations(declaringType.stratum(stratumID),
-                                sourceName);
+        return allLineLocations(declaringType.stratum(stratumID), sourceName);
     }
 
-    public final List locationsOfLine(int lineNumber)
+    public final List<Location> locationsOfLine(int lineNumber)
                            throws AbsentInformationException {
-        return locationsOfLine(vm.getDefaultStratum(),
-                               null, lineNumber);
+        return locationsOfLine(vm.getDefaultStratum(), null, lineNumber);
     }
 
-    public List locationsOfLine(String stratumID,
+    public List<Location> locationsOfLine(String stratumID,
                                 String sourceName,
                                 int lineNumber)
                            throws AbsentInformationException {
-        return locationsOfLine(declaringType.stratum(stratumID),
-                               sourceName, lineNumber);
+        return locationsOfLine(declaringType.stratum(stratumID), sourceName, lineNumber);
     }
 
     LineInfo codeIndexToLineInfo(SDE.Stratum stratum,
@@ -183,8 +175,7 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         if (stratum.isJava()) {
             return new BaseLineInfo(-1, declaringType);
         } else {
-            return new StratumLineInfo(stratum.id(), -1,
-                                       null, null);
+            return new StratumLineInfo(stratum.id(), -1, null, null);
         }
     }
 

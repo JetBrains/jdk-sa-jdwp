@@ -25,10 +25,11 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
+import com.sun.jdi.Method;
 import com.sun.jdi.*;
 import sun.jvm.hotspot.oops.*;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -69,16 +70,16 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
         }
     }
 
-    void addVisibleMethods(Map methodMap) {
+    void addVisibleMethods(Map<String, Method> methodMap) {
         // arrays don't have methods
     }
 
-    List getAllMethods() {
+    List<Method> getAllMethods() {
         // arrays don't have methods
         // JLS says arrays have methods of java.lang.Object. But
         // JVMDI-JDI returns zero size list. We do the same here
         // for consistency.
-        return new ArrayList(0);
+        return Collections.emptyList();
     }
 
     /*
@@ -154,12 +155,12 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
         return JDWP.TypeTag.ARRAY;
     }
 
-    List inheritedTypes() {
+    List<ReferenceType> inheritedTypes() {
         // arrays are derived from java.lang.Object and
         // B[] is derived from A[] if B is derived from A.
         // But JVMDI-JDI returns zero sized list and we do the
         // same for consistency.
-        return new ArrayList(0);
+        return Collections.emptyList();
     }
 
     int getModifiers() {

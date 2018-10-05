@@ -34,8 +34,8 @@ public class JNITypeParser {
     static final char SIGNATURE_ENDFUNC = ')';
 
     private String signature;
-    private List typeNameList;
-    private List signatureList;
+    private List<String> typeNameList;
+    private List<String> signatureList;
     private int currentIndex;
 
     JNITypeParser(String signature) {
@@ -81,18 +81,18 @@ public class JNITypeParser {
     }
 
     String typeName() {
-        return (String)typeNameList().get(typeNameList().size()-1);
+        return typeNameList().get(typeNameList().size()-1);
     }
 
-    List argumentTypeNames() {
+    List<String> argumentTypeNames() {
         return typeNameList().subList(0, typeNameList().size() - 1);
     }
 
     String signature() {
-        return (String)signatureList().get(signatureList().size()-1);
+        return signatureList().get(signatureList().size()-1);
     }
 
-    List argumentSignatures() {
+    List<String> argumentSignatures() {
         return signatureList().subList(0, signatureList().size() - 1);
     }
 
@@ -109,9 +109,9 @@ public class JNITypeParser {
         return signature().substring(level);
     }
 
-    private synchronized List signatureList() {
+    private synchronized List<String> signatureList() {
         if (signatureList == null) {
-            signatureList = new ArrayList(10);
+            signatureList = new ArrayList<String>(10);
             String elem;
 
             currentIndex = 0;
@@ -128,9 +128,9 @@ public class JNITypeParser {
         return signatureList;
     }
 
-    private synchronized List typeNameList() {
+    private synchronized List<String> typeNameList() {
         if (typeNameList == null) {
-            typeNameList = new ArrayList(10);
+            typeNameList = new ArrayList<String>(10);
             String elem;
 
             currentIndex = 0;

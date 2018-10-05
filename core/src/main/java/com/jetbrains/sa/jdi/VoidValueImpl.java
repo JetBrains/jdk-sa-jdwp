@@ -53,9 +53,7 @@ public class VoidValueImpl extends ValueImpl implements VoidValue {
         return vm.theVoidType();
     }
 
-    ValueImpl prepareForAssignmentTo(ValueContainer destination)
-                    throws InvalidTypeException {
-
+    ValueImpl prepareForAssignmentTo(ValueContainer destination) throws InvalidTypeException {
         throw new InvalidTypeException();
     }
 

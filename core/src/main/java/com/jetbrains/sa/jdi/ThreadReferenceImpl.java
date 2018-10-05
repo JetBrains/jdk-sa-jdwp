@@ -46,9 +46,9 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
              implements ThreadReference, /* imports */ JVMTIThreadState {
 
     private JavaThread myJavaThread;
-    private ArrayList<StackFrameImpl> frames;    // StackFrames
+    private ArrayList<StackFrame> frames;    // StackFrames
     private List<ObjectReference> ownedMonitors;
-    private List<MonitorInfoImpl> ownedMonitorsInfo; // List<MonitorInfo>
+    private List<com.sun.jdi.MonitorInfo> ownedMonitorsInfo; // List<MonitorInfo>
     private ObjectReferenceImpl currentContendingMonitor;
 
     ThreadReferenceImpl(VirtualMachine aVm, JavaThread aRef) {
@@ -102,7 +102,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         return 1;
     }
 
-    public void stop(ObjectReference throwable) throws InvalidTypeException {
+    public void stop(ObjectReference throwable) {
         vm.throwNotReadOnlyException("ThreadReference.stop()");
     }
 
@@ -170,8 +170,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
     }
 
     public ThreadGroupReference threadGroup() {
-        return vm.threadGroupMirror(
-               (Instance)OopUtilities.threadOopGetThreadGroup(ref()));
+        return vm.threadGroupMirror((Instance)OopUtilities.threadOopGetThreadGroup(ref()));
     }
 
     public int frameCount() throws IncompatibleThreadStateException  { //fixme jjh
@@ -179,20 +178,18 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         return frames.size();
     }
 
-    public List frames() throws IncompatibleThreadStateException  {
+    public List<StackFrame> frames() throws IncompatibleThreadStateException  {
         return privateFrames(0, -1);
     }
 
     public StackFrameImpl frame(int index) throws IncompatibleThreadStateException  {
-        List list = privateFrames(index, 1);
-        return (StackFrameImpl) list.get(0);
+        return (StackFrameImpl) privateFrames(index, 1).get(0);
     }
 
-    public List frames(int start, int length)
+    public List<StackFrame> frames(int start, int length)
                               throws IncompatibleThreadStateException  {
         if (length < 0) {
-            throw new IndexOutOfBoundsException(
-                "length must be greater than or equal to zero");
+            throw new IndexOutOfBoundsException("length must be greater than or equal to zero");
         }
         return privateFrames(start, length);
     }
@@ -202,14 +199,14 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
      * remaining frames.
      */
 
-    private List<StackFrameImpl> privateFrames(int start, int length)
+    private List<StackFrame> privateFrames(int start, int length)
                               throws IncompatibleThreadStateException  {
         if (myJavaThread == null) {
             // for zombies and yet-to-be-started threads we need to throw exception
             throw new IncompatibleThreadStateException();
         }
         if (frames == null) {
-            frames = new ArrayList<StackFrameImpl>(10);
+            frames = new ArrayList<StackFrame>(10);
             JavaVFrame myvf = myJavaThread.getLastJavaVFrameDbg();
             int id = 0;
             while (myvf != null) {
@@ -225,9 +222,9 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
             }
         }
 
-        List retVal;
+        List<StackFrame> retVal;
         if (frames.size() == 0) {
-            retVal = new ArrayList(0);
+            retVal = new ArrayList<StackFrame>(0);
         } else {
             int toIndex = start + length;
             if (length == -1) {
@@ -254,10 +251,10 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
 
         ownedMonitorsWithStackDepth();
 
-        for (MonitorInfoImpl monitorInfo : ownedMonitorsInfo) {
+        for (com.sun.jdi.MonitorInfo monitorInfo : ownedMonitorsInfo) {
             //FIXME : Change the MonitorInfoImpl cast to com.sun.jdi.MonitorInfo
             //        when hotspot start building with jdk1.6.
-            ownedMonitors.add((monitorInfo).monitor());
+            ownedMonitors.add(monitorInfo.monitor());
         }
 
         return ownedMonitors;
@@ -265,7 +262,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
 
     // new method since 1.6.
     // Real body will be supplied later.
-    public List ownedMonitorsAndFrames() throws IncompatibleThreadStateException {
+    public List<com.sun.jdi.MonitorInfo> ownedMonitorsAndFrames() throws IncompatibleThreadStateException {
         if (!vm.canGetMonitorFrameInfo()) {
             throw new UnsupportedOperationException(
                 "target does not support getting Monitor Frame Info");
@@ -285,9 +282,9 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
 
     private void ownedMonitorsWithStackDepth() {
 
-        ownedMonitorsInfo = new ArrayList();
-        List lockedObjects = new ArrayList(); // List<OopHandle>
-        List stackDepth = new ArrayList(); // List<int>
+        ownedMonitorsInfo = new ArrayList<com.sun.jdi.MonitorInfo>();
+        List<OopHandle> lockedObjects = new ArrayList<OopHandle>(); // List<OopHandle>
+        List<Integer> stackDepth = new ArrayList<Integer>(); // List<int>
         ObjectMonitor waitingMonitor = myJavaThread.getCurrentWaitingMonitor();
         ObjectMonitor pendingMonitor = myJavaThread.getCurrentPendingMonitor();
         OopHandle waitingObj = null;
@@ -304,8 +301,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         JavaVFrame frame = myJavaThread.getLastJavaVFrameDbg();
         int depth=0;
         while (frame != null) {
-            List frameMonitors = frame.getMonitors();  // List<MonitorInfo>
-            for (Object frameMonitor : frameMonitors) {
+            for (Object frameMonitor : frame.getMonitors()) {
                 MonitorInfo mi = (MonitorInfo) frameMonitor;
                 if (mi.eliminated() && frame.isCompiledFrame()) {
                     continue; // skip eliminated monitor
@@ -348,11 +344,10 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
 
         // now convert List<OopHandle> to List<ObjectReference>
         ObjectHeap heap = vm.saObjectHeap();
-        Iterator stk = stackDepth.iterator();
-        for (Object lockedObject : lockedObjects) {
-            Oop obj = heap.newOop((OopHandle) lockedObject);
-            ownedMonitorsInfo.add(new MonitorInfoImpl(vm, vm.objectMirror(obj), this,
-                    (Integer) stk.next()));
+        Iterator<Integer> stk = stackDepth.iterator();
+        for (OopHandle lockedObject : lockedObjects) {
+            Oop obj = heap.newOop(lockedObject);
+            ownedMonitorsInfo.add(new MonitorInfoImpl(vm, vm.objectMirror(obj), this, stk.next()));
         }
     }
 
@@ -391,11 +386,11 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
     }
 
 
-    public void popFrames(StackFrame frame) throws IncompatibleThreadStateException {
+    public void popFrames(StackFrame frame) {
         vm.throwNotReadOnlyException("ThreadReference.popFrames()");
     }
 
-    public void forceEarlyReturn(Value returnValue) throws IncompatibleThreadStateException {
+    public void forceEarlyReturn(Value returnValue) {
         vm.throwNotReadOnlyException("ThreadReference.forceEarlyReturn()");
     }
 

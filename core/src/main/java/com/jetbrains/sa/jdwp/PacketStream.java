@@ -204,15 +204,15 @@ public class PacketStream {
     }
     //
     void writeValue(Value val) {
-        try {
+//        try {
             writeValueChecked(val);
-        } catch (InvalidTypeException exc) {  // should never happen
-            throw new RuntimeException(
-                    "Internal error: Invalid Tag/Type pair");
-        }
+//        } catch (InvalidTypeException exc) {  // should never happen
+//            throw new RuntimeException(
+//                    "Internal error: Invalid Tag/Type pair");
+//        }
     }
 
-    void writeValueChecked(Value val) throws InvalidTypeException {
+    void writeValueChecked(Value val) {
         writeByte(ValueImpl.typeValueKey(val));
         writeUntaggedValue(val);
     }

@@ -24,12 +24,9 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.InternalException;
-import com.sun.jdi.Location;
-import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.*;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,52 +53,49 @@ public class NonConcreteMethodImpl extends MethodImpl {
         return location;
     }
 
-    public List allLineLocations(String stratumID,
+    public List<Location> allLineLocations(String stratumID,
                                  String sourceName) {
-        return new ArrayList(0);
+        return Collections.emptyList();
     }
 
-    public List allLineLocations(SDE.Stratum stratum,
-                                 String sourceName) {
-        return new ArrayList(0);
+    public List<Location> allLineLocations(SDE.Stratum stratum,
+                                               String sourceName) {
+        return Collections.emptyList();
     }
 
-    public List locationsOfLine(String stratumID,
+    public List<Location> locationsOfLine(String stratumID,
                                 String sourceName,
                                 int lineNumber) {
-        return new ArrayList(0);
+        return Collections.emptyList();
     }
 
-    public List locationsOfLine(SDE.Stratum stratum,
+    public List<Location> locationsOfLine(SDE.Stratum stratum,
                                 String sourceName,
                                 int lineNumber) {
-        return new ArrayList(0);
+        return Collections.emptyList();
     }
 
     public Location locationOfCodeIndex(long codeIndex) {
         return null;
     }
 
-    LineInfo codeIndexToLineInfo(SDE.Stratum stratum,
-                                 long codeIndex) {
-
+    LineInfo codeIndexToLineInfo(SDE.Stratum stratum, long codeIndex) {
         if (stratum.isJava()) {
             return new BaseLineInfo(-1, declaringType);
         } else {
-            return new StratumLineInfo(stratum.id(), -1,
-                                       null, null);
+            return new StratumLineInfo(stratum.id(), -1, null, null);
         }
     }
 
-    public List variables() throws AbsentInformationException {
+    public List<LocalVariable> variables() throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 
-    public List variablesByName(String name) throws AbsentInformationException {
+    public List<LocalVariable> variablesByName(String name) throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 
-    public List arguments() throws AbsentInformationException {
+    public List<LocalVariable> arguments() throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 
@@ -109,7 +103,7 @@ public class NonConcreteMethodImpl extends MethodImpl {
         return new byte[0];
     }
 
-    public int argSlotCount() throws AbsentInformationException {
+    public int argSlotCount() {
         throw new InternalException("should not get here");
     }
 }

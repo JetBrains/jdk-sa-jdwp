@@ -43,13 +43,13 @@ implements ReferenceType {
     protected Symbol      typeNameSymbol;   // This is used in vm.classesByName to speedup search
     private int           modifiers = -1;
     private String        signature = null;
-    private SoftReference sdeRef = null;
-    private SoftReference fieldsCache;
-    private SoftReference allFieldsCache;
-    private SoftReference methodsCache;
-    private SoftReference allMethodsCache;
-    private SoftReference nestedTypesCache;
-    private SoftReference methodInvokesCache;
+    private SoftReference<SDE> sdeRef = null;
+    private SoftReference<List<Field>> fieldsCache;
+    private SoftReference<List<Field>> allFieldsCache;
+    private SoftReference<List<Method>> methodsCache;
+    private SoftReference<List<Method>> allMethodsCache;
+    private SoftReference<List<ReferenceType>> nestedTypesCache;
+    private SoftReference<List<Method>> methodInvokesCache;
 
     /* to mark when no info available */
     static final SDE NO_SDE_INFO_MARK = new SDE();
@@ -80,14 +80,14 @@ implements ReferenceType {
         }
         if (ref.getMethodHolder().equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
           // invoke methods are generated as needed, so make mirrors as needed
-          List mis;
+          List<Method> mis;
           if (methodInvokesCache == null) {
-            mis = new ArrayList();
-            methodInvokesCache = new SoftReference(mis);
+            mis = new ArrayList<Method>();
+            methodInvokesCache = new SoftReference<List<Method>>(mis);
           } else {
-            mis = (List)methodInvokesCache.get();
+            mis = methodInvokesCache.get();
           }
-            for (Object mi : mis) {
+            for (Method mi : mis) {
                 MethodImpl method = (MethodImpl) mi;
                 if (ref.equals(method.ref())) {
                     return method;
@@ -232,18 +232,18 @@ implements ReferenceType {
     }
 
     public final List<Field> fields() throws ClassNotPreparedException {
-        List fields = (fieldsCache != null)? (List) fieldsCache.get() : null;
+        List<Field> fields = (fieldsCache != null)? fieldsCache.get() : null;
         if (fields == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
-                fields = new ArrayList(0);
+                fields = new ArrayList<Field>(0);
             } else {
                 // Get a list of the sa Field types
                 List saFields = ((InstanceKlass)saKlass).getImmediateFields();
 
                 // Create a list of our Field types
                 int len = saFields.size();
-                fields = new ArrayList(len);
+                fields = new ArrayList<Field>(len);
                 for (Object saField : saFields) {
                     sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field) saField;
                     if (!isThrowableBacktraceField(curField)) {
@@ -252,13 +252,13 @@ implements ReferenceType {
                 }
             }
             fields = Collections.unmodifiableList(fields);
-            fieldsCache = new SoftReference(fields);
+            fieldsCache = new SoftReference<List<Field>>(fields);
         }
         return fields;
     }
 
     public final List<Field> allFields() throws ClassNotPreparedException {
-        List<Field> allFields = (allFieldsCache != null)? (List) allFieldsCache.get() : null;
+        List<Field> allFields = (allFieldsCache != null)? allFieldsCache.get() : null;
         if (allFields == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
@@ -305,20 +305,20 @@ implements ReferenceType {
                 }
             }
             allFields = Collections.unmodifiableList(allFields);
-            allFieldsCache = new SoftReference(allFields);
+            allFieldsCache = new SoftReference<List<Field>>(allFields);
         }
         return allFields;
     }
 
-    abstract List inheritedTypes();
+    abstract List<? extends ReferenceType> inheritedTypes();
 
-    void addVisibleFields(List visibleList, Map visibleTable, List ambiguousNames) {
-        List list = visibleFields();
+    void addVisibleFields(List<Field> visibleList, Map<String, Field> visibleTable, List<String> ambiguousNames) {
+        List<Field> list = visibleFields();
         for (Object o : list) {
             Field field = (Field) o;
             String name = field.name();
             if (!ambiguousNames.contains(name)) {
-                Field duplicate = (Field) visibleTable.get(name);
+                Field duplicate = visibleTable.get(name);
                 if (duplicate == null) {
                     visibleList.add(field);
                     visibleTable.put(name, field);
@@ -333,7 +333,7 @@ implements ReferenceType {
         }
     }
 
-    public final List visibleFields() throws ClassNotPreparedException {
+    public final List<Field> visibleFields() throws ClassNotPreparedException {
         checkPrepared();
         /*
          * Maintain two different collections of visible fields. The
@@ -341,32 +341,29 @@ implements ReferenceType {
          * hash map provides an efficient way to lookup visible fields
          * by name, important for finding hidden or ambiguous fields.
          */
-        List visibleList = new ArrayList();
-        Map  visibleTable = new HashMap();
+        List<Field> visibleList = new ArrayList<Field>();
+        Map<String, Field>  visibleTable = new HashMap<String, Field>();
 
         /* Track fields removed from above collection due to ambiguity */
-        List ambiguousNames = new ArrayList();
+        List<String> ambiguousNames = new ArrayList<String>();
 
         /* Add inherited, visible fields */
-        List types = inheritedTypes();
-        Iterator iter = types.iterator();
-        while (iter.hasNext()) {
+        for (ReferenceType inheritedType : inheritedTypes()) {
             /*
              * TO DO: Be defensive and check for cyclic interface inheritance
              */
-            ReferenceTypeImpl type = (ReferenceTypeImpl)iter.next();
-            type.addVisibleFields(visibleList, visibleTable, ambiguousNames);
+            ((ReferenceTypeImpl)inheritedType).addVisibleFields(visibleList, visibleTable, ambiguousNames);
         }
 
         /*
          * Insert fields from this type, removing any inherited fields they
          * hide.
          */
-        List retList = new ArrayList(fields());
-        iter = retList.iterator();
+        List<Field> retList = new ArrayList<Field>(fields());
+        Iterator iter = retList.iterator();
         while (iter.hasNext()) {
             Field field = (Field)iter.next();
-            Field hidden = (Field)visibleTable.get(field.name());
+            Field hidden = visibleTable.get(field.name());
             if (hidden != null) {
                 visibleList.remove(hidden);
             }
@@ -376,15 +373,8 @@ implements ReferenceType {
     }
 
    public final Field fieldByName(String fieldName) throws ClassNotPreparedException {
-        List searchList;
-        Field f;
-
-        // visibleFields calls checkPrepared
-        searchList = visibleFields();
-
-       for (Object o : searchList) {
-           f = (Field) o;
-
+       // visibleFields calls checkPrepared
+       for (Field f : visibleFields()) {
            if (f.name().equals(fieldName)) {
                return f;
            }
@@ -403,15 +393,14 @@ implements ReferenceType {
     }
 
     public final List<Method> methods() throws ClassNotPreparedException {
-        List<Method> methods = (methodsCache != null)? (List) methodsCache.get() : null;
+        List<Method> methods = (methodsCache != null)? methodsCache.get() : null;
         if (methods == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
                 methods = new ArrayList<Method>(0);
             } else {
-                List saMethods;
                 // Get a list of the SA Method types
-                saMethods = ((InstanceKlass)saKlass).getImmediateMethods();
+                List saMethods = ((InstanceKlass)saKlass).getImmediateMethods();
 
                 // Create a list of our MethodImpl types
                 int len = saMethods.size();
@@ -421,18 +410,19 @@ implements ReferenceType {
                 }
             }
             methods = Collections.unmodifiableList(methods);
-            methodsCache = new SoftReference(methods);
+            methodsCache = new SoftReference<List<Method>>(methods);
         }
         return methods;
     }
 
-    abstract List getAllMethods();
-    public final List allMethods() throws ClassNotPreparedException {
-        List allMethods = (allMethodsCache != null)? (List) allMethodsCache.get() : null;
+    abstract List<Method> getAllMethods();
+
+    public final List<Method> allMethods() throws ClassNotPreparedException {
+        List<Method> allMethods = (allMethodsCache != null)? allMethodsCache.get() : null;
         if (allMethods == null) {
             checkPrepared();
             allMethods = Collections.unmodifiableList(getAllMethods());
-            allMethodsCache = new SoftReference(allMethods);
+            allMethodsCache = new SoftReference<List<Method>>(allMethods);
         }
         return allMethods;
     }
@@ -441,15 +431,15 @@ implements ReferenceType {
      * Utility method used by subclasses to build lists of visible
      * methods.
      */
-    void addToMethodMap(Map methodMap, List methodList) {
-        for (Object o : methodList) {
-            Method method = (Method) o;
+    void addToMethodMap(Map<String, Method> methodMap, List<Method> methodList) {
+        for (Method method : methodList) {
             methodMap.put(method.name().concat(method.signature()), method);
         }
     }
 
-    abstract void addVisibleMethods(Map methodMap);
-    public final List visibleMethods() throws ClassNotPreparedException {
+    abstract void addVisibleMethods(Map<String, Method> methodMap);
+
+    public final List<Method> visibleMethods() throws ClassNotPreparedException {
         checkPrepared();
         /*
          * Build a collection of all visible methods. The hash
@@ -457,7 +447,7 @@ implements ReferenceType {
          * concatenation of name and signature.
          */
         //System.out.println("jj: RTI: Calling addVisibleMethods for:" + this);
-        Map map = new HashMap();
+        Map<String, Method> map = new HashMap<String, Method>();
         addVisibleMethods(map);
 
         /*
@@ -468,7 +458,7 @@ implements ReferenceType {
          */
         //System.out.println("jj: RTI: Calling allMethods for:" + this);
 
-        List list = new ArrayList(allMethods());
+        List<Method> list = new ArrayList<Method>(allMethods());
         //System.out.println("jj: allMethods = " + jjstr(list));
         //System.out.println("jj: map = " + map.toString());
         //System.out.println("jj: map = " + jjstr(map.values()));
@@ -504,10 +494,10 @@ implements ReferenceType {
         return buf.toString();
     }
 
-    public final List methodsByName(String name) throws ClassNotPreparedException {
+    public final List<Method> methodsByName(String name) throws ClassNotPreparedException {
         // visibleMethods calls checkPrepared
-        List methods = visibleMethods();
-        ArrayList retList = new ArrayList(methods.size());
+        List<Method> methods = visibleMethods();
+        ArrayList<Method> retList = new ArrayList<Method>(methods.size());
         for (Object method : methods) {
             Method candidate = (Method) method;
             if (candidate.name().equals(name)) {
@@ -518,10 +508,10 @@ implements ReferenceType {
         return retList;
     }
 
-    public final List methodsByName(String name, String signature) throws ClassNotPreparedException {
+    public final List<Method> methodsByName(String name, String signature) throws ClassNotPreparedException {
         // visibleMethods calls checkPrepared
-        List methods = visibleMethods();
-        ArrayList retList = new ArrayList(methods.size());
+        List<Method> methods = visibleMethods();
+        ArrayList<Method> retList = new ArrayList<Method>(methods.size());
         for (Object method : methods) {
             Method candidate = (Method) method;
             if (candidate.name().equals(name) &&
@@ -534,7 +524,7 @@ implements ReferenceType {
     }
 
 
-    List<InterfaceTypeImpl> getInterfaces() {
+    List<InterfaceType> getInterfaces() {
         if (saKlass instanceof ArrayKlass) {
             // Actually, JLS says arrays implement Cloneable and Serializable
             // But, JVMDI-JDI just returns 0 interfaces for arrays. We follow
@@ -546,21 +536,21 @@ implements ReferenceType {
         List saInterfaces = ((InstanceKlass)saKlass).getDirectImplementedInterfaces();
 
         // Create a list of our InterfaceTypes
-        List<InterfaceTypeImpl> myInterfaces = new ArrayList<InterfaceTypeImpl>(saInterfaces.size());
+        List<InterfaceType> myInterfaces = new ArrayList<InterfaceType>(saInterfaces.size());
         for (Object saInterface : saInterfaces) {
-            myInterfaces.add((InterfaceTypeImpl) vm.referenceType((Klass) saInterface));
+            myInterfaces.add((InterfaceType) vm.referenceType((Klass) saInterface));
         }
         return myInterfaces;
     }
 
     public final List<ReferenceType> nestedTypes() {
-        List<ReferenceType> nestedTypes = (nestedTypesCache != null)? (List) nestedTypesCache.get() : null;
+        List<ReferenceType> nestedTypes = (nestedTypesCache != null)? nestedTypesCache.get() : null;
         if (nestedTypes == null) {
             if (saKlass instanceof ArrayKlass) {
                 nestedTypes = new ArrayList<ReferenceType>(0);
             } else {
                 ClassLoaderReference cl = classLoader();
-                List classes;
+                List<ReferenceType> classes;
                 if (cl != null) {
                    classes = cl.visibleClasses();
                 } else {
@@ -581,31 +571,29 @@ implements ReferenceType {
         return nestedTypes;
     }
 
-    public Value getValue(Field sig) {
-        List list = new ArrayList(1);
-        list.add(sig);
-        Map map = getValues(list);
-        return(Value)map.get(sig);
+    public Value getValue(Field field) {
+        FieldImpl fieldImpl = (FieldImpl) field;
+
+        validateFieldAccess(fieldImpl);
+        // Do more validation specific to ReferenceType field getting
+        if (!fieldImpl.isStatic()) {
+            throw new IllegalArgumentException(
+              "Attempt to use non-static field with ReferenceType: " +
+                fieldImpl.name());
+        }
+
+        return fieldImpl.getValue();
     }
 
     /**
      * Returns a map of field values
      */
-    public Map getValues(List theFields) {
+    public Map<Field, Value> getValues(List<? extends Field> theFields) {
         //validateMirrors();
         int size = theFields.size();
-        Map map = new HashMap(size);
-        for (Object theField : theFields) {
-            FieldImpl fieldImpl = (FieldImpl) theField;
-
-            validateFieldAccess(fieldImpl);
-            // Do more validation specific to ReferenceType field getting
-            if (!fieldImpl.isStatic()) {
-                throw new IllegalArgumentException(
-                        "Attempt to use non-static field with ReferenceType: " +
-                                fieldImpl.name());
-            }
-            map.put(fieldImpl, fieldImpl.getValue());
+        Map<Field, Value> map = new HashMap<Field, Value>(size);
+        for (Field field : theFields) {
+            map.put(field, getValue(field));
         }
         return map;
     }
@@ -634,25 +622,25 @@ implements ReferenceType {
     }
 
     public String sourceName() throws AbsentInformationException {
-        return (String)(sourceNames(vm.getDefaultStratum()).get(0));
+        return (sourceNames(vm.getDefaultStratum()).get(0));
     }
 
-    public List sourceNames(String stratumID)
+    public List<String> sourceNames(String stratumID)
                                 throws AbsentInformationException {
         SDE.Stratum stratum = stratum(stratumID);
         if (stratum.isJava()) {
-            List result = new ArrayList(1);
+            List<String> result = new ArrayList<String>(1);
             result.add(baseSourceName());
             return result;
         }
         return stratum.sourceNames(this);
     }
 
-    public List sourcePaths(String stratumID)
+    public List<String> sourcePaths(String stratumID)
                                 throws AbsentInformationException {
         SDE.Stratum stratum = stratum(stratumID);
         if (stratum.isJava()) {
-            List result = new ArrayList(1);
+            List<String> result = new ArrayList<String>(1);
             result.add(baseSourceDir() + baseSourceName());
             return result;
         }
@@ -706,7 +694,7 @@ implements ReferenceType {
             return NO_SDE_INFO_MARK;
         }
         SDE sde;
-        sde = (sdeRef == null) ?  null : (SDE)sdeRef.get();
+        sde = (sdeRef == null) ?  null : sdeRef.get();
         if (sde == null) {
            String extension = null;
            if (saKlass instanceof InstanceKlass) {
@@ -717,17 +705,17 @@ implements ReferenceType {
            } else {
               sde = new SDE(extension);
            }
-           sdeRef = new SoftReference(sde);
+           sdeRef = new SoftReference<SDE>(sde);
         }
         return sde;
     }
 
-    public List availableStrata() {
+    public List<String> availableStrata() {
         SDE sde = sourceDebugExtensionInfo();
         if (sde.isValid()) {
             return sde.availableStrata();
         } else {
-            List strata = new ArrayList();
+            List<String> strata = new ArrayList<String>();
             strata.add(SDE.BASE_STRATUM_NAME);
             return strata;
         }
@@ -789,23 +777,22 @@ implements ReferenceType {
         return (int) saKlass.getClassModifiers();
     }
 
-    public List allLineLocations()
+    public List<Location> allLineLocations()
                             throws AbsentInformationException {
         return allLineLocations(vm.getDefaultStratum(), null);
     }
 
-    public List allLineLocations(String stratumID, String sourceName)
+    public List<Location> allLineLocations(String stratumID, String sourceName)
                             throws AbsentInformationException {
         checkPrepared();
         boolean someAbsent = false; // A method that should have info, didn't
         SDE.Stratum stratum = stratum(stratumID);
-        List list = new ArrayList();  // location list
+        List<Location> list = new ArrayList<Location>();  // location list
 
         for (Method method1 : methods()) {
             MethodImpl method = (MethodImpl) method1;
             try {
-                list.addAll(
-                        method.allLineLocations(stratum.id(), sourceName));
+                list.addAll(method.allLineLocations(stratum.id(), sourceName));
             } catch (AbsentInformationException exc) {
                 someAbsent = true;
             }
@@ -821,14 +808,14 @@ implements ReferenceType {
         return list;
     }
 
-    public List locationsOfLine(int lineNumber)
+    public List<Location> locationsOfLine(int lineNumber)
                            throws AbsentInformationException {
         return locationsOfLine(vm.getDefaultStratum(),
                                null,
                                lineNumber);
     }
 
-    public List locationsOfLine(String stratumID,
+    public List<Location> locationsOfLine(String stratumID,
                                 String sourceName,
                                 int lineNumber)
                            throws AbsentInformationException {
@@ -837,22 +824,18 @@ implements ReferenceType {
         boolean someAbsent = false;
         // A method that should have info, did
         boolean somePresent = false;
-        List methods = methods();
+        List<Method> methods = methods();
         SDE.Stratum stratum = stratum(stratumID);
 
-        List list = new ArrayList();
+        List<Location> list = new ArrayList<Location>();
 
         for (Object method1 : methods) {
             MethodImpl method = (MethodImpl) method1;
             // eliminate native and abstract to eliminate
             // false positives
-            if (!method.isAbstract() &&
-                    !method.isNative()) {
+            if (!method.isAbstract() && !method.isNative()) {
                 try {
-                    list.addAll(
-                            method.locationsOfLine(stratum.id(),
-                                    sourceName,
-                                    lineNumber));
+                    list.addAll(method.locationsOfLine(stratum.id(), sourceName, lineNumber));
                     somePresent = true;
                 } catch (AbsentInformationException exc) {
                     someAbsent = true;

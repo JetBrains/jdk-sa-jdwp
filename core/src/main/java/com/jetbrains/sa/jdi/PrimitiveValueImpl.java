@@ -85,7 +85,7 @@ public abstract class PrimitiveValueImpl extends ValueImpl
         }
     }
 
-    final double checkedDoubleValue() throws InvalidTypeException {
+    final double checkedDoubleValue() {
         /*
          * Can't overflow by converting to double, so this method
          * is never overridden

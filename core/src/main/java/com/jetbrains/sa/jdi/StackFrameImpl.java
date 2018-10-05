@@ -47,7 +47,7 @@ public class StackFrameImpl extends MirrorImpl
     private final JavaVFrame saFrame;
     private int id;
     private final Location location;
-    private Map visibleVariables =  null;
+    private Map<String, LocalVariable> visibleVariables =  null;
     private ObjectReference thisObject = null;
 
     StackFrameImpl(VirtualMachine vm, ThreadReferenceImpl thread, JavaVFrame jvf, int id) {
@@ -140,16 +140,15 @@ public class StackFrameImpl extends MirrorImpl
      */
     private void createVisibleVariables() throws AbsentInformationException {
         if (visibleVariables == null) {
-            List allVariables = location.method().variables();
-            Map map = new HashMap(allVariables.size());
+            List<LocalVariable> allVariables = location.method().variables();
+            Map<String, LocalVariable> map = new HashMap<String, LocalVariable>(allVariables.size());
 
-            for (Object allVariable : allVariables) {
+            for (LocalVariable allVariable : allVariables) {
                 LocalVariableImpl variable = (LocalVariableImpl) allVariable;
                 String name = variable.name();
                 if (variable.isVisible(this)) {
-                    LocalVariable existing = (LocalVariable) map.get(name);
-                    if ((existing == null) ||
-                            variable.hides(existing)) {
+                    LocalVariable existing = map.get(name);
+                    if ((existing == null) || variable.hides(existing)) {
                         map.put(name, variable);
                     }
                 }
@@ -162,10 +161,10 @@ public class StackFrameImpl extends MirrorImpl
      * Return the list of visible variable in the frame.
      * Need not be synchronized since it cannot be provably stale.
      */
-    public List visibleVariables() throws AbsentInformationException {
+    public List<LocalVariable> visibleVariables() throws AbsentInformationException {
         validateStackFrame();
         createVisibleVariables();
-        List mapAsList = new ArrayList(visibleVariables.values());
+        List<LocalVariable> mapAsList = new ArrayList<LocalVariable>(visibleVariables.values());
         Collections.sort(mapAsList);
         return mapAsList;
     }
@@ -177,27 +176,23 @@ public class StackFrameImpl extends MirrorImpl
     public LocalVariable visibleVariableByName(String name) throws AbsentInformationException  {
         validateStackFrame();
         createVisibleVariables();
-        return (LocalVariable)visibleVariables.get(name);
+        return visibleVariables.get(name);
     }
 
     public Value getValue(LocalVariable variable) {
-        List list = new ArrayList(1);
-        list.add(variable);
-        Map map = getValues(list);
-        return (Value)map.get(variable);
+        return getValues(Collections.singletonList(variable)).get(variable);
     }
 
-    public Map getValues(List variables) {
+    public Map<LocalVariable, Value> getValues(List<? extends LocalVariable> variables) {
         validateStackFrame();
         StackValueCollection values = saFrame.getLocals();
 
         int count = variables.size();
-        Map map = new HashMap(count);
+        Map<LocalVariable, Value> map = new HashMap<LocalVariable, Value>(count);
         for (Object variable1 : variables) {
             LocalVariableImpl variable = (LocalVariableImpl) variable1;
             if (!variable.isVisible(this)) {
-                throw new IllegalArgumentException(variable.name() +
-                        " is not valid at this frame location");
+                throw new IllegalArgumentException(variable.name() + " is not valid at this frame location");
             }
             ValueImpl valueImpl;
             int ss = variable.slot();
@@ -209,15 +204,15 @@ public class StackFrameImpl extends MirrorImpl
         return map;
     }
 
-    public List getArgumentValues() {
+    public List<Value> getArgumentValues() {
         validateStackFrame();
         StackValueCollection values = saFrame.getLocals();
         MethodImpl mmm = (MethodImpl)location.method();
         if (mmm.isNative())
             return null;
-        List argSigs = mmm.argumentSignatures();
+        List<String> argSigs = mmm.argumentSignatures();
         int count = argSigs.size();
-        List res = new ArrayList(0);
+        List<Value> res = new ArrayList<Value>(0);
 
         int slot = mmm.isStatic()? 0 : 1;
         for (int ii = 0; ii < count; ++slot, ++ii) {
@@ -307,8 +302,7 @@ public class StackFrameImpl extends MirrorImpl
         return valueImpl;
     }
 
-    public void setValue(LocalVariable variableIntf, Value valueIntf)
-        throws InvalidTypeException, ClassNotLoadedException {
+    public void setValue(LocalVariable variableIntf, Value valueIntf) {
 
         vm.throwNotReadOnlyException("StackFrame.setValue()");
     }

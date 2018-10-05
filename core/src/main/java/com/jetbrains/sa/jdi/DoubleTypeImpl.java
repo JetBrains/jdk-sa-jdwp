@@ -26,7 +26,6 @@ package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
 import com.sun.jdi.DoubleType;
-import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.PrimitiveValue;
 import com.sun.jdi.VirtualMachine;
 
@@ -45,7 +44,7 @@ public class DoubleTypeImpl extends PrimitiveTypeImpl implements DoubleType {
         return JDWP.Tag.DOUBLE;
     }
 
-    PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException {
+    PrimitiveValue convert(PrimitiveValue value) {
         return vm.mirrorOf(((PrimitiveValueImpl)value).checkedDoubleValue());
     }
 

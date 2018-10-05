@@ -68,16 +68,13 @@ public class ClassLoaderReferenceImpl
      }
 
      Type findType(String signature) throws ClassNotLoadedException {
-         List types = visibleClasses();
-         for (Object type1 : types) {
-             ReferenceType type = (ReferenceType) type1;
+         for (ReferenceType type : visibleClasses()) {
              if (type.signature().equals(signature)) {
                  return type;
              }
          }
          JNITypeParser parser = new JNITypeParser(signature);
-         throw new ClassNotLoadedException(parser.typeName(),
-                                          "Class " + parser.typeName() + " not loaded");
+         throw new ClassNotLoadedException(parser.typeName(), "Class " + parser.typeName() + " not loaded");
      }
 
     @Override

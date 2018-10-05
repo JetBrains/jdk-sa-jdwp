@@ -30,6 +30,7 @@ import sun.jvm.hotspot.oops.Array;
 import sun.jvm.hotspot.runtime.BasicType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ArrayReferenceImpl extends ObjectReferenceImpl
@@ -53,11 +54,10 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
     }
 
     public Value getValue(int index) {
-        List list = getValues(index, 1);
-        return (Value)list.get(0);
+        return getValues(index, 1).get(0);
     }
 
-    public List getValues() {
+    public List<Value> getValues() {
         return getValues(0, -1);
     }
 
@@ -89,10 +89,10 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
            len = length() - index;
         }
         validateArrayAccess(index, len);
-        List vals = new ArrayList();
         if (len == 0) {
-            return vals;
+            return Collections.emptyList();
         }
+        List<Value> vals = new ArrayList<Value>(len);
 
         sun.jvm.hotspot.oops.TypeArray typeArray = null;
         sun.jvm.hotspot.oops.ObjArray objArray = null;
@@ -140,30 +140,20 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         return vals;
     }
 
-    public void setValue(int index, Value value)
-            throws InvalidTypeException,
-                   ClassNotLoadedException {
+    public void setValue(int index, Value value) {
         vm.throwNotReadOnlyException("ArrayReference.setValue(...)");
     }
 
-    public void setValues(List values)
-            throws InvalidTypeException,
-                   ClassNotLoadedException {
+    public void setValues(List<? extends Value> values) {
         setValues(0, values, 0, -1);
     }
 
-    public void setValues(int index, List values,
-                          int srcIndex, int length)
-            throws InvalidTypeException,
-                   ClassNotLoadedException {
-
+    public void setValues(int index, List<? extends Value> values, int srcIndex, int length) {
         vm.throwNotReadOnlyException("ArrayReference.setValue(...)");
-
     }
 
     public String toString() {
-        return "instance of " + arrayType().componentTypeName() +
-               "[" + length() + "] (id=" + uniqueID() + ")";
+        return "instance of " + arrayType().componentTypeName() + "[" + length() + "] (id=" + uniqueID() + ")";
     }
 
     @Override

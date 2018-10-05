@@ -93,9 +93,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
     private final List<ReferenceTypeImpl>       typesBySignature = new ArrayList<ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
-    private List      bootstrapClasses;      // all bootstrap classes
+    private List<ReferenceType>      bootstrapClasses;      // all bootstrap classes
     private ArrayList<ThreadReference> allThreads;
-    private ArrayList topLevelGroups;
+    private ArrayList<ThreadGroupReference> topLevelGroups;
     final   int       sequenceNumber;
 
     // ObjectReference cache
@@ -228,8 +228,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
 
-    VirtualMachineImpl(VirtualMachineManager mgr, int sequenceNumber)
-        throws Exception {
+    VirtualMachineImpl(VirtualMachineManager mgr, int sequenceNumber) {
         super(null);  // Can't use super(this)
         vm = this;
 
@@ -305,11 +304,10 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // classes loaded by bootstrap loader
-    List bootstrapClasses() {
+    List<ReferenceType> bootstrapClasses() {
         if (bootstrapClasses == null) {
-            bootstrapClasses = new ArrayList();
-            List all = allClasses();
-            for (Object o : all) {
+            bootstrapClasses = new ArrayList<ReferenceType>();
+            for (Object o : allClasses()) {
                 ReferenceType type = (ReferenceType) o;
                 if (type.classLoader() == null) {
                     bootstrapClasses.add(type);
@@ -339,14 +337,12 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         Symbol typeNameSym = saSymbolTable().probe(typeName);
         // if there is no symbol in VM, then we wouldn't have that type
         if (typeNameSym == null) {
-            return new ArrayList<ReferenceType>(0);
+            return Collections.emptyList();
         }
 
-        Iterator iter = typesBySignature.iterator();
         List<ReferenceType> list = new ArrayList<ReferenceType>();
-        while (iter.hasNext()) {
+        for (ReferenceTypeImpl type : typesBySignature) {
             // We have cached type name as symbol in reference type
-            ReferenceTypeImpl type = (ReferenceTypeImpl)iter.next();
             if (typeNameSym.equals(type.typeNameAsSymbol())) {
                 list.add(type);
             }
@@ -402,16 +398,14 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return threadGroupForJDI;
     }
 
-    public void redefineClasses(Map classToBytes) {
+    public void redefineClasses(Map<? extends ReferenceType, byte[]> classToBytes) {
         throwNotReadOnlyException("VirtualMachineImpl.redefineClasses()");
     }
 
     private List<ThreadReference> getAllThreads() {
         if (allThreads == null) {
-            allThreads = new ArrayList(10);  // Might be enough, might not be
-            for (JavaThread thread =
-                 saVM.getThreads().first(); thread != null;
-                 thread = thread.next()) {
+            allThreads = new ArrayList<ThreadReference>(10);  // Might be enough, might not be
+            for (JavaThread thread = saVM.getThreads().first(); thread != null; thread = thread.next()) {
                 // refer to JvmtiEnv::GetAllThreads in jvmtiEnv.cpp.
                 // filter out the hidden-from-external-view threads.
                 if (!thread.isHiddenFromExternalView()) {
@@ -435,7 +429,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         throwNotReadOnlyException("VirtualMachineImpl.resume()");
     }
 
-    public List topLevelThreadGroups() { //fixme jjh
+    public List<ThreadGroupReference> topLevelThreadGroups() { //fixme jjh
         // The doc for ThreadGroup says that The top-level thread group
         // is the only thread group whose parent is null.  This means there is
         // only one top level thread group.  There will be a thread in this
@@ -443,7 +437,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         // and that will be it.
 
         if (topLevelGroups == null) {
-            topLevelGroups = new ArrayList(1);
+            topLevelGroups = new ArrayList<ThreadGroupReference>(1);
             for (ThreadReference threadReference : getAllThreads()) {
                 ThreadReferenceImpl myThread = (ThreadReferenceImpl) threadReference;
                 ThreadGroupReference myGroup = myThread.threadGroup();
@@ -515,25 +509,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     public Process process() {
         throwNotReadOnlyException("VirtualMachine.process");
         return null;
-    }
-
-    // dispose observer for Class re-use. refer to ConnectorImpl.
-    private Observer disposeObserver;
-
-    // ConnectorImpl loaded by a different class loader can not access it.
-    // i.e., runtime package of <ConnectorImpl, L1> is not the same that of
-    // <VirtualMachineImpl, L2> when L1 != L2. So, package private method
-    // can be called reflectively after using setAccessible(true).
-
-    void setDisposeObserver(Observer observer) {
-       disposeObserver = observer;
-    }
-
-    private void notifyDispose() {
-        if (Assert.ASSERTS_ENABLED) {
-            Assert.that(disposeObserver != null, "null VM.dispose observer");
-        }
-        disposeObserver.update(null, null);
     }
 
     public void dispose() {
@@ -660,7 +635,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     // new method since 1.6
     // Real body will be supplied later.
-    public long[] instanceCounts(List classes) {
+    public long[] instanceCounts(List<? extends ReferenceType> classes) {
         if (!canGetInstanceInfo()) {
             throw new UnsupportedOperationException(
                       "target does not support getting instances");
@@ -784,57 +759,57 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // return a list of all objects in heap
-    public List/*<ObjectReference>*/ allObjects() {
-        final List objects = new ArrayList(0);
+    public List<ObjectReference> allObjects() {
+        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
         saObjectHeap.iterate(
-            new DefaultHeapVisitor() {
-                public boolean doObj(Oop oop) {
-                    objects.add(objectMirror(oop));
-                                        return false;
-                }
-            });
+                new DefaultHeapVisitor() {
+                    public boolean doObj(Oop oop) {
+                        objects.add(objectMirror(oop));
+                        return false;
+                    }
+                });
         return objects;
     }
 
     // equivalent to objectsByType(type, true)
-    public List/*<ObjectReference>*/ objectsByType(ReferenceType type) {
+    public List<ObjectReference> objectsByType(ReferenceType type) {
         return objectsByType(type, true);
     }
 
     // returns objects of type exactly equal to given type
-    private List/*<ObjectReference>*/ objectsByExactType(ReferenceType type) {
-        final List objects = new ArrayList(0);
-        final Klass givenKls = ((ReferenceTypeImpl)type).ref();
+    private List<ObjectReference> objectsByExactType(ReferenceType type) {
+        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
+        final Klass givenKls = ((ReferenceTypeImpl) type).ref();
         saObjectHeap.iterate(new DefaultHeapVisitor() {
-                public boolean doObj(Oop oop) {
-                    if (givenKls.equals(oop.getKlass())) {
-                        objects.add(objectMirror(oop));
-                    }
-                        return false;
+            public boolean doObj(Oop oop) {
+                if (givenKls.equals(oop.getKlass())) {
+                    objects.add(objectMirror(oop));
                 }
-            });
+                return false;
+            }
+        });
         return objects;
     }
 
     // returns objects of given type as well as it's subtypes
-    private List/*<ObjectReference>*/ objectsBySubType(ReferenceType type) {
-        final List objects = new ArrayList(0);
+    private List<ObjectReference> objectsBySubType(ReferenceType type) {
+        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
         final ReferenceType givenType = type;
         saObjectHeap.iterate(new DefaultHeapVisitor() {
-                public boolean doObj(Oop oop) {
-                    ReferenceTypeImpl curType = referenceType(oop.getKlass());
-                    if (curType.isAssignableTo(givenType)) {
-                        objects.add(objectMirror(oop));
-                    }
-                        return false;
+            public boolean doObj(Oop oop) {
+                ReferenceTypeImpl curType = referenceType(oop.getKlass());
+                if (curType.isAssignableTo(givenType)) {
+                    objects.add(objectMirror(oop));
                 }
-            });
+                return false;
+            }
+        });
         return objects;
     }
 
     // includeSubtypes - do you want to include subclass/subtype instances of given
     // ReferenceType or do we want objects of exact type only?
-    public List/*<ObjectReference>*/ objectsByType(ReferenceType type, boolean includeSubtypes) {
+    public List<ObjectReference> objectsByType(ReferenceType type, boolean includeSubtypes) {
         Klass kls = ((ReferenceTypeImpl)type).ref();
         if (kls instanceof InstanceKlass) {
             InstanceKlass ik = (InstanceKlass) kls;
@@ -863,17 +838,13 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     Type findBootType(String signature) throws ClassNotLoadedException {
-        List types = allClasses();
-        for (Object type1 : types) {
-            ReferenceType type = (ReferenceType) type1;
-            if ((type.classLoader() == null) &&
-                    (type.signature().equals(signature))) {
+        for (ReferenceType type : allClasses()) {
+            if ((type.classLoader() == null) && (type.signature().equals(signature))) {
                 return type;
             }
         }
         JNITypeParser parser = new JNITypeParser(signature);
-        throw new ClassNotLoadedException(parser.typeName(),
-                                         "Type " + parser.typeName() + " not loaded");
+        throw new ClassNotLoadedException(parser.typeName(), "Type " + parser.typeName() + " not loaded");
     }
 
     BooleanType theBooleanType() {
@@ -1001,8 +972,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private void processQueue() {
         Reference ref;
         while ((ref = referenceQueue.poll()) != null) {
-            SoftObjectReference softRef = (SoftObjectReference)ref;
-            removeObjectMirror(softRef);
+            removeObjectMirror((SoftObjectReference)ref);
         }
     }
 
@@ -1147,12 +1117,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     // Use of soft refs and caching stuff here has to be re-examined.
     //  It might not make sense for JDI - SA.
-    static private class SoftObjectReference extends SoftReference {
+    static private class SoftObjectReference extends SoftReference<ObjectReferenceImpl> {
        int count;
-       Object key;
+       Oop key;
 
-       SoftObjectReference(Object key, ObjectReferenceImpl mirror,
-                           ReferenceQueue queue) {
+       SoftObjectReference(Oop key, ObjectReferenceImpl mirror, ReferenceQueue queue) {
            super(mirror, queue);
            this.count = 1;
            this.key = key;
@@ -1166,12 +1135,12 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
            count++;
        }
 
-       Object key() {
+       Oop key() {
            return key;
        }
 
        ObjectReferenceImpl object() {
-           return (ObjectReferenceImpl)get();
+           return get();
        }
    }
 

@@ -73,18 +73,15 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     }
 
     public Value getValue(Field sig) {
-        List list = new ArrayList(1);
-        list.add(sig);
-        Map map = getValues(list);
-        return(Value)map.get(sig);
+        return getValues(Collections.singletonList(sig)).get(sig);
     }
 
-    public Map getValues(List theFields) {
+    public Map<Field, Value> getValues(List<? extends Field> theFields) {
         //validateMirrors(theFields);
 
-        List staticFields = new ArrayList(0);
+        List<FieldImpl> staticFields = new ArrayList<FieldImpl>(0);
         int size = theFields.size();
-        List instanceFields = new ArrayList(size);
+        List<FieldImpl> instanceFields = new ArrayList<FieldImpl>(size);
 
         for (int i=0; i<size; i++) {
             FieldImpl field = (FieldImpl) theFields.get(i);
@@ -103,11 +100,11 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         }
 
         // Look up static field(s) first to mimic the JDI implementation
-        Map map;
+        Map<Field, Value> map;
         if (staticFields.size() > 0) {
             map = referenceType().getValues(staticFields);
         } else {
-            map = new HashMap(size);
+            map = new HashMap<Field, Value>(size);
         }
 
         // Then get instance field(s)
@@ -120,17 +117,12 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         return map;
     }
 
-    public void setValue(Field field, Value value)
-                   throws InvalidTypeException, ClassNotLoadedException {
+    public void setValue(Field field, Value value) {
         vm.throwNotReadOnlyException("ObjectReference.setValue(...)");
     }
 
     public Value invokeMethod(ThreadReference threadIntf, Method methodIntf,
-                              List arguments, int options)
-                              throws InvalidTypeException,
-                                     IncompatibleThreadStateException,
-                                     InvocationException,
-                                     ClassNotLoadedException {
+                              List<? extends Value> arguments, int options) {
         vm.throwNotReadOnlyException("ObjectReference.invokeMethod(...)");
         return null;
     }
@@ -191,41 +183,38 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     // Real body will be supplied later.
     public List<ObjectReference> referringObjects(long maxReferrers) {
         if (!vm.canGetInstanceInfo()) {
-            throw new UnsupportedOperationException(
-                      "target does not support getting instances");
+            throw new UnsupportedOperationException("target does not support getting instances");
         }
         if (maxReferrers < 0) {
-            throw new IllegalArgumentException("maxReferrers is less than zero: "
-                                              + maxReferrers);
+            throw new IllegalArgumentException("maxReferrers is less than zero: " + maxReferrers);
         }
         final ObjectReference obj = this;
         final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
         final long max = maxReferrers;
-                vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
-                private long refCount = 0;
-                public boolean doObj(Oop oop) {
-                                        try {
-                                                ObjectReference objref = vm.objectMirror(oop);
-                                                List fields = objref.referenceType().allFields();
-                                            for (Object field : fields) {
-                                                Field fld = (Field) field;
-                                                if (objref.getValue(fld).equals(obj) && !objects.contains(objref)) {
-                                                    objects.add(objref);
-                                                    refCount++;
-                                                }
-                                            }
-                                                if (max > 0 && refCount >= max) {
-                                                        return true;
-                                                }
-                                        } catch  (RuntimeException x) {
-                                          // Ignore RuntimeException thrown from vm.objectMirror(oop)
-                                          // for bad oop. It is possible to see some bad oop
-                                          // because heap might be iterating at no safepoint.
-                                        }
-                                        return false;
+        vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
+            private long refCount = 0;
 
+            public boolean doObj(Oop oop) {
+                try {
+                    ObjectReference objref = vm.objectMirror(oop);
+                    for (Field fld : objref.referenceType().allFields()) {
+                        if (objref.getValue(fld).equals(obj) && !objects.contains(objref)) {
+                            objects.add(objref);
+                            refCount++;
+                        }
+                    }
+                    if (max > 0 && refCount >= max) {
+                        return true;
+                    }
+                } catch (RuntimeException x) {
+                    // Ignore RuntimeException thrown from vm.objectMirror(oop)
+                    // for bad oop. It is possible to see some bad oop
+                    // because heap might be iterating at no safepoint.
                 }
-            });
+                return false;
+
+            }
+        });
         return objects;
     }
 
@@ -239,9 +228,8 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         int res = 0;
         JavaVFrame frame = jt.getLastJavaVFrameDbg();
         while (frame != null) {
-            List monitors = frame.getMonitors();
             OopHandle givenHandle = obj.getHandle();
-            for (Object monitor : monitors) {
+            for (Object monitor : frame.getMonitors()) {
                 MonitorInfo mi = (MonitorInfo) monitor;
                 if (mi.eliminated() && frame.isCompiledFrame()) continue; // skip eliminated monitor
                 if (givenHandle.equals(mi.owner())) {

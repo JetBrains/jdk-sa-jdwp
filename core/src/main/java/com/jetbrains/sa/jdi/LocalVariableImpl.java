@@ -127,13 +127,13 @@ public class LocalVariableImpl extends MirrorImpl
     }
 
     public boolean isArgument() {
-        try {
+//        try {
             MethodImpl method = (MethodImpl)scopeStart.method();
             return (slot < method.argSlotCount());
-        } catch (AbsentInformationException e) {
-            // If this variable object exists, there shouldn't be absent info
-            throw (InternalException) new InternalException().initCause(e);
-        }
+//        } catch (AbsentInformationException e) {
+//             If this variable object exists, there shouldn't be absent info
+//            throw (InternalException) new InternalException().initCause(e);
+//        }
     }
 
     public int slot() {

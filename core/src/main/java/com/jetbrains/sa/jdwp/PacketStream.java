@@ -230,7 +230,7 @@ public class PacketStream {
         byte tag = ValueImpl.typeValueKey(val);
         if (isObjectTag(tag)) {
             if (val == null) {
-                writeObjectRef(0);
+                writeNullObjectRef();
             } else {
                 if (!(val instanceof ObjectReference)) {
                     throw new InvalidTypeException();
@@ -433,7 +433,11 @@ public class PacketStream {
 
     void writeTaggedObjectReference(ObjectReference ref) {
         writeByte(ValueImpl.typeValueKey(ref));
-        writeObjectRef(ref.uniqueID());
+        if (ref == null) {
+            writeNullObjectRef();
+        } else {
+            writeObjectRef(ref.uniqueID());
+        }
     }
 
 //    ObjectReferenceImpl readTaggedObjectReference() {

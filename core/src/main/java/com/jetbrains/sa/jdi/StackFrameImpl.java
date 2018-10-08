@@ -134,6 +134,10 @@ public class StackFrameImpl extends MirrorImpl
         return thisObject;
     }
 
+    public int getMaxSlot() {
+        return saFrame.getLocals().size();
+    }
+
     /**
      * Build the visible variable map.
      * Need not be synchronized since it cannot be provably stale.

@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Code" pattern="file[compatibility-10_main]:com/jetbrains/sa/jdi//*||file[compatibility-8_main]:com/jetbrains/sa/jdi//*||file[core_main]:java/com/jetbrains/sa//*||file[core_main]:java/com/jetbrains/sa/jdwp//*" />
+</component>

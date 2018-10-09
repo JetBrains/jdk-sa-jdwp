@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Oracle" pattern="(file[core_main]:java/com/jetbrains/sa/jdi//*||file[core_main]:java/com/jetbrains/sa/jdwp/Packet.java||file[core_main]:java/com/jetbrains/sa/jdwp/PacketStream.java)&amp;&amp;!file[core_main]:java/com/jetbrains/sa/jdi/Compatibility.java&amp;&amp;!file[core_main]:java/com/jetbrains/sa/jdi/CompatibilityHelper.java&amp;&amp;!file[core_main]:java/com/jetbrains/sa/jdi/CompatibilityHelper6.java" />
+</component>

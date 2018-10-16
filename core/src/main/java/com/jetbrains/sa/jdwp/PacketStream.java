@@ -446,6 +446,10 @@ public class PacketStream {
 
     void writeTaggedObjectReference(ObjectReference ref) {
         writeByte(ValueImpl.typeValueKey(ref));
+        writeUntaggedObjectReference(ref);
+    }
+
+    private void writeUntaggedObjectReference(ObjectReference ref) {
         if (ref == null) {
             writeNullObjectRef();
         } else {
@@ -477,7 +481,7 @@ public class PacketStream {
     }
 
     void writeThreadReference(ThreadReference thread) {
-        writeObjectRef(thread.uniqueID());
+        writeUntaggedObjectReference(thread);
     }
     //
     ThreadGroupReferenceImpl readThreadGroupReference() {
@@ -486,7 +490,7 @@ public class PacketStream {
     }
 
     void writeThreadGroupReference(ThreadGroupReference ref) {
-        writeObjectRef(ref.uniqueID());
+        writeUntaggedObjectReference(ref);
     }
     //
     ClassLoaderReferenceImpl readClassLoaderReference() {
@@ -506,7 +510,7 @@ public class PacketStream {
     }
 
     void writeClassLoaderReference(ClassLoaderReferenceImpl ref) {
-        writeObjectRef(ref.uniqueID());
+        writeUntaggedObjectReference(ref);
     }
 
     void writeClassObjectReference(ClassObjectReferenceImpl ref) {

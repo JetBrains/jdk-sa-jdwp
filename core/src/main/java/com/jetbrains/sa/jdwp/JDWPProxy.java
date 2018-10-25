@@ -18,7 +18,9 @@ package com.jetbrains.sa.jdwp;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.connect.spi.Connection;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,6 +75,16 @@ public class JDWPProxy {
                     e.printStackTrace();
                     packetStream.pkt.errorCode = JDWP.Error.INTERNAL;
                     packetStream.dataStream.reset();
+
+                    // serialize the original exception as a utf8 string
+                    try {
+                        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                        PrintStream printStream = new PrintStream(byteStream, false, "UTF8");
+                        e.printStackTrace(printStream);
+                        printStream.close();
+                        packetStream.writeString(byteStream.toString("UTF8"));
+                    } catch (Exception ignored) {
+                    }
                 }
                 packetStream.send();
             }

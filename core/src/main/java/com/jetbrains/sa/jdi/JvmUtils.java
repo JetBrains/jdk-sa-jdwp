@@ -17,6 +17,7 @@ package com.jetbrains.sa.jdi;
 
 import sun.jvm.hotspot.runtime.CompiledVFrame;
 import sun.jvm.hotspot.runtime.JavaVFrame;
+import sun.jvm.hotspot.utilities.AssertionFailure;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,5 +32,13 @@ class JvmUtils {
             return Collections.emptyList();
         }
         return frame.getMonitors();
+    }
+
+    static JavaVFrame getFrameJavaSender(JavaVFrame frame) {
+        try {
+            return frame.javaSender();
+        } catch (AssertionFailure e) {
+            return null; // do not fail
+        }
     }
 }

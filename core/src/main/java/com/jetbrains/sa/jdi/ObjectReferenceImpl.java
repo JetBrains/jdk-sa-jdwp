@@ -248,7 +248,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
                     res++;
                 }
             }
-            frame = frame.javaSender();
+            frame = JvmUtils.getFrameJavaSender(frame);
         }
         return res;
     }

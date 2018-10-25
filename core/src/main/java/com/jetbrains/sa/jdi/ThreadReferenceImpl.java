@@ -225,12 +225,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
                 StackFrameImpl myFrame = new StackFrameImpl(vm, this, myvf, id++);
                 //fixme jjh null should be a Location
                 frames.add(myFrame);
-                try {
-                    myvf = myvf.javaSender();
-                } catch (Exception e) {
-                    e.printStackTrace(); // skip
-                    break;
-                }
+                myvf = JvmUtils.getFrameJavaSender(myvf);
             }
         }
 
@@ -350,7 +345,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
                 lockedObjects.add(obj);
                 stackDepth.add(depth);
             }
-            frame = frame.javaSender();
+            frame = JvmUtils.getFrameJavaSender(frame);
             depth++;
         }
 

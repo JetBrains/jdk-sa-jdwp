@@ -372,9 +372,7 @@ implements ReferenceType {
          * hide.
          */
         List<Field> retList = new ArrayList<Field>(fields());
-        Iterator iter = retList.iterator();
-        while (iter.hasNext()) {
-            Field field = (Field)iter.next();
+        for (Field field : retList) {
             Field hidden = visibleTable.get(field.name());
             if (hidden != null) {
                 visibleList.remove(hidden);

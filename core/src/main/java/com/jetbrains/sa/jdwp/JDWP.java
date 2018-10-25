@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Java(tm) Debug Wire Protocol
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "DanglingJavadoc"})
 public class JDWP {
 
     static class VirtualMachine {
@@ -94,8 +94,8 @@ public class JDWP {
             static class ClassInfo {
 
                 /**
-                 * <a href="#JDWP_TypeTag">Kind</a> 
-                 * of following reference type. 
+                 * <a href="#JDWP_TypeTag">Kind</a>
+                 * of following reference type.
                  */
                 //final byte refTypeTag;
 
@@ -151,8 +151,8 @@ public class JDWP {
             static class ClassInfo {
 
                 /**
-                 * <a href="#JDWP_TypeTag">Kind</a> 
-                 * of following reference type. 
+                 * <a href="#JDWP_TypeTag">Kind</a>
+                 * of following reference type.
                  */
                 //final byte refTypeTag;
 
@@ -251,12 +251,11 @@ public class JDWP {
             //final ThreadGroupReferenceImpl[] groups;
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                List list = vm.vm.topLevelThreadGroups();
+                List<com.sun.jdi.ThreadGroupReference> list = vm.vm.topLevelThreadGroups();
 //                //int groupsCount = answer.readInt();
                 answer.writeInt(list.size());
-                for (Object group : list) {
-                    com.sun.jdi.ThreadGroupReference g = (com.sun.jdi.ThreadGroupReference) group;
-                    answer.writeObjectRef(g.uniqueID());
+                for (com.sun.jdi.ThreadGroupReference group : list) {
+                    answer.writeObjectRef(group.uniqueID());
                 }
                 //groups = new ThreadGroupReferenceImpl[groupsCount];
                 //for (int i = 0; i < groupsCount; i++) {;
@@ -309,22 +308,22 @@ public class JDWP {
 
 
             /**
-             * fieldID size in bytes 
+             * fieldID size in bytes
              */
             //final int fieldIDSize;
 
             /**
-             * methodID size in bytes 
+             * methodID size in bytes
              */
             //final int methodIDSize;
 
             /**
-             * objectID size in bytes 
+             * objectID size in bytes
              */
             //final int objectIDSize;
 
             /**
-             * referenceTypeID size in bytes 
+             * referenceTypeID size in bytes
              */
             //final int referenceTypeIDSize;
 
@@ -428,31 +427,31 @@ public class JDWP {
 
 
             /**
-             * Can the VM watch field modification, and therefore 
+             * Can the VM watch field modification, and therefore
              * can it send the Modification Watchpoint Event?
              */
             //final boolean canWatchFieldModification;
 
             /**
-             * Can the VM watch field access, and therefore 
+             * Can the VM watch field access, and therefore
              * can it send the Access Watchpoint Event?
              */
             //final boolean canWatchFieldAccess;
 
             /**
-             * Can the VM get the bytecodes of a given method? 
+             * Can the VM get the bytecodes of a given method?
              */
             //final boolean canGetBytecodes;
 
             /**
-             * Can the VM determine whether a field or method is 
-             * synthetic? (that is, can the VM determine if the 
-             * method or the field was invented by the compiler?) 
+             * Can the VM determine whether a field or method is
+             * synthetic? (that is, can the VM determine if the
+             * method or the field was invented by the compiler?)
              */
             //final boolean canGetSyntheticAttribute;
 
             /**
-             * Can the VM get the owned monitors infornation for 
+             * Can the VM get the owned monitors infornation for
              * a thread?
              */
             //final boolean canGetOwnedMonitorInfo;
@@ -495,7 +494,7 @@ public class JDWP {
 
 
             /**
-             * Base directory used to resolve relative 
+             * Base directory used to resolve relative
              * paths in either of the following lists.
              */
             //final String baseDir;
@@ -627,25 +626,25 @@ public class JDWP {
             //final boolean canWatchFieldModification;
 
             /**
-             * Can the VM watch field access, and therefore 
+             * Can the VM watch field access, and therefore
              * can it send the Access Watchpoint Event?
              */
             //final boolean canWatchFieldAccess;
 
             /**
-             * Can the VM get the bytecodes of a given method? 
+             * Can the VM get the bytecodes of a given method?
              */
             //final boolean canGetBytecodes;
 
             /**
-             * Can the VM determine whether a field or method is 
-             * synthetic? (that is, can the VM determine if the 
-             * method or the field was invented by the compiler?) 
+             * Can the VM determine whether a field or method is
+             * synthetic? (that is, can the VM determine if the
+             * method or the field was invented by the compiler?)
              */
             //final boolean canGetSyntheticAttribute;
 
             /**
-             * Can the VM get the owned monitors infornation for 
+             * Can the VM get the owned monitors infornation for
              * a thread?
              */
             //final boolean canGetOwnedMonitorInfo;
@@ -656,7 +655,7 @@ public class JDWP {
             //final boolean canGetCurrentContendedMonitor;
 
             /**
-             * Can the VM get the monitor information for a given object? 
+             * Can the VM get the monitor information for a given object?
              */
             //final boolean canGetMonitorInfo;
 
@@ -666,7 +665,7 @@ public class JDWP {
             //final boolean canRedefineClasses;
 
             /**
-             * Can the VM add methods when redefining 
+             * Can the VM add methods when redefining
              * classes?
              */
             //final boolean canAddMethod;
@@ -703,7 +702,7 @@ public class JDWP {
             //final boolean canSetDefaultStratum;
 
             /**
-             * Can the VM return instances, counts of instances of classes 
+             * Can the VM return instances, counts of instances of classes
              * and referring objects?
              */
             //final boolean canGetInstanceInfo;
@@ -914,8 +913,8 @@ public class JDWP {
             static class ClassInfo {
 
                 /**
-                 * <a href="#JDWP_TypeTag">Kind</a> 
-                 * of following reference type. 
+                 * <a href="#JDWP_TypeTag">Kind</a>
+                 * of following reference type.
                  */
                 //final byte refTypeTag;
 
@@ -930,7 +929,7 @@ public class JDWP {
                 //final String signature;
 
                 /**
-                 * The generic signature of the loaded reference type 
+                 * The generic signature of the loaded reference type
                  * or an empty string if there is none.
                  */
                 //final String genericSignature;
@@ -962,7 +961,7 @@ public class JDWP {
             //final ClassInfo[] classes;
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                List allClasses = vm.vm.allClasses();
+                List<com.sun.jdi.ReferenceType> allClasses = vm.vm.allClasses();
 //                //int classesCount = answer.readInt();
                 answer.writeInt(allClasses.size());
                 //classes = new ClassInfo[classesCount];
@@ -1323,8 +1322,8 @@ public class JDWP {
             static class TypeInfo {
 
                 /**
-                 * <a href="#JDWP_TypeTag">Kind</a> 
-                 * of following reference type. 
+                 * <a href="#JDWP_TypeTag">Kind</a>
+                 * of following reference type.
                  */
                 //final byte refTypeTag;
 
@@ -1540,7 +1539,7 @@ public class JDWP {
                 //final String signature;
 
                 /**
-                 * The generic signature of the 
+                 * The generic signature of the
                  * field, or an empty string if there is none.
                  */
                 //final String genericSignature;
@@ -1626,7 +1625,7 @@ public class JDWP {
                 //final String signature;
 
                 /**
-                 * The generic signature of the method, or 
+                 * The generic signature of the method, or
                  * an empty string if there is none.
                  */
                 //final String genericSignature;
@@ -1983,7 +1982,7 @@ public class JDWP {
 
 
             /**
-             * The newly created object, or null 
+             * The newly created object, or null
              * if the constructor threw an exception.
              */
             //final ObjectReferenceImpl newObject;
@@ -2123,7 +2122,7 @@ public class JDWP {
             static class LineInfo {
 
                 /**
-                 * Initial code index of the line, 
+                 * Initial code index of the line,
                  * start <= lineCodeIndex < end
                  */
                 //final long lineCodeIndex;
@@ -2141,7 +2140,7 @@ public class JDWP {
 
 
             /**
-             * Lowest valid code index for the method, >=0, or -1 if the method is native 
+             * Lowest valid code index for the method, >=0, or -1 if the method is native
              */
             //final long start;
 
@@ -2208,10 +2207,10 @@ public class JDWP {
             static class SlotInfo {
 
                 /**
-                 * First code index at which the variable is visible (unsigned). 
-                 * Used in conjunction with <code>length</code>. 
-                 * The variable can be get or set only when the current 
-                 * <code>codeIndex</code> <= current frame code index < <code>codeIndex + length</code> 
+                 * First code index at which the variable is visible (unsigned).
+                 * Used in conjunction with <code>length</code>.
+                 * The variable can be get or set only when the current
+                 * <code>codeIndex</code> <= current frame code index < <code>codeIndex + length</code>
                  */
                 //final long codeIndex;
 
@@ -2226,9 +2225,9 @@ public class JDWP {
                 //final String signature;
 
                 /**
-                 * Unsigned value used in conjunction with <code>codeIndex</code>. 
-                 * The variable can be get or set only when the current 
-                 * <code>codeIndex</code> <= current frame code index < <code>code index + length</code> 
+                 * Unsigned value used in conjunction with <code>codeIndex</code>.
+                 * The variable can be get or set only when the current
+                 * <code>codeIndex</code> <= current frame code index < <code>code index + length</code>
                  */
                 //final int length;
 
@@ -2253,8 +2252,8 @@ public class JDWP {
 
 
             /**
-             * The number of words in the frame used by arguments. 
-             * Eight-byte arguments use two words; all others use one. 
+             * The number of words in the frame used by arguments.
+             * Eight-byte arguments use two words; all others use one.
              */
             //final int argCnt;
 
@@ -2365,10 +2364,10 @@ public class JDWP {
             static class SlotInfo {
 
                 /**
-                 * First code index at which the variable is visible (unsigned). 
-                 * Used in conjunction with <code>length</code>. 
-                 * The variable can be get or set only when the current 
-                 * <code>codeIndex</code> <= current frame code index < <code>codeIndex + length</code> 
+                 * First code index at which the variable is visible (unsigned).
+                 * Used in conjunction with <code>length</code>.
+                 * The variable can be get or set only when the current
+                 * <code>codeIndex</code> <= current frame code index < <code>codeIndex + length</code>
                  */
                 //final long codeIndex;
 
@@ -2383,15 +2382,15 @@ public class JDWP {
                 //final String signature;
 
                 /**
-                 * The variable type's generic 
+                 * The variable type's generic
                  * signature or an empty string if there is none.
                  */
                 //final String genericSignature;
 
                 /**
-                 * Unsigned value used in conjunction with <code>codeIndex</code>. 
-                 * The variable can be get or set only when the current 
-                 * <code>codeIndex</code> <= current frame code index < <code>code index + length</code> 
+                 * Unsigned value used in conjunction with <code>codeIndex</code>.
+                 * The variable can be get or set only when the current
+                 * <code>codeIndex</code> <= current frame code index < <code>code index + length</code>
                  */
                 //final int length;
 
@@ -2418,8 +2417,8 @@ public class JDWP {
 
 
             /**
-             * The number of words in the frame used by arguments. 
-             * Eight-byte arguments use two words; all others use one. 
+             * The number of words in the frame used by arguments.
+             * Eight-byte arguments use two words; all others use one.
              */
             //final int argCnt;
 
@@ -2470,8 +2469,8 @@ public class JDWP {
 
 
             /**
-             * <a href="#JDWP_TypeTag">Kind</a> 
-             * of following reference type. 
+             * <a href="#JDWP_TypeTag">Kind</a>
+             * of following reference type.
              */
             //final byte refTypeTag;
 
@@ -3153,7 +3152,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
-                List list;
+                List<com.sun.jdi.MonitorInfo> list;
                 try {
                     list = thread.ownedMonitorsAndFrames();
                 } catch (IncompatibleThreadStateException e) {
@@ -3162,9 +3161,9 @@ public class JDWP {
                 }
 //                //int ownedCount = answer.readInt();
                 answer.writeInt(list.size());
-                for (Object o : list) {
-                    answer.writeTaggedObjectReference(((MonitorInfo) o).monitor());
-                    answer.writeInt(((MonitorInfo) o).stackDepth());
+                for (com.sun.jdi.MonitorInfo o : list) {
+                    answer.writeTaggedObjectReference(o.monitor());
+                    answer.writeInt(o.stackDepth());
                 }
                 //owned = new monitor[ownedCount];
                 //for (int i = 0; i < ownedCount; i++) {;

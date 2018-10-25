@@ -241,7 +241,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         JavaVFrame frame = jt.getLastJavaVFrameDbg();
         while (frame != null) {
             OopHandle givenHandle = obj.getHandle();
-            for (Object monitor : frame.getMonitors()) {
+            for (Object monitor : JvmUtils.getFrameMonitors(frame)) {
                 MonitorInfo mi = (MonitorInfo) monitor;
                 if (mi.eliminated() && frame.isCompiledFrame()) continue; // skip eliminated monitor
                 if (givenHandle.equals(mi.owner())) {

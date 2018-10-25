@@ -313,7 +313,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         JavaVFrame frame = myJavaThread.getLastJavaVFrameDbg();
         int depth=0;
         while (frame != null) {
-            for (Object frameMonitor : frame.getMonitors()) {
+            for (Object frameMonitor : JvmUtils.getFrameMonitors(frame)) {
                 MonitorInfo mi = (MonitorInfo) frameMonitor;
                 if (mi.eliminated() && frame.isCompiledFrame()) {
                     continue; // skip eliminated monitor

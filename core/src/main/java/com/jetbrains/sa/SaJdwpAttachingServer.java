@@ -17,7 +17,6 @@ package com.jetbrains.sa;
 
 import com.jetbrains.sa.jdi.VirtualMachineImpl;
 import com.jetbrains.sa.jdwp.JDWPProxy;
-import com.sun.jdi.Bootstrap;
 import com.sun.jdi.connect.spi.Connection;
 import com.sun.tools.jdi.SocketTransportService;
 
@@ -36,7 +35,7 @@ public class SaJdwpAttachingServer {
 
         System.setProperty("sun.jvm.hotspot.debugger.useWindbgDebugger", "true");
 
-        final VirtualMachineImpl vm = VirtualMachineImpl.createVirtualMachineForPID(Bootstrap.virtualMachineManager(), Integer.parseInt(args[0]), 0);
+        final VirtualMachineImpl vm = SaJdwpUtils.createVirtualMachine(args[0]);
 
         String address = args[1];
         System.out.println(SERVER_READY);

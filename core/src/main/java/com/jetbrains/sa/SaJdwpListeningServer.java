@@ -17,7 +17,6 @@ package com.jetbrains.sa;
 
 import com.jetbrains.sa.jdi.VirtualMachineImpl;
 import com.jetbrains.sa.jdwp.JDWPProxy;
-import com.sun.jdi.Bootstrap;
 import com.sun.jdi.connect.spi.Connection;
 import com.sun.jdi.connect.spi.TransportService;
 import com.sun.tools.jdi.SocketTransportService;
@@ -39,7 +38,7 @@ public class SaJdwpListeningServer {
 
         System.setProperty("sun.jvm.hotspot.debugger.useWindbgDebugger", "true");
 
-        final VirtualMachineImpl vm = VirtualMachineImpl.createVirtualMachineForPID(Bootstrap.virtualMachineManager(), Integer.parseInt(args[0]), 0);
+        final VirtualMachineImpl vm = SaJdwpUtils.createVirtualMachine(args[0]);
 
         final SocketTransportService socketTransportService = new SocketTransportService();
         final TransportService.ListenKey listenKey = socketTransportService.startListening(args.length > 1 ? args[1] : null);

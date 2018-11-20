@@ -61,7 +61,7 @@ public class SaJdwp {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static List<String> getServerProcessCommand(Properties systemProperties, String pidString, String port, boolean server, String pathToJar) throws Exception {
+    public static List<String> getServerProcessCommand(Properties systemProperties, String target, String port, boolean server, String pathToJar) throws Exception {
         String javaHome = systemProperties.getProperty("java.home");
         String version = systemProperties.getProperty("java.specification.version");
 
@@ -83,7 +83,7 @@ public class SaJdwp {
         }
 
         String serverClassName = server ? SaJdwpListeningServer.class.getName() : SaJdwpAttachingServer.class.getName();
-        Collections.addAll(commands, serverClassName, pidString, port);
+        Collections.addAll(commands, serverClassName, target, port);
         return commands;
     }
 

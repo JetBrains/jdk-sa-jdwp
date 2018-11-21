@@ -131,9 +131,10 @@ public class SaJdwp {
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.memory=ALL-UNNAMED",
-                "--add-opens", "jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
+                "--add-opens",   "jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
+                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.tools.jcore=ALL-UNNAMED",
                 "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
                 "-cp", pathToJar);
     }

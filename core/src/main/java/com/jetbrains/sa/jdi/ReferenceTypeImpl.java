@@ -41,6 +41,7 @@ import com.sun.jdi.Method;
 import com.sun.jdi.*;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.oops.*;
+import sun.jvm.hotspot.tools.jcore.ClassWriter;
 import sun.jvm.hotspot.utilities.Assert;
 
 import java.io.ByteArrayOutputStream;
@@ -981,11 +982,22 @@ implements ReferenceType {
         if (this instanceof ArrayType || this instanceof PrimitiveType) {
             return new byte[0];
         } else {
-            ByteArrayOutputStream bs = new ByteArrayOutputStream();
+            ByteArrayOutputStream bs = new ByteArrayOutputStream() {
+                @Override
+                public byte[] toByteArray() {
+                    // drop constant_pool_count (first 2 bytes)
+                    return Arrays.copyOfRange(buf, 2, count);
+                }
+            };
             try {
-                ((InstanceKlass)saKlass).getConstants().writeBytes(bs);
+                new ClassWriter((InstanceKlass)saKlass, bs) {
+                    @Override
+                    public void writeConstantPool() throws IOException {
+                        super.writeConstantPool();
+                    }
+                }.writeConstantPool();
             } catch (IOException ex) {
-                                ex.printStackTrace();
+                ex.printStackTrace();
                 return new byte[0];
             }
             return bs.toByteArray();

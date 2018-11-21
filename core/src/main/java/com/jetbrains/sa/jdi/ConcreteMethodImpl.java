@@ -36,12 +36,12 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.LocalVariable;
-import com.sun.jdi.Location;
-import com.sun.jdi.VirtualMachine;
+import com.sun.jdi.*;
+import sun.jvm.hotspot.oops.InstanceKlass;
+import sun.jvm.hotspot.oops.Klass;
 import sun.jvm.hotspot.oops.LineNumberTableElement;
 import sun.jvm.hotspot.oops.LocalVariableTableElement;
+import sun.jvm.hotspot.tools.jcore.ByteCodeRewriter;
 
 import java.lang.ref.SoftReference;
 import java.util.*;
@@ -372,6 +372,10 @@ public class ConcreteMethodImpl extends MethodImpl {
                 bytecodesRef.get();
         if (bytecodes == null) {
             bytecodes = saMethod.getByteCode();
+            Klass klass = declaringType.ref();
+            if (klass instanceof InstanceKlass) {
+                new ByteCodeRewriter(saMethod, ((InstanceKlass) klass).getConstants(), bytecodes).rewrite();
+            }
             bytecodesRef = new SoftReference<byte[]>(bytecodes);
         }
         /*

@@ -146,7 +146,7 @@ public class StackFrameImpl extends MirrorImpl
         return thisObject;
     }
 
-    public int getMaxSlot() {
+    public int getAvailableSlots() {
         return saFrame.getLocals().size();
     }
 

@@ -3543,14 +3543,16 @@ public class JDWP {
                 try {
                     StackFrameImpl frame = thread.frame((int) command.readFrameRef());
                     int slots = command.readInt();
-                    if (slots >= frame.getMaxSlot()) {
-                        answer.pkt.errorCode = Error.INVALID_SLOT;
-                        return;
-                    }
+                    int available = frame.getAvailableSlots();
                     //int valuesCount = answer.readInt();
                     answer.writeInt(slots);
                     for (int i = 0; i < slots; i++) {
-                        Value slotValue = frame.getSlotValue(command.readInt(), command.readByte());
+                        int slot = command.readInt();
+                        if (slot >= available) {
+                            answer.pkt.errorCode = Error.INVALID_SLOT;
+                            return;
+                        }
+                        Value slotValue = frame.getSlotValue(slot, command.readByte());
                         answer.writeValue(slotValue);
                     }
 

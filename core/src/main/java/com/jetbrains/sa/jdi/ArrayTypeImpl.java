@@ -148,16 +148,15 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
                 return false;
             }
         } else {
-            Symbol typeName = ((ReferenceTypeImpl)destType).typeNameAsSymbol();
+            String typeName = ((ReferenceTypeImpl)destType).name();
             if (destType instanceof InterfaceType) {
                 // Every array type implements java.io.Serializable and
                 // java.lang.Cloneable. fixme in JVMDI-JDI, includes only
                 // Cloneable but not Serializable.
-                return typeName.equals(vm.javaLangCloneable()) ||
-                       typeName.equals(vm.javaIoSerializable());
+                return vm.javaLangCloneable.equals(typeName) || vm.javaIoSerializable.equals(typeName);
             } else {
                 // Only valid ClassType assignee is Object
-                return typeName.equals(vm.javaLangObject());
+                return vm.javaLangObject.equals(typeName);
             }
         }
     }

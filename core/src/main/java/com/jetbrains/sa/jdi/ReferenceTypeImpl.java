@@ -53,7 +53,6 @@ import java.util.*;
 public abstract class ReferenceTypeImpl extends TypeImpl
 implements ReferenceType {
     protected Klass       saKlass;          // This can be an InstanceKlass or an ArrayKlass
-    protected Symbol      typeNameSymbol;   // This is used in vm.classesByName to speedup search
     private int           modifiers = -1;
     private String        signature = null;
     private SoftReference<SDE> sdeRef = null;
@@ -70,14 +69,15 @@ implements ReferenceType {
     protected ReferenceTypeImpl(VirtualMachine aVm, Klass klass) {
         super(aVm);
         saKlass = klass;
-        typeNameSymbol = saKlass.getName();
+    }
+
+    @Override
+    protected String computeName() {
+        Symbol typeNameSymbol = saKlass.getName();
         if (Assert.ASSERTS_ENABLED) {
             Assert.that(typeNameSymbol != null, "null type name for a Klass");
         }
-    }
-
-    Symbol typeNameAsSymbol() {
-        return typeNameSymbol;
+        return typeNameSymbol.asString();
     }
 
     Method getMethodMirror(sun.jvm.hotspot.oops.Method ref) {
@@ -231,7 +231,7 @@ implements ReferenceType {
         // refer to JvmtiEnv::GetClassFields in jvmtiEnv.cpp.
         // We want to filter out java.lang.Throwable.backtrace (see 4446677).
         // It contains some Method*s that aren't quite real Objects.
-        return fld.getFieldHolder().getName().equals(vm.javaLangThrowable()) &&
+        return JvmUtils.nameEquals(fld.getFieldHolder().getName(), vm.javaLangThrowable) &&
                 fld.getID().getName().equals("backtrace");
     }
 

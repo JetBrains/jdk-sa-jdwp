@@ -51,10 +51,13 @@ public abstract class TypeImpl extends MirrorImpl implements Type
 
     public String name() {
         if (typeName == null) {
-            JNITypeParser parser = new JNITypeParser(signature());
-            typeName = parser.typeName();
+            typeName = computeName();
         }
         return typeName;
+    }
+
+    protected String computeName() {
+        return new JNITypeParser(signature()).typeName();
     }
 
     public boolean equals(Object obj) {

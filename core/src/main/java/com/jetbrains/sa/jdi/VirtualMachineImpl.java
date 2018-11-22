@@ -41,7 +41,6 @@ import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.request.EventRequestManager;
 import sun.jvm.hotspot.HotSpotAgent;
 import sun.jvm.hotspot.debugger.Address;
-import sun.jvm.hotspot.memory.SymbolTable;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.memory.Universe;
 import sun.jvm.hotspot.oops.*;
@@ -60,7 +59,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private VM               saVM;
     private Universe         saUniverse;
     private SystemDictionary saSystemDictionary;
-    private SymbolTable      saSymbolTable;
     private ObjectHeap       saObjectHeap;
 
     VM saVM() {
@@ -70,11 +68,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     SystemDictionary saSystemDictionary() {
         return saSystemDictionary;
     }
-
-    SymbolTable saSymbolTable() {
-        return saSymbolTable;
-    }
-
+    
     Universe saUniverse() {
         return saUniverse;
     }
@@ -103,7 +97,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private VoidValue voidVal;
     private final Map<Klass, ReferenceTypeImpl> typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
-    private final List<ReferenceTypeImpl>       typesBySignature = new ArrayList<ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
     private List<ReferenceType>      bootstrapClasses;      // all bootstrap classes
     private ArrayList<ThreadReference> allThreads;
@@ -116,69 +109,32 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private final ReferenceQueue referenceQueue = new ReferenceQueue();
 
     // names of some well-known classes to jdi
-    private Symbol javaLangString;
-    private Symbol javaLangThread;
-    private Symbol javaLangThreadGroup;
-    private Symbol javaLangClass;
-    private Symbol javaLangClassLoader;
+    final String javaLangString = "java/lang/String";
+    final String javaLangThread = "java/lang/Thread";
+    final String javaLangThreadGroup = "java/lang/ThreadGroup";
+    final String javaLangClass = "java/lang/Class";
+    final String javaLangClassLoader = "java/lang/ClassLoader";
 
     // used in ReferenceTypeImpl.isThrowableBacktraceField
-    private Symbol javaLangThrowable;
+    final String javaLangThrowable = "java/lang/Throwable";
 
     // names of classes used in array assignment check
     // refer to ArrayTypeImpl.isAssignableTo
-    private Symbol javaLangObject;
-    private Symbol javaLangCloneable;
-    private Symbol javaIoSerializable;
+    final String javaLangObject = "java/lang/Object";
+    final String javaLangCloneable = "java/lang/Cloneable";
+    final String javaIoSerializable = "java/io/Serializable";
 
     // symbol used in ClassTypeImpl.isEnum check
-    private Symbol javaLangEnum;
-
-    Symbol javaLangObject() {
-        return javaLangObject;
-    }
-
-    Symbol javaLangCloneable() {
-        return javaLangCloneable;
-    }
-
-    Symbol javaIoSerializable() {
-        return javaIoSerializable;
-    }
-
-    Symbol javaLangEnum() {
-        return javaLangEnum;
-    }
-
-    Symbol javaLangThrowable() {
-        return javaLangThrowable;
-    }
+    final String javaLangEnum = "java/lang/Enum";
 
     // name of the current default stratum
     private String defaultStratum;
-
-    // initialize known class name symbols
-    private void initClassNameSymbols() {
-        SymbolTable st = saSymbolTable();
-        javaLangString = st.probe("java/lang/String");
-        javaLangThread = st.probe("java/lang/Thread");
-        javaLangThreadGroup = st.probe("java/lang/ThreadGroup");
-        javaLangClass = st.probe("java/lang/Class");
-        javaLangClassLoader = st.probe("java/lang/ClassLoader");
-        javaLangThrowable = st.probe("java/lang/Throwable");
-        javaLangObject = st.probe("java/lang/Object");
-        javaLangCloneable = st.probe("java/lang/Cloneable");
-        javaIoSerializable = st.probe("java/io/Serializable");
-        javaLangEnum = st.probe("java/lang/Enum");
-    }
 
     private void init() {
         saVM = VM.getVM();
         saUniverse = saVM.getUniverse();
         saSystemDictionary = saVM.getSystemDictionary();
-        saSymbolTable = saVM.getSymbolTable();
         saObjectHeap = saVM.getObjectHeap();
-        initClassNameSymbols();
     }
 
     static public VirtualMachineImpl createVirtualMachineForCorefile(VirtualMachineManager mgr,
@@ -310,7 +266,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         }
         ArrayList<ReferenceType> a;
         synchronized (this) {
-            a = new ArrayList<ReferenceType>(typesBySignature);
+            a = new ArrayList<ReferenceType>(typesById.values());
         }
         return Collections.unmodifiableList(a);
     }
@@ -330,11 +286,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     public synchronized List<ReferenceType> findReferenceTypes(String signature) {
-        // we haven't sorted types by signatures. But we can take
-        // advantage of comparing symbols instead of name. In the worst
-        // case, we will be comparing N addresses rather than N strings
-        // where N being total no. of classes in allClasses() list.
-
         // The signature could be Lx/y/z; or [....
         // If it is Lx/y/z; the internal type name is x/y/x
         // for array klasses internal type name is same as
@@ -346,16 +297,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             typeName = signature;
         }
 
-        Symbol typeNameSym = saSymbolTable().probe(typeName);
-        // if there is no symbol in VM, then we wouldn't have that type
-        if (typeNameSym == null) {
-            return Collections.emptyList();
-        }
-
-        List<ReferenceType> list = new ArrayList<ReferenceType>();
-        for (ReferenceTypeImpl type : typesBySignature) {
-            // We have cached type name as symbol in reference type
-            if (typeNameSym.equals(type.typeNameAsSymbol())) {
+        List<ReferenceType> list = new ArrayList<ReferenceType>(1);
+        for (ReferenceTypeImpl type : typesById.values()) {
+            if (type.name().equals(typeName)) {
                 list.add(type);
             }
         }
@@ -363,7 +307,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     private void retrieveAllClasses() {
-        final List<Klass> saKlasses = CompatibilityHelper.INSTANCE.allClasses(saSystemDictionary, saVM);
+        final Collection<Klass> saKlasses = CompatibilityHelper.INSTANCE.allClasses(saSystemDictionary, saVM);
 
         // Hold lock during processing to improve performance
         // and to have safe check/set of retrievedAllTypes
@@ -402,7 +346,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
         typesByKlass.put(kk, newRefType);
         typesById.put(newRefType.uniqueID(), newRefType);
-        typesBySignature.add(newRefType);
         return newRefType;
     }
 
@@ -1030,10 +973,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         if (object == null) {
             if (key instanceof Instance) {
                 // look for well-known classes
-                Symbol className = key.getKlass().getName();
+                Symbol classNameSymbol = key.getKlass().getName();
                 if (Assert.ASSERTS_ENABLED) {
-                    Assert.that(className != null, "Null class name");
+                    Assert.that(classNameSymbol != null, "Null class name");
                 }
+                String className = classNameSymbol.asString();
                 Instance inst = (Instance) key;
                 if (className.equals(javaLangString)) {
                     object = new StringReferenceImpl(this, inst);
@@ -1050,7 +994,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
                     // one of the known classes.
                     Klass kls = key.getKlass().getSuper();
                     while (kls != null) {
-                       className = kls.getName();
+                       className = kls.getName().asString();
                        // java.lang.Class and java.lang.String are final classes
                        if (className.equals(javaLangThread)) {
                           object = new ThreadReferenceImpl(this, inst);

@@ -161,7 +161,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl
     public boolean isEnum() {
         ClassTypeImpl superclass = (ClassTypeImpl) superclass();
         if (superclass != null) {
-            return superclass.typeNameAsSymbol().equals(vm.javaLangEnum());
+            return vm.javaLangEnum.equals(superclass.name());
         } else {
             return false;
         }

@@ -15,6 +15,7 @@
 
 package com.jetbrains.sa.jdi;
 
+import sun.jvm.hotspot.oops.Symbol;
 import sun.jvm.hotspot.runtime.CompiledVFrame;
 import sun.jvm.hotspot.runtime.JavaVFrame;
 import sun.jvm.hotspot.utilities.AssertionFailure;
@@ -40,5 +41,9 @@ class JvmUtils {
         } catch (AssertionFailure e) {
             return null; // do not fail
         }
+    }
+
+    static boolean nameEquals(Symbol symbol, String name) {
+        return name.equals(symbol.asString());
     }
 }

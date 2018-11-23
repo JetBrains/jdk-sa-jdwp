@@ -45,10 +45,12 @@ public class StringReferenceImpl extends ObjectReferenceImpl {
 
     StringReferenceImpl(VirtualMachineImpl aVm, Instance oRef) {
         super(aVm,oRef);
-        value = OopUtilities.stringOopToString(oRef);
     }
 
     public String value() {
+        if (value == null) {
+            value = OopUtilities.stringOopToString(ref());
+        }
         return value;
     }
 

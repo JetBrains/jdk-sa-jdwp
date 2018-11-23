@@ -3,6 +3,8 @@ Java serviceability agent to jdwp adapter
 
 sa-jdi was removed from jdk 9, this library should replace it and allow to attach to a process from any java debugger
 
+checked with jdk 6-11 and 12ea
+
 ## Usage
 * run `java -jar sa-jdwp.jar <pid> (port)`
 * wait for `Waiting for debugger on..` message

@@ -35,20 +35,20 @@
  */
 
 package com.jetbrains.sa.jdi;
-import com.sun.jdi.*;
 
-public class LocalVariableImpl extends MirrorImpl implements LocalVariable
-{
-    private final Method method;
+import com.sun.jdi.ClassNotLoadedException;
+
+public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVariableImpl> {
+    private final MethodImpl method;
     private final int slot;
-    private final Location scopeStart;
-    private final Location scopeEnd;
+    private final LocationImpl scopeStart;
+    private final LocationImpl scopeEnd;
     private final String name;
     private final String signature;
     private final String genericSignature;
 
-    LocalVariableImpl(VirtualMachine vm, Method method,
-                      int slot, Location scopeStart, Location scopeEnd,
+    LocalVariableImpl(VirtualMachineImpl vm, MethodImpl method,
+                      int slot, LocationImpl scopeStart, LocationImpl scopeEnd,
                       String name, String signature, String genericSignature) {
         super(vm);
         this.method = method;
@@ -78,7 +78,7 @@ public class LocalVariableImpl extends MirrorImpl implements LocalVariable
         return method.hashCode() + slot();
     }
 
-    public int compareTo(LocalVariable localVar) {
+    public int compareTo(LocalVariableImpl localVar) {
         LocalVariableImpl other = (LocalVariableImpl) localVar;
         int rc = method.compareTo(other.method);
         if (rc == 0) {
@@ -100,11 +100,11 @@ public class LocalVariableImpl extends MirrorImpl implements LocalVariable
         return parser.typeName();
     }
 
-    public Type type() throws ClassNotLoadedException {
+    public TypeImpl type() throws ClassNotLoadedException {
         return findType(signature());
     }
 
-    public Type findType(String signature) throws ClassNotLoadedException {
+    public TypeImpl findType(String signature) throws ClassNotLoadedException {
         ReferenceTypeImpl enclosing = (ReferenceTypeImpl)method.declaringType();
         return enclosing.findType(signature);
     }
@@ -117,9 +117,9 @@ public class LocalVariableImpl extends MirrorImpl implements LocalVariable
         return genericSignature;
     }
 
-    public boolean isVisible(StackFrame frame) {
+    public boolean isVisible(StackFrameImpl frame) {
         //validateMirror(frame);
-        Method frameMethod = frame.location().method();
+        MethodImpl frameMethod = frame.location().method();
 
         if (!frameMethod.equals(method)) {
             throw new IllegalArgumentException(
@@ -163,7 +163,7 @@ public class LocalVariableImpl extends MirrorImpl implements LocalVariable
      * variable should be preferred when looking for a single variable
      * with its name when both variables are visible.
      */
-    boolean hides(LocalVariable other) {
+    boolean hides(LocalVariableImpl other) {
         LocalVariableImpl otherImpl = (LocalVariableImpl)other;
         if (!method.equals(otherImpl.method) ||
             !name.equals(otherImpl.name)) {

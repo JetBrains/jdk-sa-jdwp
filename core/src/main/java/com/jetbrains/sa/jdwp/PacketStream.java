@@ -39,7 +39,8 @@
 package com.jetbrains.sa.jdwp;
 
 import com.jetbrains.sa.jdi.*;
-import com.sun.jdi.*;
+import com.sun.jdi.InternalException;
+import com.sun.jdi.InvalidTypeException;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -202,9 +203,9 @@ public class PacketStream {
     void writeLocation(LocationImpl location) {
         ReferenceTypeImpl refType = (ReferenceTypeImpl)location.declaringType();
         byte tag;
-        if (refType instanceof ClassType) {
+        if (refType instanceof ClassTypeImpl) {
             tag = JDWP.TypeTag.CLASS;
-        } else if (refType instanceof InterfaceType) {
+        } else if (refType instanceof InterfaceTypeImpl) {
             // It's possible to have executable code in an interface
             tag = JDWP.TypeTag.INTERFACE;
         } else {
@@ -216,7 +217,7 @@ public class PacketStream {
         writeLong(location.codeIndex());
     }
     //
-    void writeValue(Value val) {
+    void writeValue(ValueImpl val) {
 //        try {
             writeValueChecked(val);
 //        } catch (InvalidTypeException exc) {  // should never happen
@@ -225,12 +226,12 @@ public class PacketStream {
 //        }
     }
 
-    void writeValueChecked(Value val) {
+    void writeValueChecked(ValueImpl val) {
         writeByte(ValueImpl.typeValueKey(val));
         writeUntaggedValue(val);
     }
 
-    void writeUntaggedValue(Value val) {
+    void writeUntaggedValue(ValueImpl val) {
         try {
             writeUntaggedValueChecked(val);
         } catch (InvalidTypeException exc) {  // should never happen
@@ -239,13 +240,13 @@ public class PacketStream {
         }
     }
 
-    void writeUntaggedValueChecked(Value val) throws InvalidTypeException {
+    void writeUntaggedValueChecked(ValueImpl val) throws InvalidTypeException {
         byte tag = ValueImpl.typeValueKey(val);
         if (isObjectTag(tag)) {
             if (val == null) {
                 writeNullObjectRef();
             } else {
-                if (!(val instanceof ObjectReference)) {
+                if (!(val instanceof ObjectReferenceImpl)) {
                     throw new InvalidTypeException();
                 }
                 writeObjectRef(((ObjectReferenceImpl)val).uniqueID());
@@ -253,59 +254,59 @@ public class PacketStream {
         } else {
             switch (tag) {
                 case JDWP.Tag.BYTE:
-                    if(!(val instanceof ByteValue))
+                    if(!(val instanceof ByteValueImpl))
                         throw new InvalidTypeException();
 
-                    writeByte(((PrimitiveValue)val).byteValue());
+                    writeByte(((PrimitiveValueImpl)val).byteValue());
                     break;
 
                 case JDWP.Tag.CHAR:
-                    if(!(val instanceof CharValue))
+                    if(!(val instanceof CharValueImpl))
                         throw new InvalidTypeException();
 
-                    writeChar(((PrimitiveValue)val).charValue());
+                    writeChar(((PrimitiveValueImpl)val).charValue());
                     break;
 
                 case JDWP.Tag.FLOAT:
-                    if(!(val instanceof FloatValue))
+                    if(!(val instanceof FloatValueImpl))
                         throw new InvalidTypeException();
 
-                    writeFloat(((PrimitiveValue)val).floatValue());
+                    writeFloat(((PrimitiveValueImpl)val).floatValue());
                     break;
 
                 case JDWP.Tag.DOUBLE:
-                    if(!(val instanceof DoubleValue))
+                    if(!(val instanceof DoubleValueImpl))
                         throw new InvalidTypeException();
 
-                    writeDouble(((PrimitiveValue)val).doubleValue());
+                    writeDouble(((PrimitiveValueImpl)val).doubleValue());
                     break;
 
                 case JDWP.Tag.INT:
-                    if(!(val instanceof IntegerValue))
+                    if(!(val instanceof IntegerValueImpl))
                         throw new InvalidTypeException();
 
-                    writeInt(((PrimitiveValue)val).intValue());
+                    writeInt(((PrimitiveValueImpl)val).intValue());
                     break;
 
                 case JDWP.Tag.LONG:
-                    if(!(val instanceof LongValue))
+                    if(!(val instanceof LongValueImpl))
                         throw new InvalidTypeException();
 
-                    writeLong(((PrimitiveValue)val).longValue());
+                    writeLong(((PrimitiveValueImpl)val).longValue());
                     break;
 
                 case JDWP.Tag.SHORT:
-                    if(!(val instanceof ShortValue))
+                    if(!(val instanceof ShortValueImpl))
                         throw new InvalidTypeException();
 
-                    writeShort(((PrimitiveValue)val).shortValue());
+                    writeShort(((PrimitiveValueImpl)val).shortValue());
                     break;
 
                 case JDWP.Tag.BOOLEAN:
-                    if(!(val instanceof BooleanValue))
+                    if(!(val instanceof BooleanValueImpl))
                         throw new InvalidTypeException();
 
-                    writeBoolean(((PrimitiveValue)val).booleanValue());
+                    writeBoolean(((PrimitiveValueImpl)val).booleanValue());
                     break;
             }
         }
@@ -444,12 +445,12 @@ public class PacketStream {
         return readID(vm.sizeofClassRef);
     }
 
-    void writeTaggedObjectReference(ObjectReference ref) {
+    void writeTaggedObjectReference(ObjectReferenceImpl ref) {
         writeByte(ValueImpl.typeValueKey(ref));
         writeUntaggedObjectReference(ref);
     }
 
-    private void writeUntaggedObjectReference(ObjectReference ref) {
+    private void writeUntaggedObjectReference(ObjectReferenceImpl ref) {
         if (ref == null) {
             writeNullObjectRef();
         } else {
@@ -480,7 +481,7 @@ public class PacketStream {
         return vm.vm.getThreadById(readObjectRef());
     }
 
-    void writeThreadReference(ThreadReference thread) {
+    void writeThreadReference(ThreadReferenceImpl thread) {
         writeUntaggedObjectReference(thread);
     }
     //
@@ -489,7 +490,7 @@ public class PacketStream {
         return vm.vm.getThreadGroupReferenceById(ref);
     }
 
-    void writeThreadGroupReference(ThreadGroupReference ref) {
+    void writeThreadGroupReference(ThreadGroupReferenceImpl ref) {
         writeUntaggedObjectReference(ref);
     }
     //
@@ -649,11 +650,11 @@ public class PacketStream {
 //        return list;
 //    }
 
-    void writeArrayRegion(List<Value> srcValues, byte typeTag) {
+    void writeArrayRegion(List<ValueImpl> srcValues, byte typeTag) {
         writeByte(typeTag);
         writeInt(srcValues.size());
         boolean withTags = isObjectTag(typeTag);
-        for (Value value : srcValues) {
+        for (ValueImpl value : srcValues) {
             if (withTags) {
                 writeValue(value);
             }

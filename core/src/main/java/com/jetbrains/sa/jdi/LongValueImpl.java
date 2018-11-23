@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.LongValue;
 
-public class LongValueImpl extends PrimitiveValueImpl implements LongValue {
+public class LongValueImpl extends PrimitiveValueImpl {
     private long value;
 
     LongValueImpl(VirtualMachineImpl aVm,long aValue) {

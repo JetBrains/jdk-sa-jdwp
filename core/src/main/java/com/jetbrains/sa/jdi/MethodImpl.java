@@ -36,21 +36,22 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.ClassNotLoadedException;
 import sun.jvm.hotspot.oops.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class MethodImpl extends TypeComponentImpl implements Method {
+public abstract class MethodImpl extends TypeComponentImpl {
     private JNITypeParser signatureParser;
     protected sun.jvm.hotspot.oops.Method saMethod;
 
     public abstract int argSlotCount();
-    abstract List<Location> allLineLocations(SDE.Stratum stratum, String sourceName) throws AbsentInformationException;
-    abstract List<Location> locationsOfLine(SDE.Stratum stratum, String sourceName, int lineNumber) throws AbsentInformationException;
+    abstract List<LocationImpl> allLineLocations(SDE.Stratum stratum, String sourceName) throws AbsentInformationException;
+    abstract List<LocationImpl> locationsOfLine(SDE.Stratum stratum, String sourceName, int lineNumber) throws AbsentInformationException;
 
-    static MethodImpl createMethodImpl(VirtualMachine vm, ReferenceTypeImpl declaringType,
+    static MethodImpl createMethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
                                        sun.jvm.hotspot.oops.Method saMethod) {
         // Someday might have to add concrete and non-concrete subclasses.
         if (saMethod.isNative() || saMethod.isAbstract()) {
@@ -60,7 +61,7 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         }
     }
 
-    MethodImpl(VirtualMachine vm, ReferenceTypeImpl declaringType,
+    MethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
                sun.jvm.hotspot.oops.Method saMethod ) {
         super(vm, declaringType);
         this.saMethod = saMethod;
@@ -94,11 +95,11 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         return getParser().typeName();
     }
 
-    public Type returnType() throws ClassNotLoadedException {
+    public TypeImpl returnType() throws ClassNotLoadedException {
         return findType(getParser().signature());
     }
 
-    private Type findType(String signature) throws ClassNotLoadedException {
+    private TypeImpl findType(String signature) throws ClassNotLoadedException {
         ReferenceTypeImpl enclosing = (ReferenceTypeImpl)declaringType();
         return enclosing.findType(signature);
     }
@@ -111,17 +112,17 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         return getParser().argumentSignatures();
     }
 
-    Type argumentType(int index) throws ClassNotLoadedException {
+    TypeImpl argumentType(int index) throws ClassNotLoadedException {
         ReferenceTypeImpl enclosing = (ReferenceTypeImpl)declaringType();
         String signature = argumentSignatures().get(index);
         return enclosing.findType(signature);
     }
 
-    public List<Type> argumentTypes() throws ClassNotLoadedException {
+    public List<TypeImpl> argumentTypes() throws ClassNotLoadedException {
         int size = argumentSignatures().size();
-        ArrayList<Type> types = new ArrayList<Type>(size);
+        ArrayList<TypeImpl> types = new ArrayList<TypeImpl>(size);
         for (int i = 0; i < size; i++) {
-            Type type = argumentType(i);
+            TypeImpl type = argumentType(i);
             types.add(type);
         }
         return types;
@@ -159,23 +160,23 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
         return saMethod.isObsolete();
     }
 
-    public final List<Location> allLineLocations()
+    public final List<LocationImpl> allLineLocations()
                            throws AbsentInformationException {
         return allLineLocations(vm.getDefaultStratum(), null);
     }
 
-    public List<Location> allLineLocations(String stratumID,
+    public List<LocationImpl> allLineLocations(String stratumID,
                                  String sourceName)
                            throws AbsentInformationException {
         return allLineLocations(declaringType.stratum(stratumID), sourceName);
     }
 
-    public final List<Location> locationsOfLine(int lineNumber)
+    public final List<LocationImpl> locationsOfLine(int lineNumber)
                            throws AbsentInformationException {
         return locationsOfLine(vm.getDefaultStratum(), null, lineNumber);
     }
 
-    public List<Location> locationsOfLine(String stratumID,
+    public List<LocationImpl> locationsOfLine(String stratumID,
                                 String sourceName,
                                 int lineNumber)
                            throws AbsentInformationException {
@@ -203,7 +204,7 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     }
 
     // From interface Comparable
-    public int compareTo(Method method) {
+    public int compareTo(MethodImpl method) {
         ReferenceTypeImpl declaringType = (ReferenceTypeImpl)declaringType();
          int rc = declaringType.compareTo(method.declaringType());
          if (rc == 0) {
@@ -272,4 +273,8 @@ public abstract class MethodImpl extends TypeComponentImpl implements Method {
     public int hashCode() {
         return saMethod.hashCode();
     }
+
+    abstract public List<LocalVariableImpl> variables() throws AbsentInformationException;
+
+    abstract public byte[] bytecodes();
 }

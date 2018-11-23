@@ -36,21 +36,21 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.InvalidStackFrameException;
 
-public class MonitorInfoImpl extends MirrorImpl implements MonitorInfo {
+public class MonitorInfoImpl extends MirrorImpl {
 
     /* Once false, monitorInfo should not be used.
      * access synchronized on (vm.state())
      */
     private boolean isValid = true;
 
-    ObjectReference monitor;
-    ThreadReference thread;
+    ObjectReferenceImpl monitor;
+    ThreadReferenceImpl thread;
     int  stack_depth;
 
-    MonitorInfoImpl(VirtualMachine vm, ObjectReference mon,
-                    ThreadReference thread, int dpth) {
+    MonitorInfoImpl(VirtualMachineImpl vm, ObjectReferenceImpl mon,
+                    ThreadReferenceImpl thread, int dpth) {
         super(vm);
         this.monitor = mon;
         this.thread = thread;
@@ -63,7 +63,7 @@ public class MonitorInfoImpl extends MirrorImpl implements MonitorInfo {
         }
     }
 
-    public ObjectReference monitor() {
+    public ObjectReferenceImpl monitor() {
         validateMonitorInfo();
         return monitor;
     }
@@ -73,7 +73,7 @@ public class MonitorInfoImpl extends MirrorImpl implements MonitorInfo {
         return stack_depth;
     }
 
-    public ThreadReference thread() {
+    public ThreadReferenceImpl thread() {
         validateMonitorInfo();
         return thread;
     }

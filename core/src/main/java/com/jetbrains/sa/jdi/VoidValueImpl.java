@@ -37,13 +37,11 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VoidValue;
 
-public class VoidValueImpl extends ValueImpl implements VoidValue {
+public class VoidValueImpl extends ValueImpl {
 
-    VoidValueImpl(VirtualMachine aVm) {
+    VoidValueImpl(VirtualMachineImpl aVm) {
         super(aVm);
     }
 
@@ -60,7 +58,7 @@ public class VoidValueImpl extends ValueImpl implements VoidValue {
         return type().hashCode();
     }
 
-    public Type type() {
+    public TypeImpl type() {
         return vm.theVoidType;
     }
 

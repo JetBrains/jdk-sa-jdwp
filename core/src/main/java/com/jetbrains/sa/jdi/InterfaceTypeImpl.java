@@ -36,71 +36,70 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
 import com.jetbrains.sa.jdwp.JDWP;
+import com.sun.jdi.ClassNotPreparedException;
 import sun.jvm.hotspot.oops.InstanceKlass;
 
 import java.lang.ref.SoftReference;
 import java.util.*;
 
-public class InterfaceTypeImpl extends ReferenceTypeImpl
-                               implements InterfaceType {
-    private SoftReference<List<InterfaceType>> superInterfacesCache = null;
-    private SoftReference<List<InterfaceType>> subInterfacesCache = null;
-    private SoftReference<List<ClassType>> implementorsCache = null;
+public class InterfaceTypeImpl extends ReferenceTypeImpl {
+    private SoftReference<List<InterfaceTypeImpl>> superInterfacesCache = null;
+    private SoftReference<List<InterfaceTypeImpl>> subInterfacesCache = null;
+    private SoftReference<List<ClassTypeImpl>> implementorsCache = null;
 
-    protected InterfaceTypeImpl(VirtualMachine aVm, InstanceKlass aRef) {
+    protected InterfaceTypeImpl(VirtualMachineImpl aVm, InstanceKlass aRef) {
         super(aVm, aRef, JDWP.TypeTag.INTERFACE);
     }
 
-    public List<InterfaceType> superinterfaces() throws ClassNotPreparedException {
-        List<InterfaceType> superinterfaces = (superInterfacesCache != null)? superInterfacesCache.get() : null;
+    public List<InterfaceTypeImpl> superinterfaces() throws ClassNotPreparedException {
+        List<InterfaceTypeImpl> superinterfaces = (superInterfacesCache != null)? superInterfacesCache.get() : null;
         if (superinterfaces == null) {
             checkPrepared();
             superinterfaces = Collections.unmodifiableList(getInterfaces());
-            superInterfacesCache = new SoftReference<List<InterfaceType>>(superinterfaces);
+            superInterfacesCache = new SoftReference<List<InterfaceTypeImpl>>(superinterfaces);
         }
         return superinterfaces;
     }
 
-    public List<InterfaceType> subinterfaces() {
-        List<InterfaceType> subinterfaces = (subInterfacesCache != null)? subInterfacesCache.get() : null;
+    public List<InterfaceTypeImpl> subinterfaces() {
+        List<InterfaceTypeImpl> subinterfaces = (subInterfacesCache != null)? subInterfacesCache.get() : null;
         if (subinterfaces == null) {
-            subinterfaces = new ArrayList<InterfaceType>();
-            for (ReferenceType refType : vm.allClasses()) {
-                if (refType instanceof InterfaceType) {
-                    InterfaceType interfaze = (InterfaceType) refType;
+            subinterfaces = new ArrayList<InterfaceTypeImpl>();
+            for (ReferenceTypeImpl refType : vm.allClasses()) {
+                if (refType instanceof InterfaceTypeImpl) {
+                    InterfaceTypeImpl interfaze = (InterfaceTypeImpl) refType;
                     if (interfaze.isPrepared() && interfaze.superinterfaces().contains(this)) {
                         subinterfaces.add(interfaze);
                     }
                 }
             }
             subinterfaces = Collections.unmodifiableList(subinterfaces);
-            subInterfacesCache = new SoftReference<List<InterfaceType>>(subinterfaces);
+            subInterfacesCache = new SoftReference<List<InterfaceTypeImpl>>(subinterfaces);
         }
         return subinterfaces;
     }
 
-    public List<ClassType> implementors() {
-        List<ClassType> implementors = (implementorsCache != null)? implementorsCache.get() : null;
+    public List<ClassTypeImpl> implementors() {
+        List<ClassTypeImpl> implementors = (implementorsCache != null)? implementorsCache.get() : null;
         if (implementors == null) {
-            implementors = new ArrayList<ClassType>();
+            implementors = new ArrayList<ClassTypeImpl>();
             for (Object o : vm.allClasses()) {
-                ReferenceType refType = (ReferenceType) o;
-                if (refType instanceof ClassType) {
-                    ClassType clazz = (ClassType) refType;
+                ReferenceTypeImpl refType = (ReferenceTypeImpl) o;
+                if (refType instanceof ClassTypeImpl) {
+                    ClassTypeImpl clazz = (ClassTypeImpl) refType;
                     if (clazz.isPrepared() && clazz.interfaces().contains(this)) {
                         implementors.add(clazz);
                     }
                 }
             }
             implementors = Collections.unmodifiableList(implementors);
-            implementorsCache = new SoftReference<List<ClassType>>(implementors);
+            implementorsCache = new SoftReference<List<ClassTypeImpl>>(implementors);
         }
         return implementors;
     }
 
-    void addVisibleMethods(Map<String, Method> methodMap) {
+    void addVisibleMethods(Map<String, MethodImpl> methodMap) {
         /*
          * Add methods from
          * parent types first, so that the methods in this class will
@@ -114,27 +113,27 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
         addToMethodMap(methodMap, methods());
     }
 
-    List<Method> getAllMethods() {
-        ArrayList<Method> list = new ArrayList<Method>(methods());
+    List<MethodImpl> getAllMethods() {
+        ArrayList<MethodImpl> list = new ArrayList<MethodImpl>(methods());
         /*
          * It's more efficient if don't do this
          * recursively.
          */
-        List<InterfaceType> interfaces = allSuperinterfaces();
-        for (InterfaceType interfaze : interfaces) {
+        List<InterfaceTypeImpl> interfaces = allSuperinterfaces();
+        for (InterfaceTypeImpl interfaze : interfaces) {
             list.addAll(interfaze.methods());
         }
 
         return list;
     }
 
-    List<InterfaceType> allSuperinterfaces() {
-        ArrayList<InterfaceType> list = new ArrayList<InterfaceType>();
+    List<InterfaceTypeImpl> allSuperinterfaces() {
+        ArrayList<InterfaceTypeImpl> list = new ArrayList<InterfaceTypeImpl>();
         addSuperinterfaces(list);
         return list;
     }
 
-    void addSuperinterfaces(List<InterfaceType> list) {
+    void addSuperinterfaces(List<InterfaceTypeImpl> list) {
         /*
          * This code is a little strange because it
          * builds the list with a more suitable order than the
@@ -147,10 +146,10 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
          * Get a list of direct superinterfaces that's not already in the
          * list being built.
          */
-        List<InterfaceType> immediate = new ArrayList<InterfaceType>(superinterfaces());
-        Iterator<InterfaceType> iter = immediate.iterator();
+        List<InterfaceTypeImpl> immediate = new ArrayList<InterfaceTypeImpl>(superinterfaces());
+        Iterator<InterfaceTypeImpl> iter = immediate.iterator();
         while (iter.hasNext()) {
-            InterfaceType interfaze = iter.next();
+            InterfaceTypeImpl interfaze = iter.next();
             if (list.contains(interfaze)) {
                 iter.remove();
             }
@@ -171,14 +170,14 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
         }
     }
 
-    boolean isAssignableTo(ReferenceType type) {
+    boolean isAssignableTo(ReferenceTypeImpl type) {
 
         // Exact match?
         if (this.equals(type)) {
             return true;
         } else {
             // Try superinterfaces.
-            for (InterfaceType aSuper : superinterfaces()) {
+            for (InterfaceTypeImpl aSuper : superinterfaces()) {
                 InterfaceTypeImpl interfaze = (InterfaceTypeImpl) aSuper;
                 if (interfaze.isAssignableTo(type)) {
                     return true;
@@ -189,7 +188,7 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
         }
     }
 
-    List<InterfaceType> inheritedTypes() {
+    List<InterfaceTypeImpl> inheritedTypes() {
         return superinterfaces();
     }
 

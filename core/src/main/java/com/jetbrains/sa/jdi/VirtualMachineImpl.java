@@ -36,7 +36,8 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.VirtualMachineManager;
 import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.request.EventRequestManager;
 import sun.jvm.hotspot.HotSpotAgent;
@@ -53,7 +54,7 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.util.*;
 
-public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtualMachine {
+public class VirtualMachineImpl extends MirrorImpl {
 
     private HotSpotAgent     saAgent = new HotSpotAgent();
     private VM               saVM;
@@ -79,8 +80,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     VirtualMachineManager vmmgr;
 
-    private final ThreadGroup             threadGroupForJDI;
-
     // Per-vm singletons for primitive types and for void.
     final PrimitiveTypeImpl theBooleanType;
     final PrimitiveTypeImpl theByteType;
@@ -91,16 +90,16 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     final PrimitiveTypeImpl theFloatType;
     final PrimitiveTypeImpl theDoubleType;
 
-    final VoidType theVoidType;
+    final VoidTypeImpl theVoidType;
 
     private final VoidValueImpl voidVal;
 
     private final Map<Klass, ReferenceTypeImpl> typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
-    private List<ReferenceType>      bootstrapClasses;      // all bootstrap classes
-    private ArrayList<ThreadReference> allThreads;
-    private ArrayList<ThreadGroupReference> topLevelGroups;
+    private List<ReferenceTypeImpl>      bootstrapClasses;      // all bootstrap classes
+    private ArrayList<ThreadReferenceImpl> allThreads;
+    private ArrayList<ThreadGroupReferenceImpl> topLevelGroups;
     final   int       sequenceNumber;
 
     // ObjectReference cache
@@ -203,14 +202,6 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         this.sequenceNumber = sequenceNumber;
         this.vmmgr = mgr;
 
-        /* Create ThreadGroup to be used by all threads servicing
-         * this VM.
-         */
-        threadGroupForJDI = new ThreadGroup("JDI [" +
-                                            this.hashCode() + "]");
-
-        ((com.sun.tools.jdi.VirtualMachineManagerImpl)mgr).addVirtualMachine(this);
-
         // By default SA agent classes prefer Windows process debugger
         // to windbg debugger. SA expects special properties to be set
         // to choose other debuggers. We will set those here before
@@ -262,9 +253,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return System.identityHashCode(this);
     }
 
-    public List<ReferenceType> classesByName(String className) {
+    public List<ReferenceTypeImpl> classesByName(String className) {
         String signature = JNITypeParser.typeNameToSignature(className);
-        List<ReferenceType> list;
+        List<ReferenceTypeImpl> list;
         if (!retrievedAllTypes) {
             retrieveAllClasses();
         }
@@ -272,23 +263,23 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return Collections.unmodifiableList(list);
     }
 
-    public List<ReferenceType> allClasses() {
+    public List<ReferenceTypeImpl> allClasses() {
         if (!retrievedAllTypes) {
             retrieveAllClasses();
         }
-        ArrayList<ReferenceType> a;
+        ArrayList<ReferenceTypeImpl> a;
         synchronized (this) {
-            a = new ArrayList<ReferenceType>(typesById.values());
+            a = new ArrayList<ReferenceTypeImpl>(typesById.values());
         }
         return Collections.unmodifiableList(a);
     }
 
     // classes loaded by bootstrap loader
-    List<ReferenceType> bootstrapClasses() {
+    List<ReferenceTypeImpl> bootstrapClasses() {
         if (bootstrapClasses == null) {
-            bootstrapClasses = new ArrayList<ReferenceType>();
+            bootstrapClasses = new ArrayList<ReferenceTypeImpl>();
             for (Object o : allClasses()) {
-                ReferenceType type = (ReferenceType) o;
+                ReferenceTypeImpl type = (ReferenceTypeImpl) o;
                 if (type.classLoader() == null) {
                     bootstrapClasses.add(type);
                 }
@@ -297,7 +288,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return bootstrapClasses;
     }
 
-    public synchronized List<ReferenceType> findReferenceTypes(String signature) {
+    public synchronized List<ReferenceTypeImpl> findReferenceTypes(String signature) {
         // The signature could be Lx/y/z; or [....
         // If it is Lx/y/z; the internal type name is x/y/x
         // for array klasses internal type name is same as
@@ -309,7 +300,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             typeName = signature;
         }
 
-        List<ReferenceType> list = new ArrayList<ReferenceType>(1);
+        List<ReferenceTypeImpl> list = new ArrayList<ReferenceTypeImpl>(1);
         for (ReferenceTypeImpl type : typesById.values()) {
             if (type.name().equals(typeName)) {
                 list.add(type);
@@ -361,17 +352,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return newRefType;
     }
 
-    ThreadGroup threadGroupForJDI() {
-        return threadGroupForJDI;
-    }
-
-    public void redefineClasses(Map<? extends ReferenceType, byte[]> classToBytes) {
-        throwNotReadOnlyException("VirtualMachineImpl.redefineClasses()");
-    }
-
-    private List<ThreadReference> getAllThreads() {
+    private List<ThreadReferenceImpl> getAllThreads() {
         if (allThreads == null) {
-            allThreads = new ArrayList<ThreadReference>(10);  // Might be enough, might not be
+            allThreads = new ArrayList<ThreadReferenceImpl>(10);  // Might be enough, might not be
             for (JavaThread thread = saVM.getThreads().first(); thread != null; thread = thread.next()) {
                 // refer to JvmtiEnv::GetAllThreads in jvmtiEnv.cpp.
                 // filter out the hidden-from-external-view threads.
@@ -384,7 +367,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return allThreads;
     }
 
-    public List<ThreadReference> allThreads() { //fixme jjh
+    public List<ThreadReferenceImpl> allThreads() { //fixme jjh
         return Collections.unmodifiableList(getAllThreads());
     }
 
@@ -396,7 +379,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         throwNotReadOnlyException("VirtualMachineImpl.resume()");
     }
 
-    public List<ThreadGroupReference> topLevelThreadGroups() { //fixme jjh
+    public List<ThreadGroupReferenceImpl> topLevelThreadGroups() { //fixme jjh
         // The doc for ThreadGroup says that The top-level thread group
         // is the only thread group whose parent is null.  This means there is
         // only one top level thread group.  There will be a thread in this
@@ -404,11 +387,11 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         // and that will be it.
 
         if (topLevelGroups == null) {
-            topLevelGroups = new ArrayList<ThreadGroupReference>(1);
-            for (ThreadReference threadReference : getAllThreads()) {
+            topLevelGroups = new ArrayList<ThreadGroupReferenceImpl>(1);
+            for (ThreadReferenceImpl threadReference : getAllThreads()) {
                 ThreadReferenceImpl myThread = (ThreadReferenceImpl) threadReference;
-                ThreadGroupReference myGroup = myThread.threadGroup();
-                ThreadGroupReference myParent = myGroup.parent();
+                ThreadGroupReferenceImpl myGroup = myThread.threadGroup();
+                ThreadGroupReferenceImpl myParent = myGroup.parent();
                 if (myGroup.parent() == null) {
                     topLevelGroups.add(myGroup);
                     break;
@@ -460,7 +443,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return new DoubleValueImpl(this,value);
     }
 
-    public StringReference mirrorOf(String value) {
+    public StringReferenceImpl mirrorOf(String value) {
         throwNotReadOnlyException("VirtualMachinestop.mirrorOf(String)");
         return null;
     }
@@ -599,7 +582,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     // new method since 1.6
     // Real body will be supplied later.
-    public long[] instanceCounts(List<? extends ReferenceType> classes) {
+    public long[] instanceCounts(List<? extends ReferenceTypeImpl> classes) {
         if (!canGetInstanceInfo()) {
             throw new UnsupportedOperationException(
                       "target does not support getting instances");
@@ -612,7 +595,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         for (Object aClass : classes) {
             ReferenceTypeImpl rti = (ReferenceTypeImpl) aClass;
             instanceMap.put(CompatibilityHelper.INSTANCE.getAddress(rti.ref()), 0L);
-            if (!(rti.isAbstract() || (rti instanceof InterfaceType))) {
+            if (!(rti.isAbstract() || (rti instanceof InterfaceTypeImpl))) {
                 allAbstractClasses = false;
             }
         }
@@ -702,7 +685,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // from interface Mirror
-    public VirtualMachine virtualMachine() {
+    public VirtualMachineImpl virtualMachine() {
         return this;
     }
 
@@ -723,8 +706,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // return a list of all objects in heap
-    public List<ObjectReference> allObjects() {
-        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
+    public List<ObjectReferenceImpl> allObjects() {
+        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
         saObjectHeap.iterate(
                 new DefaultHeapVisitor() {
                     public boolean doObj(Oop oop) {
@@ -736,13 +719,13 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // equivalent to objectsByType(type, true)
-    public List<ObjectReference> objectsByType(ReferenceType type) {
+    public List<ObjectReferenceImpl> objectsByType(ReferenceTypeImpl type) {
         return objectsByType(type, true);
     }
 
     // returns objects of type exactly equal to given type
-    private List<ObjectReference> objectsByExactType(ReferenceType type) {
-        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
+    private List<ObjectReferenceImpl> objectsByExactType(ReferenceTypeImpl type) {
+        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
         final Klass givenKls = ((ReferenceTypeImpl) type).ref();
         saObjectHeap.iterate(new DefaultHeapVisitor() {
             public boolean doObj(Oop oop) {
@@ -756,9 +739,9 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     // returns objects of given type as well as it's subtypes
-    private List<ObjectReference> objectsBySubType(ReferenceType type) {
-        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
-        final ReferenceType givenType = type;
+    private List<ObjectReferenceImpl> objectsBySubType(ReferenceTypeImpl type) {
+        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
+        final ReferenceTypeImpl givenType = type;
         saObjectHeap.iterate(new DefaultHeapVisitor() {
             public boolean doObj(Oop oop) {
                 ReferenceTypeImpl curType = referenceType(oop.getKlass());
@@ -773,7 +756,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
 
     // includeSubtypes - do you want to include subclass/subtype instances of given
     // ReferenceType or do we want objects of exact type only?
-    public List<ObjectReference> objectsByType(ReferenceType type, boolean includeSubtypes) {
+    public List<ObjectReferenceImpl> objectsByType(ReferenceTypeImpl type, boolean includeSubtypes) {
         Klass kls = ((ReferenceTypeImpl)type).ref();
         if (kls instanceof InstanceKlass) {
             InstanceKlass ik = (InstanceKlass) kls;
@@ -785,8 +768,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
             // no subtypes for primitive array types
             ArrayTypeImpl arrayType = (ArrayTypeImpl) type;
             try {
-                Type componentType = arrayType.componentType();
-                if (componentType instanceof PrimitiveType) {
+                TypeImpl componentType = arrayType.componentType();
+                if (componentType instanceof PrimitiveTypeImpl) {
                     includeSubtypes = false;
                 }
             } catch (ClassNotLoadedException cnle) {
@@ -801,8 +784,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         }
     }
 
-    Type findBootType(String signature) throws ClassNotLoadedException {
-        for (ReferenceType type : allClasses()) {
+    TypeImpl findBootType(String signature) throws ClassNotLoadedException {
+        for (ReferenceTypeImpl type : allClasses()) {
             if ((type.classLoader() == null) && (type.signature().equals(signature))) {
                 return type;
             }
@@ -811,7 +794,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         throw new ClassNotLoadedException(parser.typeName(), "Type " + parser.typeName() + " not loaded");
     }
 
-    PrimitiveType primitiveTypeMirror(char tag) {
+    PrimitiveTypeImpl primitiveTypeMirror(char tag) {
         switch (tag) {
         case 'Z':
                 return theBooleanType;
@@ -1011,7 +994,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
    }
 
     public ThreadReferenceImpl getThreadById(long id) {
-        for (ThreadReference thread : allThreads()) {
+        for (ThreadReferenceImpl thread : allThreads()) {
             if (thread.uniqueID() == id) {
                 return (ThreadReferenceImpl) thread;
             }
@@ -1028,8 +1011,8 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     }
 
     public ThreadGroupReferenceImpl getThreadGroupReferenceById(long id) {
-        for (ThreadReference thread : allThreads()) {
-            ThreadGroupReference threadGroup = thread.threadGroup();
+        for (ThreadReferenceImpl thread : allThreads()) {
+            ThreadGroupReferenceImpl threadGroup = thread.threadGroup();
             if (threadGroup.uniqueID() == id) {
                 return (ThreadGroupReferenceImpl) threadGroup;
             }

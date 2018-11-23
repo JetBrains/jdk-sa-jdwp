@@ -37,19 +37,16 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.ClassNotLoadedException;
-import com.sun.jdi.Field;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
 import sun.jvm.hotspot.oops.Array;
 import sun.jvm.hotspot.oops.FieldIdentifier;
 import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.oops.Symbol;
 
-public class FieldImpl extends TypeComponentImpl implements Field {
+public class FieldImpl extends TypeComponentImpl {
     private JNITypeParser signatureParser;
     private sun.jvm.hotspot.oops.Field saField;
 
-    FieldImpl( VirtualMachine vm, ReferenceTypeImpl declaringType,
+    FieldImpl( VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
                sun.jvm.hotspot.oops.Field saField) {
         super(vm, declaringType);
         this.saField = saField;
@@ -141,7 +138,7 @@ public class FieldImpl extends TypeComponentImpl implements Field {
         return saField.isEnumConstant();
     }
 
-    public Type type() throws ClassNotLoadedException {
+    public TypeImpl type() throws ClassNotLoadedException {
         // So, we do it just like JDI does by searching the enclosing type.
         return findType(signature());
     }
@@ -157,7 +154,7 @@ public class FieldImpl extends TypeComponentImpl implements Field {
     }
 
     // From interface Comparable
-    public int compareTo(Field field) {
+    public int compareTo(FieldImpl field) {
         ReferenceTypeImpl declaringType = (ReferenceTypeImpl)declaringType();
         int rc = declaringType.compareTo(field.declaringType());
         if (rc == 0) {
@@ -215,7 +212,7 @@ public class FieldImpl extends TypeComponentImpl implements Field {
     }
 
 
-    private Type findType(String signature) throws ClassNotLoadedException {
+    private TypeImpl findType(String signature) throws ClassNotLoadedException {
         ReferenceTypeImpl enclosing = (ReferenceTypeImpl)declaringType();
         return enclosing.findType(signature);
     }

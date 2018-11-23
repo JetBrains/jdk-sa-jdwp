@@ -36,20 +36,15 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.PrimitiveValue;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-
-public abstract class PrimitiveValueImpl extends ValueImpl implements PrimitiveValue {
+public abstract class PrimitiveValueImpl extends ValueImpl {
     private final PrimitiveTypeImpl type;
 
-    PrimitiveValueImpl(VirtualMachine aVm, PrimitiveTypeImpl type) {
+    PrimitiveValueImpl(VirtualMachineImpl aVm, PrimitiveTypeImpl type) {
         super(aVm);
         this.type = type;
     }
 
-    @Override
-    public final Type type() {
+    public final TypeImpl type() {
         return type;
     }
 

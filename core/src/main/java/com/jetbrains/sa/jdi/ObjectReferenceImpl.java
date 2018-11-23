@@ -37,7 +37,6 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.*;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.DefaultHeapVisitor;
@@ -52,12 +51,12 @@ import sun.jvm.hotspot.utilities.Assert;
 
 import java.util.*;
 
-public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
+public class ObjectReferenceImpl extends ValueImpl {
     private Oop  saObject;
     private long myID;
     private boolean monitorInfoCached = false;
     private ThreadReferenceImpl owningThread = null;
-    private List<ThreadReference> waitingThreads = null;
+    private List<ThreadReferenceImpl> waitingThreads = null;
     private int entryCount = 0;
 
     private static long nextID = 0L;
@@ -65,7 +64,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         return ++nextID;
     }
 
-    ObjectReferenceImpl(VirtualMachine aVm, Oop oRef) {
+    ObjectReferenceImpl(VirtualMachineImpl aVm, Oop oRef) {
         super(aVm);
         saObject = oRef;
         myID = nextID();
@@ -75,20 +74,20 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         return saObject;
     }
 
-    public Type type() {
+    public TypeImpl type() {
         return referenceType();
     }
 
-    public ReferenceType referenceType() {
+    public ReferenceTypeImpl referenceType() {
         Klass myKlass = ref().getKlass();
         return vm.referenceType(myKlass);
     }
 
-    public Value getValue(Field sig) {
+    public ValueImpl getValue(FieldImpl sig) {
         return getValues(Collections.singletonList(sig)).get(sig);
     }
 
-    public Map<Field, Value> getValues(List<? extends Field> theFields) {
+    public Map<FieldImpl, ValueImpl> getValues(List<? extends FieldImpl> theFields) {
         //validateMirrors(theFields);
 
         List<FieldImpl> staticFields = new ArrayList<FieldImpl>(0);
@@ -112,11 +111,11 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         }
 
         // Look up static field(s) first to mimic the JDI implementation
-        Map<Field, Value> map;
+        Map<FieldImpl, ValueImpl> map;
         if (staticFields.size() > 0) {
             map = referenceType().getValues(staticFields);
         } else {
-            map = new HashMap<Field, Value>(size);
+            map = new HashMap<FieldImpl, ValueImpl>(size);
         }
 
         // Then get instance field(s)
@@ -129,12 +128,12 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         return map;
     }
 
-    public void setValue(Field field, Value value) {
+    public void setValue(FieldImpl field, ValueImpl value) {
         vm.throwNotReadOnlyException("ObjectReference.setValue(...)");
     }
 
-    public Value invokeMethod(ThreadReference threadIntf, Method methodIntf,
-                              List<? extends Value> arguments, int options) {
+    public ValueImpl invokeMethod(ThreadReferenceImpl threadIntf, MethodImpl methodIntf,
+                              List<? extends ValueImpl> arguments, int options) {
         vm.throwNotReadOnlyException("ObjectReference.invokeMethod(...)");
         return null;
     }
@@ -156,7 +155,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         return myID;
     }
 
-    public List<ThreadReference> waitingThreads() {
+    public List<ThreadReferenceImpl> waitingThreads() {
         if (!vm.canGetMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
@@ -168,7 +167,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
     }
 
 
-    public ThreadReference owningThread() {
+    public ThreadReferenceImpl owningThread() {
         if (!vm.canGetMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
@@ -193,23 +192,23 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
 
     // new method since 1.6.
     // Real body will be supplied later.
-    public List<ObjectReference> referringObjects(long maxReferrers) {
+    public List<ObjectReferenceImpl> referringObjects(long maxReferrers) {
         if (!vm.canGetInstanceInfo()) {
             throw new UnsupportedOperationException("target does not support getting instances");
         }
         if (maxReferrers < 0) {
             throw new IllegalArgumentException("maxReferrers is less than zero: " + maxReferrers);
         }
-        final ObjectReference obj = this;
-        final List<ObjectReference> objects = new ArrayList<ObjectReference>(0);
+        final ObjectReferenceImpl obj = this;
+        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
         final long max = maxReferrers;
         vm.saObjectHeap().iterate(new DefaultHeapVisitor() {
             private long refCount = 0;
 
             public boolean doObj(Oop oop) {
                 try {
-                    ObjectReference objref = vm.objectMirror(oop);
-                    for (Field fld : objref.referenceType().allFields()) {
+                    ObjectReferenceImpl objref = vm.objectMirror(oop);
+                    for (FieldImpl fld : objref.referenceType().allFields()) {
                         if (objref.getValue(fld).equals(obj) && !objects.contains(objref)) {
                             objects.add(objref);
                             refCount++;
@@ -316,7 +315,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         }
 
         // find the contenders & waiters
-        waitingThreads = new ArrayList<ThreadReference>();
+        waitingThreads = new ArrayList<ThreadReferenceImpl>();
         if (mon != null) {
             // this object has a heavyweight monitor. threads could
             // be contenders or waiters

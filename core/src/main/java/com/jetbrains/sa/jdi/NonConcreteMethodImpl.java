@@ -36,7 +36,8 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.InternalException;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,15 +48,15 @@ import java.util.List;
  */
 public class NonConcreteMethodImpl extends MethodImpl {
 
-    private Location location = null;
+    private LocationImpl location = null;
 
-    NonConcreteMethodImpl(VirtualMachine vm,
+    NonConcreteMethodImpl(VirtualMachineImpl vm,
                           ReferenceTypeImpl declaringType,
                           sun.jvm.hotspot.oops.Method saMethod) {
         super(vm, declaringType, saMethod);
     }
 
-    public Location location() {
+    public LocationImpl location() {
         if (isAbstract()) {
             return null;
         }
@@ -65,29 +66,29 @@ public class NonConcreteMethodImpl extends MethodImpl {
         return location;
     }
 
-    public List<Location> allLineLocations(String stratumID,
+    public List<LocationImpl> allLineLocations(String stratumID,
                                  String sourceName) {
         return Collections.emptyList();
     }
 
-    public List<Location> allLineLocations(SDE.Stratum stratum,
+    public List<LocationImpl> allLineLocations(SDE.Stratum stratum,
                                                String sourceName) {
         return Collections.emptyList();
     }
 
-    public List<Location> locationsOfLine(String stratumID,
+    public List<LocationImpl> locationsOfLine(String stratumID,
                                 String sourceName,
                                 int lineNumber) {
         return Collections.emptyList();
     }
 
-    public List<Location> locationsOfLine(SDE.Stratum stratum,
+    public List<LocationImpl> locationsOfLine(SDE.Stratum stratum,
                                 String sourceName,
                                 int lineNumber) {
         return Collections.emptyList();
     }
 
-    public Location locationOfCodeIndex(long codeIndex) {
+    public LocationImpl locationOfCodeIndex(long codeIndex) {
         return null;
     }
 
@@ -99,15 +100,15 @@ public class NonConcreteMethodImpl extends MethodImpl {
         }
     }
 
-    public List<LocalVariable> variables() throws AbsentInformationException {
+    public List<LocalVariableImpl> variables() throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 
-    public List<LocalVariable> variablesByName(String name) throws AbsentInformationException {
+    public List<LocalVariableImpl> variablesByName(String name) throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 
-    public List<LocalVariable> arguments() throws AbsentInformationException {
+    public List<LocalVariableImpl> arguments() throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 

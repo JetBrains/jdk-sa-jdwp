@@ -15,7 +15,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ReferenceType;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.*;
@@ -118,8 +117,8 @@ class CompatibilityHelper10 implements Compatibility {
     }
 
     @Override
-    public List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
-        List<ReferenceType> res = new ArrayList<>();
+    public List<ReferenceTypeImpl> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
+        List<ReferenceTypeImpl> res = new ArrayList<>();
         vm.saVM().getClassLoaderDataGraph().allEntriesDo((k, loader) -> {
             if (ref.equals(loader)) {
                 for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {

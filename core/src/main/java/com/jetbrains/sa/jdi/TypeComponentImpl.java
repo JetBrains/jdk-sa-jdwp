@@ -36,27 +36,22 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ReferenceType;
-import com.sun.jdi.TypeComponent;
-import com.sun.jdi.VirtualMachine;
-
 /**
  * There is no SA class that corresponds to this.  Therefore,
  * all the methods in this class which involve the SA mirror class
  * have to be implemented in the subclasses.
  */
-abstract public class TypeComponentImpl extends MirrorImpl
-    implements TypeComponent {
+abstract public class TypeComponentImpl extends MirrorImpl {
 
     protected final ReferenceTypeImpl declaringType;
     protected String signature;
 
-    TypeComponentImpl(VirtualMachine vm, ReferenceTypeImpl declaringType) {
+    TypeComponentImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType) {
         super(vm);
         this.declaringType = declaringType;
     }
 
-    public ReferenceType declaringType() {
+    public ReferenceTypeImpl declaringType() {
         return declaringType;
     }
 

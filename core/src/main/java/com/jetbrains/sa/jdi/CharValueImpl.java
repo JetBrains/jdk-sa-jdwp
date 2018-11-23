@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.CharValue;
 
-public class CharValueImpl extends PrimitiveValueImpl implements CharValue {
+public class CharValueImpl extends PrimitiveValueImpl {
     private char value;
 
     CharValueImpl(VirtualMachineImpl aVm, char aValue) {

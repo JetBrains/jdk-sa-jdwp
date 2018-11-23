@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.ByteValue;
 
-public class ByteValueImpl extends PrimitiveValueImpl implements ByteValue {
+public class ByteValueImpl extends PrimitiveValueImpl {
     private byte value;
 
     ByteValueImpl(VirtualMachineImpl aVm, byte aValue) {

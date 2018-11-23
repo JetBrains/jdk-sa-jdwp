@@ -36,7 +36,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
 import com.jetbrains.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Array;
 import sun.jvm.hotspot.runtime.BasicType;
@@ -45,11 +44,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ArrayReferenceImpl extends ObjectReferenceImpl
-    implements ArrayReference
-{
+public class ArrayReferenceImpl extends ObjectReferenceImpl {
     private int length;
-    ArrayReferenceImpl(VirtualMachine aVm, Array aRef) {
+    ArrayReferenceImpl(VirtualMachineImpl aVm, Array aRef) {
         super(aVm, aRef);
         length = (int) aRef.getLength();
     }
@@ -65,11 +62,11 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         return length;
     }
 
-    public Value getValue(int index) {
+    public ValueImpl getValue(int index) {
         return getValues(index, 1).get(0);
     }
 
-    public List<Value> getValues() {
+    public List<ValueImpl> getValues() {
         return getValues(0, -1);
     }
 
@@ -96,7 +93,7 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         }
     }
 
-    public List<Value> getValues(int index, int len) {
+    public List<ValueImpl> getValues(int index, int len) {
         if (len == -1) { // -1 means the rest of the array
            len = length() - index;
         }
@@ -104,7 +101,7 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         if (len == 0) {
             return Collections.emptyList();
         }
-        List<Value> vals = new ArrayList<Value>(len);
+        List<ValueImpl> vals = new ArrayList<ValueImpl>(len);
 
         sun.jvm.hotspot.oops.TypeArray typeArray = null;
         sun.jvm.hotspot.oops.ObjArray objArray = null;
@@ -152,15 +149,15 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         return vals;
     }
 
-    public void setValue(int index, Value value) {
+    public void setValue(int index, ValueImpl value) {
         vm.throwNotReadOnlyException("ArrayReference.setValue(...)");
     }
 
-    public void setValues(List<? extends Value> values) {
+    public void setValues(List<? extends ValueImpl> values) {
         setValues(0, values, 0, -1);
     }
 
-    public void setValues(int index, List<? extends Value> values, int srcIndex, int length) {
+    public void setValues(int index, List<? extends ValueImpl> values, int srcIndex, int length) {
         vm.throwNotReadOnlyException("ArrayReference.setValue(...)");
     }
 

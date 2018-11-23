@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.IntegerValue;
 
-public class IntegerValueImpl extends PrimitiveValueImpl implements IntegerValue {
+public class IntegerValueImpl extends PrimitiveValueImpl {
     private int value;
 
     IntegerValueImpl(VirtualMachineImpl aVm, int aValue) {

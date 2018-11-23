@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.ShortValue;
 
-public class ShortValueImpl extends PrimitiveValueImpl implements ShortValue {
+public class ShortValueImpl extends PrimitiveValueImpl {
     private short value;
 
     ShortValueImpl(VirtualMachineImpl aVm, short aValue) {

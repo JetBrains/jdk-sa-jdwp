@@ -17,7 +17,10 @@ package com.jetbrains.sa.jdwp;
 
 
 import com.jetbrains.sa.jdi.*;
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.IncompatibleThreadStateException;
+import com.sun.jdi.VMDisconnectedException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,9 +131,9 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 String signature = command.readString();
-                List<com.sun.jdi.ReferenceType> referenceTypes = vm.vm.findReferenceTypes(signature);
+                List<ReferenceTypeImpl> referenceTypes = vm.vm.findReferenceTypes(signature);
                 answer.writeInt(referenceTypes.size());
-                for (com.sun.jdi.ReferenceType referenceType : referenceTypes) {
+                for (ReferenceTypeImpl referenceType : referenceTypes) {
                     ClassInfo.write(((ReferenceTypeImpl) referenceType), vm, answer);
                 }
 //                //int classesCount = answer.readInt();
@@ -191,9 +194,9 @@ public class JDWP {
             //final ClassInfo[] classes;
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                List<com.sun.jdi.ReferenceType> referenceTypes = vm.vm.allClasses();
+                List<ReferenceTypeImpl> referenceTypes = vm.vm.allClasses();
                 answer.writeInt(referenceTypes.size());
-                for (com.sun.jdi.ReferenceType referenceType : referenceTypes) {
+                for (ReferenceTypeImpl referenceType : referenceTypes) {
                     ClassInfo.write((ReferenceTypeImpl) referenceType, vm, answer);
                 }
 //                //int classesCount = answer.readInt();
@@ -223,10 +226,10 @@ public class JDWP {
             //final ThreadReferenceImpl[] threads;
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                List<com.sun.jdi.ThreadReference> allThreads = vm.vm.allThreads();
+                List<ThreadReferenceImpl> allThreads = vm.vm.allThreads();
 //                //int threadsCount = answer.readInt();
                 answer.writeInt(allThreads.size());
-                for (com.sun.jdi.ThreadReference thread : allThreads) {
+                for (ThreadReferenceImpl thread : allThreads) {
                     answer.writeObjectRef(thread.uniqueID());
                 }
                 //threads = new ThreadReferenceImpl[threadsCount];
@@ -251,10 +254,10 @@ public class JDWP {
             //final ThreadGroupReferenceImpl[] groups;
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                List<com.sun.jdi.ThreadGroupReference> list = vm.vm.topLevelThreadGroups();
+                List<ThreadGroupReferenceImpl> list = vm.vm.topLevelThreadGroups();
 //                //int groupsCount = answer.readInt();
                 answer.writeInt(list.size());
-                for (com.sun.jdi.ThreadGroupReference group : list) {
+                for (ThreadGroupReferenceImpl group : list) {
                     answer.writeObjectRef(group.uniqueID());
                 }
                 //groups = new ThreadGroupReferenceImpl[groupsCount];
@@ -961,7 +964,7 @@ public class JDWP {
             //final ClassInfo[] classes;
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
-                List<com.sun.jdi.ReferenceType> allClasses = vm.vm.allClasses();
+                List<ReferenceTypeImpl> allClasses = vm.vm.allClasses();
 //                //int classesCount = answer.readInt();
                 answer.writeInt(allClasses.size());
                 //classes = new ClassInfo[classesCount];
@@ -1167,10 +1170,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.Field> fields = type.fields();
+                List<FieldImpl> fields = type.fields();
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(fields.size());
-                for (com.sun.jdi.Field field : fields) {
+                for (FieldImpl field : fields) {
                     FieldInfo.write((FieldImpl) field, vm, answer);
                 }
 //                //int declaredCount = answer.readInt();
@@ -1241,10 +1244,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.Method> methods = type.methods();
+                List<MethodImpl> methods = type.methods();
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(methods.size());
-                for (com.sun.jdi.Method method : methods) {
+                for (MethodImpl method : methods) {
                     MethodInfo.write((MethodImpl) method, vm, answer);
                 }
 //                //int declaredCount = answer.readInt();
@@ -1348,10 +1351,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.ReferenceType> nestedTypes = type.nestedTypes();
+                List<ReferenceTypeImpl> nestedTypes = type.nestedTypes();
 //                //int classesCount = answer.readInt();
                 answer.writeInt(nestedTypes.size());
-                for (com.sun.jdi.ReferenceType nestedType : nestedTypes) {
+                for (ReferenceTypeImpl nestedType : nestedTypes) {
                     TypeInfo.write((ReferenceTypeImpl) nestedType, vm, answer);
                 }
                 //classes = new TypeInfo[classesCount];
@@ -1406,9 +1409,9 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.InterfaceType> interfaces;
-                if (type instanceof com.sun.jdi.ClassType) {
-                    interfaces = ((com.sun.jdi.ClassType) type).interfaces();
+                List<InterfaceTypeImpl> interfaces;
+                if (type instanceof ClassTypeImpl) {
+                    interfaces = ((ClassTypeImpl) type).interfaces();
                 }
                 else if (type instanceof InterfaceTypeImpl) {
                     interfaces = ((InterfaceTypeImpl) type).superinterfaces();
@@ -1419,7 +1422,7 @@ public class JDWP {
                 }
 //                //int interfacesCount = answer.readInt();
                 answer.writeInt(interfaces.size());
-                for (com.sun.jdi.InterfaceType iface : interfaces) {
+                for (InterfaceTypeImpl iface : interfaces) {
                     answer.writeClassRef(((InterfaceTypeImpl) iface).uniqueID());
                 }
                 //interfaces = new InterfaceTypeImpl[interfacesCount];
@@ -1578,10 +1581,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.Field> fields = type.fields();
+                List<FieldImpl> fields = type.fields();
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(fields.size());
-                for (com.sun.jdi.Field field : fields) {
+                for (FieldImpl field : fields) {
                     FieldInfo.write((FieldImpl) field, vm, answer);
                 }
                 //declared = new FieldInfo[declaredCount];
@@ -1664,10 +1667,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.Method> methods = type.methods();
+                List<MethodImpl> methods = type.methods();
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(methods.size());
-                for (com.sun.jdi.Method method : methods) {
+                for (MethodImpl method : methods) {
                     MethodInfo.write((MethodImpl) method, vm, answer);
                 }
                 //declared = new MethodInfo[declaredCount];
@@ -1695,10 +1698,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                List<com.sun.jdi.ObjectReference> instances = type.instances(command.readInt());
+                List<ObjectReferenceImpl> instances = type.instances(command.readInt());
 //                //int instancesCount = answer.readInt();
                 answer.writeInt(instances.size());
-                for (com.sun.jdi.ObjectReference instance : instances) {
+                for (ObjectReferenceImpl instance : instances) {
                     answer.writeTaggedObjectReference(instance);
                 }
                 //instances = new ObjectReferenceImpl[instancesCount];
@@ -1810,9 +1813,9 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
-                if (type instanceof com.sun.jdi.ClassType) {
+                if (type instanceof ClassTypeImpl) {
                     //superclass = vm.classType(answer.readClassRef());
-                    com.sun.jdi.ClassType superclass = ((com.sun.jdi.ClassType) type).superclass();
+                    ClassTypeImpl superclass = ((ClassTypeImpl) type).superclass();
                     if (superclass != null) {
                         answer.writeClassRef(((ClassTypeImpl) superclass).uniqueID());
                     }
@@ -2162,7 +2165,7 @@ public class JDWP {
                     return;
                 }
 
-                List<Location> locations = Collections.emptyList();
+                List<LocationImpl> locations = Collections.emptyList();
                 try {
                     locations = method.allLineLocations();
                 } catch (AbsentInformationException ignored) {
@@ -2179,7 +2182,7 @@ public class JDWP {
                 answer.writeLong(end);
 //                //int linesCount = answer.readInt();
                 answer.writeInt(locations.size());
-                for (Location location : locations) {
+                for (LocationImpl location : locations) {
                     //lineCodeIndex = answer.readLong();
                     answer.writeLong(location.codeIndex());
                     //lineNumber = answer.readInt();
@@ -2266,12 +2269,12 @@ public class JDWP {
                 ReferenceTypeImpl referenceType = command.readReferenceType();
                 MethodImpl method = referenceType.methodById(command.readMethodRef());
                 try {
-                    List<LocalVariable> variables = method.variables();
+                    List<LocalVariableImpl> variables = method.variables();
                     //argCnt = answer.readInt();
                     answer.writeInt(method.argSlotCount());
                     //int slotsCount = answer.readInt();
                     answer.writeInt(variables.size());
-                    for (LocalVariable variable : variables) {
+                    for (LocalVariableImpl variable : variables) {
                         SlotInfo.write((LocalVariableImpl) variable, vm, answer);
                     }
                     //slots = new SlotInfo[slotsCount];
@@ -2431,12 +2434,12 @@ public class JDWP {
                 ReferenceTypeImpl referenceType = command.readReferenceType();
                 MethodImpl method = referenceType.methodById(command.readMethodRef());
                 try {
-                    List<LocalVariable> variables = method.variables();
+                    List<LocalVariableImpl> variables = method.variables();
                     //argCnt = answer.readInt();
                     answer.writeInt(method.argSlotCount());
                     //int slotsCount = answer.readInt();
                     answer.writeInt(variables.size());
-                    for (LocalVariable variable : variables) {
+                    for (LocalVariableImpl variable : variables) {
                         SlotInfo.write((LocalVariableImpl) variable, vm, answer);
                     }
                     //slots = new SlotInfo[slotsCount];
@@ -2578,9 +2581,9 @@ public class JDWP {
                 //entryCount = answer.readInt();
                 answer.writeInt(objectReference.entryCount());
 //                //int waitersCount = answer.readInt();
-                List<com.sun.jdi.ThreadReference> waiting = objectReference.waitingThreads();
+                List<ThreadReferenceImpl> waiting = objectReference.waitingThreads();
                 answer.writeInt(waiting.size());
-                for (com.sun.jdi.ThreadReference threadReference : waiting) {
+                for (ThreadReferenceImpl threadReference : waiting) {
                     answer.writeThreadReference(threadReference);
                 }
                 //waiters = new ThreadReferenceImpl[waitersCount];
@@ -2754,10 +2757,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ObjectReferenceImpl objectReference = vm.vm.objectMirror(command.readObjectRef());
-                List<com.sun.jdi.ObjectReference> refs = objectReference.referringObjects(command.readInt());
+                List<ObjectReferenceImpl> refs = objectReference.referringObjects(command.readInt());
 //                //int referringObjectsCount = answer.readInt();
                 answer.writeInt(refs.size());
-                for (com.sun.jdi.ObjectReference ref : refs) {
+                for (ObjectReferenceImpl ref : refs) {
                     answer.writeTaggedObjectReference(ref);
                 }
                 //referringObjects = new ObjectReferenceImpl[referringObjectsCount];
@@ -2786,9 +2789,9 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ObjectReferenceImpl objectReference = command.readObjectReference();
-                if (objectReference instanceof com.sun.jdi.StringReference) {
+                if (objectReference instanceof StringReferenceImpl) {
                     //stringValue = answer.readString();
-                    answer.writeString(((com.sun.jdi.StringReference) objectReference).value());
+                    answer.writeString(((StringReferenceImpl) objectReference).value());
                 }
                 else {
                     answer.pkt.errorCode = Error.INVALID_STRING;
@@ -2940,7 +2943,7 @@ public class JDWP {
                  */
                 //final Location location;
 
-                public static void write(com.sun.jdi.StackFrame frame, VirtualMachineImpl vm, PacketStream answer) {
+                public static void write(StackFrameImpl frame, VirtualMachineImpl vm, PacketStream answer) {
                     //frameID = answer.readFrameRef();
                     answer.writeFrameRef(((StackFrameImpl) frame).id());
                     //location = answer.readLocation();
@@ -2957,10 +2960,10 @@ public class JDWP {
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
                 try {
-                    List<com.sun.jdi.StackFrame> frames = thread.frames();
+                    List<StackFrameImpl> frames = thread.frames();
 //                //int framesCount = answer.readInt();
                     answer.writeInt(frames.size());
-                    for (com.sun.jdi.StackFrame frame : frames) {
+                    for (StackFrameImpl frame : frames) {
                         Frame.write(frame,vm, answer);
                     }
                     //frames = new Frame[framesCount];
@@ -3017,7 +3020,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
-                List<com.sun.jdi.ObjectReference> ownedMonitors;
+                List<ObjectReferenceImpl> ownedMonitors;
                 try {
                     ownedMonitors = thread.ownedMonitors();
                 } catch (IncompatibleThreadStateException e) {
@@ -3026,7 +3029,7 @@ public class JDWP {
                 }
 //                //int ownedCount = answer.readInt();
                 answer.writeInt(ownedMonitors.size());
-                for (com.sun.jdi.ObjectReference ownedMonitor : ownedMonitors) {
+                for (ObjectReferenceImpl ownedMonitor : ownedMonitors) {
                     answer.writeTaggedObjectReference(ownedMonitor);
                 }
                 //owned = new ObjectReferenceImpl[ownedCount];
@@ -3152,7 +3155,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
-                List<com.sun.jdi.MonitorInfo> list;
+                List<MonitorInfoImpl> list;
                 try {
                     list = thread.ownedMonitorsAndFrames();
                 } catch (IncompatibleThreadStateException e) {
@@ -3161,7 +3164,7 @@ public class JDWP {
                 }
 //                //int ownedCount = answer.readInt();
                 answer.writeInt(list.size());
-                for (com.sun.jdi.MonitorInfo o : list) {
+                for (MonitorInfoImpl o : list) {
                     answer.writeTaggedObjectReference(o.monitor());
                     answer.writeInt(o.stackDepth());
                 }
@@ -3294,20 +3297,20 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadGroupReferenceImpl group = command.readThreadGroupReference();
-                List<com.sun.jdi.ThreadReference> threads = group.threads();
+                List<ThreadReferenceImpl> threads = group.threads();
 //                //int childThreadsCount = answer.readInt();
                 answer.writeInt(threads.size());
-                for (com.sun.jdi.ThreadReference thread : threads) {
+                for (ThreadReferenceImpl thread : threads) {
                     answer.writeThreadReference(thread);
                 }
                 //childThreads = new ThreadReferenceImpl[childThreadsCount];
                 //for (int i = 0; i < childThreadsCount; i++) {;
                     //childThreads[i] = answer.readThreadReference();
                 //}
-                List<com.sun.jdi.ThreadGroupReference> threadGroups = group.threadGroups();
+                List<ThreadGroupReferenceImpl> threadGroups = group.threadGroups();
 //                //int childGroupsCount = answer.readInt();
                 answer.writeInt(threadGroups.size());
-                for (com.sun.jdi.ThreadGroupReference threadGroup : threadGroups) {
+                for (ThreadGroupReferenceImpl threadGroup : threadGroups) {
                     answer.writeThreadGroupReference(threadGroup);
                 }
                 //childGroups = new ThreadGroupReferenceImpl[childGroupsCount];
@@ -3363,7 +3366,7 @@ public class JDWP {
 
                 byte tag;
                 try {
-                    tag = ((TypeImpl)((com.sun.jdi.ArrayType) arrayReference.type()).componentType()).tag();
+                    tag = ((TypeImpl)((ArrayTypeImpl) arrayReference.type()).componentType()).tag();
                 } catch (ClassNotLoadedException e) { // fallback to the first element type
                     tag = ValueImpl.typeValueKey(arrayReference.getValue(0));
                 }
@@ -3441,10 +3444,10 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ClassLoaderReferenceImpl classLoaderReference = command.readClassLoaderReference();
-                List<com.sun.jdi.ReferenceType> visibleClasses = classLoaderReference.visibleClasses();
+                List<ReferenceTypeImpl> visibleClasses = classLoaderReference.visibleClasses();
 //                //int classesCount = answer.readInt();
                 answer.writeInt(visibleClasses.size());
-                for (com.sun.jdi.ReferenceType visibleClass : visibleClasses) {
+                for (ReferenceTypeImpl visibleClass : visibleClasses) {
                     //refTypeTag = answer.readByte();
                     answer.writeByte(((ReferenceTypeImpl) visibleClass).tag());
                     //typeID = answer.readClassRef();
@@ -3552,7 +3555,7 @@ public class JDWP {
                             answer.pkt.errorCode = Error.INVALID_SLOT;
                             return;
                         }
-                        Value slotValue = frame.getSlotValue(slot, command.readByte());
+                        ValueImpl slotValue = frame.getSlotValue(slot, command.readByte());
                         answer.writeValue(slotValue);
                     }
 
@@ -4387,7 +4390,7 @@ public class JDWP {
                  * Notification of a completed thread in the target VM. The
                  * notification is generated by the dying thread before it terminates.
                  * Because of this timing, it is possible
-                 * for {@link com.sun.jdi.VirtualMachine#allThreads} to return this thread
+                 * for {@link VirtualMachine#allThreads} to return this thread
                  * after this event is received.
                  * <p>
                  * Note that this event gives no information

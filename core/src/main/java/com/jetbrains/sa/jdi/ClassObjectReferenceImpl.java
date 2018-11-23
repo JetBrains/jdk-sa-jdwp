@@ -36,22 +36,18 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ClassObjectReference;
-import com.sun.jdi.ReferenceType;
-import com.sun.jdi.VirtualMachine;
 import com.jetbrains.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Instance;
 import sun.jvm.hotspot.oops.Klass;
 
-public class ClassObjectReferenceImpl extends ObjectReferenceImpl
-                                      implements ClassObjectReference {
-    private ReferenceType reflectedType;
+public class ClassObjectReferenceImpl extends ObjectReferenceImpl {
+    private ReferenceTypeImpl reflectedType;
 
-    ClassObjectReferenceImpl(VirtualMachine vm, Instance oRef) {
+    ClassObjectReferenceImpl(VirtualMachineImpl vm, Instance oRef) {
         super(vm, oRef);
     }
 
-    public ReferenceType reflectedType() {
+    public ReferenceTypeImpl reflectedType() {
         if (reflectedType == null) {
             Klass k = CompatibilityHelper.INSTANCE.asKlass(ref());
             reflectedType = vm.referenceType(k);

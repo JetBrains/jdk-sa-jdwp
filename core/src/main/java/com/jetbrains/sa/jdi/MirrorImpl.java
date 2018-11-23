@@ -36,28 +36,20 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.Mirror;
-import com.sun.jdi.VirtualMachine;
-
-abstract class MirrorImpl implements Mirror {
+abstract class MirrorImpl {
     protected VirtualMachineImpl vm;
 
-    MirrorImpl(VirtualMachine aVm) {
-        super();
-
-        // Yes, its a bit of a hack. But by doing it this
-        // way, this is the only place we have to change
-        // typing to substitute a new impl.
-        vm = (VirtualMachineImpl)aVm;
+    MirrorImpl(VirtualMachineImpl aVm) {
+        vm = aVm;
     }
 
-    public VirtualMachine virtualMachine() {
+    public VirtualMachineImpl virtualMachine() {
         return vm;
     }
 
     public boolean equals(Object obj) {
-        if ((obj instanceof Mirror)) {
-            Mirror other = (Mirror)obj;
+        if ((obj instanceof MirrorImpl)) {
+            MirrorImpl other = (MirrorImpl)obj;
             return vm.equals(other.virtualMachine());
         } else {
             return false;

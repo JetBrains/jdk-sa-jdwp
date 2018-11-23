@@ -36,12 +36,10 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.VirtualMachine;
-import com.sun.jdi.VoidType;
 import com.jetbrains.sa.jdwp.JDWP;
 
-public class VoidTypeImpl extends TypeImpl implements VoidType {
-    VoidTypeImpl(VirtualMachine vm) {
+public class VoidTypeImpl extends TypeImpl {
+    VoidTypeImpl(VirtualMachineImpl vm) {
         super(vm, JDWP.Tag.VOID);
     }
 

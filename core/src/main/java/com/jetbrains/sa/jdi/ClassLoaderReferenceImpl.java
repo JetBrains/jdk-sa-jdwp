@@ -37,22 +37,19 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.*;
+import com.sun.jdi.ClassNotLoadedException;
 import sun.jvm.hotspot.oops.Instance;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassLoaderReferenceImpl
-    extends ObjectReferenceImpl
-    implements ClassLoaderReference
-{
+public class ClassLoaderReferenceImpl extends ObjectReferenceImpl {
      // because we work on process snapshot or core we can
      // cache visibleClasses & definedClasses always (i.e., no suspension)
-     private List<ReferenceType> visibleClassesCache;
-     private List<ReferenceType> definedClassesCache;
+     private List<ReferenceTypeImpl> visibleClassesCache;
+     private List<ReferenceTypeImpl> definedClassesCache;
 
-     ClassLoaderReferenceImpl(VirtualMachine aVm, Instance oRef) {
+     ClassLoaderReferenceImpl(VirtualMachineImpl aVm, Instance oRef) {
          super(aVm, oRef);
      }
 
@@ -60,10 +57,10 @@ public class ClassLoaderReferenceImpl
          return "ClassLoaderReference " + uniqueID();
      }
 
-     public List<ReferenceType> definedClasses() {
+     public List<ReferenceTypeImpl> definedClasses() {
          if (definedClassesCache == null) {
-             definedClassesCache = new ArrayList<ReferenceType>();
-             for (ReferenceType type : vm.allClasses()) {
+             definedClassesCache = new ArrayList<ReferenceTypeImpl>();
+             for (ReferenceTypeImpl type : vm.allClasses()) {
                  if (equals(type.classLoader())) {  /* thanks OTI */
                      definedClassesCache.add(type);
                  }
@@ -72,15 +69,15 @@ public class ClassLoaderReferenceImpl
          return definedClassesCache;
      }
 
-     public List<ReferenceType> visibleClasses() {
+     public List<ReferenceTypeImpl> visibleClasses() {
          if (visibleClassesCache == null) {
              visibleClassesCache = CompatibilityHelper.INSTANCE.visibleClasses(ref(), vm);
          }
          return visibleClassesCache;
      }
 
-     Type findType(String signature) throws ClassNotLoadedException {
-         for (ReferenceType type : visibleClasses()) {
+     TypeImpl findType(String signature) throws ClassNotLoadedException {
+         for (ReferenceTypeImpl type : visibleClasses()) {
              if (type.signature().equals(signature)) {
                  return type;
              }

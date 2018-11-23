@@ -37,16 +37,18 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.Method;
-import com.sun.jdi.*;
+import com.sun.jdi.ArrayReference;
+import com.sun.jdi.ClassNotLoadedException;
+import com.sun.jdi.InterfaceType;
+import com.sun.jdi.PrimitiveType;
 import sun.jvm.hotspot.oops.*;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
-    ArrayTypeImpl(VirtualMachine aVm, ArrayKlass aRef) {
+public class ArrayTypeImpl extends ReferenceTypeImpl {
+    ArrayTypeImpl(VirtualMachineImpl aVm, ArrayKlass aRef) {
         super(aVm, aRef, JDWP.TypeTag.ARRAY);
     }
 
@@ -64,7 +66,7 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
         return parser.typeName();
     }
 
-    public ClassLoaderReference classLoader() {
+    public ClassLoaderReferenceImpl classLoader() {
         if (ref() instanceof TypeArrayKlass) {
             // primitive array klasses are loaded by bootstrap loader
             return null;
@@ -82,11 +84,11 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
         }
     }
 
-    void addVisibleMethods(Map<String, Method> methodMap) {
+    void addVisibleMethods(Map<String, MethodImpl> methodMap) {
         // arrays don't have methods
     }
 
-    List<Method> getAllMethods() {
+    List<MethodImpl> getAllMethods() {
         // arrays don't have methods
         // JLS says arrays have methods of java.lang.Object. But
         // JVMDI-JDI returns zero size list. We do the same here
@@ -95,11 +97,11 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
     }
 
     /*
-     * Find the type object, if any, of a component type of this array.
-     * The component type does not have to be immediate; e.g. this method
+     * Find the TypeImpl object, if any, of a component TypeImpl of this array.
+     * The component TypeImpl does not have to be immediate; e.g. this method
      * can be used to find the component Foo of Foo[][].
      */
-    public Type componentType() throws ClassNotLoadedException {
+    public TypeImpl componentType() throws ClassNotLoadedException {
         ArrayKlass k = (ArrayKlass) ref();
         if (k instanceof ObjArrayKlass) {
             Klass elementKlass = ((ObjArrayKlass)k).getElementKlass();
@@ -114,7 +116,7 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
         }
     }
 
-    static boolean isComponentAssignable(Type destination, Type source) {
+    static boolean isComponentAssignable(TypeImpl destination, TypeImpl source) {
         if (source instanceof PrimitiveType) {
             // Assignment of primitive arrays requires identical
             // component types.
@@ -137,10 +139,10 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
     * Return true if an instance of the  given reference type
     * can be assigned to a variable of this type
     */
-    boolean isAssignableTo(ReferenceType destType) {
-        if (destType instanceof ArrayType) {
+    boolean isAssignableTo(ReferenceTypeImpl destType) {
+        if (destType instanceof ArrayTypeImpl) {
             try {
-                Type destComponentType = ((ArrayType)destType).componentType();
+                TypeImpl destComponentType = ((ArrayTypeImpl)destType).componentType();
                 return isComponentAssignable(destComponentType, componentType());
             } catch (ClassNotLoadedException e) {
                 // One or both component types has not yet been
@@ -150,18 +152,18 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
         } else {
             String typeName = ((ReferenceTypeImpl)destType).name();
             if (destType instanceof InterfaceType) {
-                // Every array type implements java.io.Serializable and
+                // Every array TypeImpl implements java.io.Serializable and
                 // java.lang.Cloneable. fixme in JVMDI-JDI, includes only
                 // Cloneable but not Serializable.
                 return vm.javaLangCloneable.equals(typeName) || vm.javaIoSerializable.equals(typeName);
             } else {
-                // Only valid ClassType assignee is Object
+                // Only valid ClassTypeImpl assignee is Object
                 return vm.javaLangObject.equals(typeName);
             }
         }
     }
 
-    List<ReferenceType> inheritedTypes() {
+    List<ReferenceTypeImpl> inheritedTypes() {
         // arrays are derived from java.lang.Object and
         // B[] is derived from A[] if B is derived from A.
         // But JVMDI-JDI returns zero sized list and we do the
@@ -175,7 +177,7 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
          * Accessible.isPrivate(), Accessible.isProtected(),
          * etc... are the same as would be returned for the
          * component type.  Fetch the modifier bits from the
-         * component type and use those.
+         * component TypeImpl and use those.
          *
          * For primitive arrays, the modifiers are always
          *   VMModifiers.FINAL | VMModifiers.PUBLIC
@@ -183,11 +185,11 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
          * Reference com.sun.jdi.Accessible.java.
          */
         try {
-            Type t = componentType();
+            TypeImpl t = componentType();
             if (t instanceof PrimitiveType) {
                 return VMModifiers.FINAL | VMModifiers.PUBLIC;
             } else {
-                ReferenceType rt = (ReferenceType)t;
+                ReferenceTypeImpl rt = (ReferenceTypeImpl)t;
                 return rt.modifiers();
             }
         } catch (ClassNotLoadedException cnle) {

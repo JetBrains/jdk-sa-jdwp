@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.BooleanValue;
 
-public class BooleanValueImpl extends PrimitiveValueImpl implements BooleanValue {
+public class BooleanValueImpl extends PrimitiveValueImpl {
     private boolean value;
 
     BooleanValueImpl(VirtualMachineImpl aVm, boolean aValue) {

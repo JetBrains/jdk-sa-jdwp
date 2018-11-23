@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.DoubleValue;
 
-public class DoubleValueImpl extends PrimitiveValueImpl implements DoubleValue {
+public class DoubleValueImpl extends PrimitiveValueImpl {
     private double value;
 
     DoubleValueImpl(VirtualMachineImpl aVm, double aValue) {

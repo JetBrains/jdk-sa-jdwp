@@ -36,18 +36,14 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.StringReference;
-import com.sun.jdi.VirtualMachine;
 import com.jetbrains.sa.jdwp.JDWP;
 import sun.jvm.hotspot.oops.Instance;
 import sun.jvm.hotspot.oops.OopUtilities;
 
-public class StringReferenceImpl extends ObjectReferenceImpl
-    implements StringReference
-{
+public class StringReferenceImpl extends ObjectReferenceImpl {
     private String value;
 
-    StringReferenceImpl(VirtualMachine aVm, Instance oRef) {
+    StringReferenceImpl(VirtualMachineImpl aVm, Instance oRef) {
         super(aVm,oRef);
         value = OopUtilities.stringOopToString(oRef);
     }

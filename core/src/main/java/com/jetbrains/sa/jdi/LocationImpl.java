@@ -36,18 +36,18 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.*;
+import com.sun.jdi.AbsentInformationException;
 
-public class LocationImpl extends MirrorImpl implements Location {
+public class LocationImpl extends MirrorImpl {
     private final ReferenceTypeImpl declaringType;
-    private Method method;
+    private MethodImpl method;
     private sun.jvm.hotspot.oops.Method methodRef;
     private long codeIndex;
     private LineInfo baseLineInfo = null;
     private LineInfo otherLineInfo = null;
 
-    LocationImpl(VirtualMachine vm,
-                 Method method, long codeIndex) {
+    LocationImpl(VirtualMachineImpl vm,
+                 MethodImpl method, long codeIndex) {
         super(vm);
 
         this.method = method;
@@ -60,7 +60,7 @@ public class LocationImpl extends MirrorImpl implements Location {
      * can be a performance savings if the method mirror does not yet
      * exist.
      */
-    LocationImpl(VirtualMachine vm, ReferenceType declaringType,
+    LocationImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
                  sun.jvm.hotspot.oops.Method methodRef, long codeIndex) {
         super(vm);
 
@@ -71,8 +71,8 @@ public class LocationImpl extends MirrorImpl implements Location {
     }
 
     public boolean equals(Object obj) {
-        if ((obj instanceof Location)) {
-            Location other = (Location)obj;
+        if ((obj instanceof LocationImpl)) {
+            LocationImpl other = (LocationImpl)obj;
             return (method().equals(other.method())) &&
                    (codeIndex() == other.codeIndex()) &&
                    super.equals(obj);
@@ -88,7 +88,7 @@ public class LocationImpl extends MirrorImpl implements Location {
         return method().hashCode() + (int)codeIndex();
     }
 
-    public int compareTo(Location other) {
+    public int compareTo(LocationImpl other) {
         int rc = method().compareTo(other.method());
         if (rc == 0) {
             long diff = codeIndex() - other.codeIndex();
@@ -102,11 +102,11 @@ public class LocationImpl extends MirrorImpl implements Location {
         return rc;
     }
 
-    public ReferenceType declaringType() {
+    public ReferenceTypeImpl declaringType() {
         return declaringType;
     }
 
-    public Method method() {
+    public MethodImpl method() {
         if (method == null) {
             method = declaringType.getMethodMirror(methodRef);
             if (method.isNative()) {

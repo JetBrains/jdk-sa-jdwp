@@ -15,7 +15,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ReferenceType;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.InstanceKlass;
@@ -48,5 +47,5 @@ public interface Compatibility {
 
     List<Klass> allClasses(SystemDictionary systemDictionary, VM vm);
 
-    List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm);
+    List<ReferenceTypeImpl> visibleClasses(final Oop ref, final VirtualMachineImpl vm);
 }

@@ -15,7 +15,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ReferenceType;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.*;
@@ -132,8 +131,8 @@ class CompatibilityHelper8 implements Compatibility {
     }
 
     @Override
-    public List<ReferenceType> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
-        final List<ReferenceType> res = new ArrayList<>();
+    public List<ReferenceTypeImpl> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
+        final List<ReferenceTypeImpl> res = new ArrayList<>();
 
         // refer to getClassLoaderClasses in jvmtiGetLoadedClasses.cpp
         //  a. SystemDictionary::classes_do doesn't include arrays of primitive types (any dimensions)

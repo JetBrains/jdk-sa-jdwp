@@ -37,14 +37,13 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
 
-public abstract class TypeImpl extends MirrorImpl implements Type
+public abstract class TypeImpl extends MirrorImpl
 {
     private final byte tag;
     private String typeName;
 
-    TypeImpl(VirtualMachine aVm, byte tag) {
+    TypeImpl(VirtualMachineImpl aVm, byte tag) {
         super(aVm);
         this.tag = tag;
     }

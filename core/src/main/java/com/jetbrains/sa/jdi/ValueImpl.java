@@ -36,18 +36,16 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.Value;
-import com.sun.jdi.VirtualMachine;
 import com.jetbrains.sa.jdwp.JDWP;
 
-public abstract class ValueImpl extends MirrorImpl implements Value {
-    ValueImpl(VirtualMachine aVm) {
+public abstract class ValueImpl extends MirrorImpl {
+    ValueImpl(VirtualMachineImpl aVm) {
         super(aVm);
     }
 
     // type() is in the subclasses
 
-    public static byte typeValueKey(Value val) {
+    public static byte typeValueKey(ValueImpl val) {
         if (val == null) {
             return JDWP.Tag.OBJECT;
         } else {

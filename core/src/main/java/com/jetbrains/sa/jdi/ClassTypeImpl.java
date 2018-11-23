@@ -37,50 +37,47 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.*;
 import sun.jvm.hotspot.oops.InstanceKlass;
 
 import java.lang.ref.SoftReference;
 import java.util.*;
 
-public class ClassTypeImpl extends ReferenceTypeImpl
-    implements ClassType
-{
-    private SoftReference<List<InterfaceType>> interfacesCache    = null;
-    private SoftReference<List<InterfaceType>> allInterfacesCache = null;
-    private SoftReference<List<ClassType>> subclassesCache    = null;
+public class ClassTypeImpl extends ReferenceTypeImpl {
+    private SoftReference<List<InterfaceTypeImpl>> interfacesCache    = null;
+    private SoftReference<List<InterfaceTypeImpl>> allInterfacesCache = null;
+    private SoftReference<List<ClassTypeImpl>> subclassesCache    = null;
 
-    protected ClassTypeImpl(VirtualMachine aVm, InstanceKlass aRef) {
+    protected ClassTypeImpl(VirtualMachineImpl aVm, InstanceKlass aRef) {
         super(aVm, aRef, JDWP.TypeTag.CLASS);
     }
 
-    public ClassType superclass() {
+    public ClassTypeImpl superclass() {
         InstanceKlass kk = (InstanceKlass)ref().getSuper();
         if (kk == null) {
             return null;
         }
-        return (ClassType) vm.referenceType(kk);
+        return (ClassTypeImpl) vm.referenceType(kk);
     }
 
-    public List<InterfaceType> interfaces()  {
-        List<InterfaceType> interfaces = (interfacesCache != null)? interfacesCache.get() : null;
+    public List<InterfaceTypeImpl> interfaces()  {
+        List<InterfaceTypeImpl> interfaces = (interfacesCache != null)? interfacesCache.get() : null;
         if (interfaces == null) {
             checkPrepared();
             interfaces = Collections.unmodifiableList(getInterfaces());
-            interfacesCache = new SoftReference<List<InterfaceType>>(interfaces);
+            interfacesCache = new SoftReference<List<InterfaceTypeImpl>>(interfaces);
         }
         return interfaces;
     }
 
-    void addInterfaces(List<InterfaceType> list) {
-        List<InterfaceType> immediate = interfaces();
+    void addInterfaces(List<InterfaceTypeImpl> list) {
+        List<InterfaceTypeImpl> immediate = interfaces();
 
-        HashSet<InterfaceType> hashList = new HashSet<InterfaceType>(list);
+        HashSet<InterfaceTypeImpl> hashList = new HashSet<InterfaceTypeImpl>(list);
         hashList.addAll(immediate);
         list.clear();
         list.addAll(hashList);
 
-        for (InterfaceType o : immediate) {
+        for (InterfaceTypeImpl o : immediate) {
             InterfaceTypeImpl interfaze = (InterfaceTypeImpl) o;
             interfaze.addSuperinterfaces(list);
         }
@@ -91,41 +88,41 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         }
     }
 
-    public List<InterfaceType> allInterfaces()  {
-        List<InterfaceType> allinterfaces = (allInterfacesCache != null)? allInterfacesCache.get() : null;
+    public List<InterfaceTypeImpl> allInterfaces()  {
+        List<InterfaceTypeImpl> allinterfaces = (allInterfacesCache != null)? allInterfacesCache.get() : null;
         if (allinterfaces == null) {
             checkPrepared();
-            allinterfaces = new ArrayList<InterfaceType>();
+            allinterfaces = new ArrayList<InterfaceTypeImpl>();
             addInterfaces(allinterfaces);
             allinterfaces = Collections.unmodifiableList(allinterfaces);
-            allInterfacesCache = new SoftReference<List<InterfaceType>>(allinterfaces);
+            allInterfacesCache = new SoftReference<List<InterfaceTypeImpl>>(allinterfaces);
         }
         return allinterfaces;
     }
 
-    public List<ClassType> subclasses() {
-        List<ClassType> subclasses = (subclassesCache != null)? subclassesCache.get() : null;
+    public List<ClassTypeImpl> subclasses() {
+        List<ClassTypeImpl> subclasses = (subclassesCache != null)? subclassesCache.get() : null;
         if (subclasses == null) {
-            subclasses = new ArrayList<ClassType>(0);
+            subclasses = new ArrayList<ClassTypeImpl>(0);
             for (Object o : vm.allClasses()) {
-                ReferenceType refType = (ReferenceType) o;
-                if (refType instanceof ClassType) {
-                    ClassType clazz = (ClassType) refType;
-                    ClassType superclass = clazz.superclass();
+                ReferenceTypeImpl refType = (ReferenceTypeImpl) o;
+                if (refType instanceof ClassTypeImpl) {
+                    ClassTypeImpl clazz = (ClassTypeImpl) refType;
+                    ClassTypeImpl superclass = clazz.superclass();
                     if ((superclass != null) && superclass.equals(this)) {
                         subclasses.add(clazz);
                     }
                 }
             }
             subclasses = Collections.unmodifiableList(subclasses);
-            subclassesCache = new SoftReference<List<ClassType>>(subclasses);
+            subclassesCache = new SoftReference<List<ClassTypeImpl>>(subclasses);
         }
         return subclasses;
     }
 
-    public Method concreteMethodByName(String name, String signature) {
+    public MethodImpl concreteMethodByName(String name, String signature) {
         checkPrepared();
-        for (Method candidate : visibleMethods()) {
+        for (MethodImpl candidate : visibleMethods()) {
             if (candidate.name().equals(name) && candidate.signature().equals(signature) && !candidate.isAbstract()) {
                 return candidate;
             }
@@ -133,9 +130,9 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         return null;
     }
 
-   List<Method> getAllMethods() {
-        ArrayList<Method> list = new ArrayList<Method>(methods());
-        ClassType clazz = superclass();
+   List<MethodImpl> getAllMethods() {
+        ArrayList<MethodImpl> list = new ArrayList<MethodImpl>(methods());
+        ClassTypeImpl clazz = superclass();
         while (clazz != null) {
             list.addAll(clazz.methods());
             clazz = clazz.superclass();
@@ -144,14 +141,14 @@ public class ClassTypeImpl extends ReferenceTypeImpl
          * Avoid duplicate checking on each method by iterating through
          * duplicate-free allInterfaces() rather than recursing
          */
-       for (InterfaceType interfaze : allInterfaces()) {
+       for (InterfaceTypeImpl interfaze : allInterfaces()) {
            list.addAll(interfaze.methods());
        }
         return list;
     }
 
-    List<ReferenceType> inheritedTypes() {
-        List<ReferenceType> inherited = new ArrayList<ReferenceType>(interfaces());
+    List<ReferenceTypeImpl> inheritedTypes() {
+        List<ReferenceTypeImpl> inherited = new ArrayList<ReferenceTypeImpl>(interfaces());
         if (superclass() != null) {
             inherited.add(0, superclass()); /* insert at front */
         }
@@ -167,32 +164,32 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         }
     }
 
-    public void setValue(Field field, Value value) {
+    public void setValue(FieldImpl field, ValueImpl value) {
         vm.throwNotReadOnlyException("ClassType.setValue(...)");
     }
 
 
-    public Value invokeMethod(ThreadReference threadIntf, Method methodIntf,
-                              List<? extends Value> arguments, int options) {
+    public ValueImpl invokeMethod(ThreadReferenceImpl threadIntf, MethodImpl methodIntf,
+                              List<? extends ValueImpl> arguments, int options) {
         vm.throwNotReadOnlyException("ClassType.invokeMethod(...)");
         return null;
     }
 
-    public ObjectReference newInstance(ThreadReference threadIntf,
-                                       Method methodIntf,
-                                       List<? extends Value> arguments, int options) {
+    public ObjectReferenceImpl newInstance(ThreadReferenceImpl threadIntf,
+                                       MethodImpl methodIntf,
+                                       List<? extends ValueImpl> arguments, int options) {
         vm.throwNotReadOnlyException("ClassType.newInstance(...)");
         return null;
     }
 
-    void addVisibleMethods(Map<String, Method> methodMap) {
+    void addVisibleMethods(Map<String, MethodImpl> methodMap) {
         /*
          * Add methods from
          * parent types first, so that the methods in this class will
          * overwrite them in the hash table
          */
 
-        for (InterfaceType interfaceType : interfaces()) {
+        for (InterfaceTypeImpl interfaceType : interfaces()) {
             InterfaceTypeImpl interfaze = (InterfaceTypeImpl) interfaceType;
             interfaze.addVisibleMethods(methodMap);
         }
@@ -205,15 +202,15 @@ public class ClassTypeImpl extends ReferenceTypeImpl
         addToMethodMap(methodMap, methods());
     }
 
-    boolean isAssignableTo(ReferenceType type) {
+    boolean isAssignableTo(ReferenceTypeImpl type) {
         ClassTypeImpl superclazz = (ClassTypeImpl)superclass();
         if (this.equals(type)) {
             return true;
         } else if ((superclazz != null) && superclazz.isAssignableTo(type)) {
             return true;
         } else {
-            List<InterfaceType> interfaces = interfaces();
-            for (InterfaceType anInterface : interfaces) {
+            List<InterfaceTypeImpl> interfaces = interfaces();
+            for (InterfaceTypeImpl anInterface : interfaces) {
                 InterfaceTypeImpl interfaze = (InterfaceTypeImpl) anInterface;
                 if (interfaze.isAssignableTo(type)) {
                     return true;

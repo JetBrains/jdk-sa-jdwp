@@ -38,7 +38,7 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.FloatValue;
 
-public class FloatValueImpl extends PrimitiveValueImpl implements FloatValue {
+public class FloatValueImpl extends PrimitiveValueImpl {
     private float value;
 
     FloatValueImpl(VirtualMachineImpl aVm, float aValue) {

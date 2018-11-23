@@ -41,6 +41,7 @@ import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.InterfaceType;
 import com.sun.jdi.PrimitiveType;
 import sun.jvm.hotspot.oops.*;
+import sun.jvm.hotspot.runtime.ClassConstants;
 
 public class ArrayTypeImpl extends ReferenceTypeImpl {
     ArrayTypeImpl(VirtualMachineImpl aVm, ArrayKlass aRef) {
@@ -152,7 +153,7 @@ public class ArrayTypeImpl extends ReferenceTypeImpl {
         try {
             TypeImpl t = componentType();
             if (t instanceof PrimitiveType) {
-                return VMModifiers.FINAL | VMModifiers.PUBLIC;
+                return (int) (ClassConstants.JVM_ACC_FINAL | ClassConstants.JVM_ACC_PUBLIC);
             } else {
                 ReferenceTypeImpl rt = (ReferenceTypeImpl)t;
                 return rt.modifiers();

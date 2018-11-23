@@ -40,6 +40,7 @@ import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.ClassNotPreparedException;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.oops.*;
+import sun.jvm.hotspot.runtime.ClassConstants;
 import sun.jvm.hotspot.tools.jcore.ClassWriter;
 import sun.jvm.hotspot.utilities.Assert;
 
@@ -176,7 +177,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     }
 
     public boolean isAbstract() {
-        return((modifiers() & VMModifiers.ABSTRACT) != 0);
+        return((modifiers() & ClassConstants.JVM_ACC_ABSTRACT) != 0);
     }
 
     public boolean isPrepared() {

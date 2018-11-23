@@ -313,9 +313,9 @@ public class ConcreteMethodImpl extends MethodImpl {
          * scope to synthetic fields in the local class.  Same for
          * other language prolog code.
          */
-        LocationImpl bestMatch = (LocationImpl)iter.next();
+        LocationImpl bestMatch = iter.next();
         while (iter.hasNext()) {
-            LocationImpl current = (LocationImpl)iter.next();
+            LocationImpl current = iter.next();
             if (current.codeIndex() > codeIndex) {
                 break;
             }

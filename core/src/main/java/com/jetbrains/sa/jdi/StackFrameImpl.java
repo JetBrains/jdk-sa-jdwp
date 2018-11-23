@@ -69,7 +69,7 @@ public class StackFrameImpl extends MirrorImpl {
 
         sun.jvm.hotspot.oops.Method SAMethod = jvf.getMethod();
 
-        ReferenceTypeImpl rt = ((VirtualMachineImpl)vm).referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
+        ReferenceTypeImpl rt = vm.referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
 
         this.location = new LocationImpl(vm, rt, SAMethod, (long)jvf.getBCI());
     }
@@ -125,7 +125,7 @@ public class StackFrameImpl extends MirrorImpl {
 
     public ObjectReferenceImpl thisObject() {
         validateStackFrame();
-        MethodImpl currentMethod = (MethodImpl)location.method();
+        MethodImpl currentMethod = location.method();
         if (currentMethod.isStatic() || currentMethod.isNative()) {
             return null;
         }
@@ -159,7 +159,7 @@ public class StackFrameImpl extends MirrorImpl {
             Map<String, LocalVariableImpl> map = new HashMap<String, LocalVariableImpl>(allVariables.size());
 
             for (LocalVariableImpl allVariable : allVariables) {
-                LocalVariableImpl variable = (LocalVariableImpl) allVariable;
+                LocalVariableImpl variable = allVariable;
                 String name = variable.name();
                 if (variable.isVisible(this)) {
                     LocalVariableImpl existing = map.get(name);
@@ -222,7 +222,7 @@ public class StackFrameImpl extends MirrorImpl {
     public List<ValueImpl> getArgumentValues() {
         validateStackFrame();
         StackValueCollection values = saFrame.getLocals();
-        MethodImpl mmm = (MethodImpl)location.method();
+        MethodImpl mmm = location.method();
         if (mmm.isNative())
             return null;
         List<String> argSigs = mmm.argumentSignatures();

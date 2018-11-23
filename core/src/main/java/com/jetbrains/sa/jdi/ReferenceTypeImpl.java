@@ -85,7 +85,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         // even though it is the same method. So do an address compare by
         // calling equals rather than just reference compare.
         for (MethodImpl method1 : methods()) {
-            MethodImpl method = (MethodImpl) method1;
+            MethodImpl method = method1;
             if (ref.equals(method.ref())) {
                 return method;
             }
@@ -100,7 +100,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
             mis = methodInvokesCache.get();
           }
             for (MethodImpl mi : mis) {
-                MethodImpl method = (MethodImpl) mi;
+                MethodImpl method = mi;
                 if (ref.equals(method.ref())) {
                     return method;
                 }
@@ -136,7 +136,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
          * (Classes of the same name loaded by different class loaders
          * or in different VMs must not return 0).
          */
-        ReferenceTypeImpl other = (ReferenceTypeImpl)refType;
+        ReferenceTypeImpl other = refType;
         int comp = name().compareTo(other.name());
         if (comp == 0) {
             Klass rf1 = ref();
@@ -145,7 +145,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
             if (rf1.equals(rf2)) {
                 // sequenceNumbers are always positive
                 comp = vm.sequenceNumber -
-                 ((VirtualMachineImpl)(other.virtualMachine())).sequenceNumber;
+                 other.virtualMachine().sequenceNumber;
             } else {
                 comp = CompatibilityHelper.INSTANCE.getAddress(rf1).minus(CompatibilityHelper.INSTANCE.getAddress(rf2)) < 0? -1 : 1;
             }
@@ -236,8 +236,8 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
 
     public final FieldImpl fieldById(long id) throws ClassNotPreparedException {
         for (FieldImpl field : allFields()) {
-            if (((FieldImpl) field).uniqueID() == id) {
-                return (FieldImpl) field;
+            if (field.uniqueID() == id) {
+                return field;
             }
         }
         throw new IllegalStateException("Field with id " + id + " not found in " + name());
@@ -364,7 +364,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
             /*
              * TO DO: Be defensive and check for cyclic interface inheritance
              */
-            ((ReferenceTypeImpl)inheritedType).addVisibleFields(visibleList, visibleTable, ambiguousNames);
+            inheritedType.addVisibleFields(visibleList, visibleTable, ambiguousNames);
         }
 
         /*
@@ -395,8 +395,8 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
 
     public final MethodImpl methodById(long id) throws ClassNotPreparedException {
         for (MethodImpl method : methods()) {
-            if (((MethodImpl) method).uniqueID() == id) {
-                return (MethodImpl) method;
+            if (method.uniqueID() == id) {
+                return method;
             }
         }
         throw new IllegalStateException("Method with id " + id + " not found in " + name());
@@ -582,7 +582,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     }
 
     public ValueImpl getValue(FieldImpl field) {
-        FieldImpl fieldImpl = (FieldImpl) field;
+        FieldImpl fieldImpl = field;
 
         validateFieldAccess(fieldImpl);
         // Do more validation specific to ReferenceType field getting
@@ -613,7 +613,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         * Field must be in this object's class, a superclass, or
         * implemented interface
         */
-        ReferenceTypeImpl declType = (ReferenceTypeImpl)field.declaringType();
+        ReferenceTypeImpl declType = field.declaringType();
         if (!declType.isAssignableFrom(this)) {
             throw new IllegalArgumentException("Invalid field");
         }
@@ -800,7 +800,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         List<LocationImpl> list = new ArrayList<LocationImpl>();  // location list
 
         for (MethodImpl method1 : methods()) {
-            MethodImpl method = (MethodImpl) method1;
+            MethodImpl method = method1;
             try {
                 list.addAll(method.allLineLocations(stratum.id(), sourceName));
             } catch (AbsentInformationException exc) {
@@ -918,7 +918,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         } else {
             // Must be a reference type.
             ClassLoaderReferenceImpl loader =
-                       (ClassLoaderReferenceImpl)classLoader();
+                    classLoader();
             if ((loader == null) ||
                 (isPrimitiveArray(signature)) //Work around 4450091
                 ) {

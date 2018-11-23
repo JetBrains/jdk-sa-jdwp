@@ -49,7 +49,7 @@ public abstract class ValueImpl extends MirrorImpl {
         if (val == null) {
             return JDWP.Tag.OBJECT;
         } else {
-            return ((ValueImpl)val).typeValueKey();
+            return val.typeValueKey();
         }
     }
 

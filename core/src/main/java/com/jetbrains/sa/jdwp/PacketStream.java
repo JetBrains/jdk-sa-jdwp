@@ -201,7 +201,7 @@ public class PacketStream {
     }
 
     void writeLocation(LocationImpl location) {
-        ReferenceTypeImpl refType = (ReferenceTypeImpl)location.declaringType();
+        ReferenceTypeImpl refType = location.declaringType();
         byte tag;
         if (refType instanceof ClassTypeImpl) {
             tag = JDWP.TypeTag.CLASS;
@@ -213,7 +213,7 @@ public class PacketStream {
         }
         writeByte(tag);
         writeClassRef(refType.uniqueID());
-        writeMethodRef(((MethodImpl)location.method()).uniqueID());
+        writeMethodRef(location.method().uniqueID());
         writeLong(location.codeIndex());
     }
     //

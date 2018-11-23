@@ -100,7 +100,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
     }
 
     private TypeImpl findType(String signature) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = (ReferenceTypeImpl)declaringType();
+        ReferenceTypeImpl enclosing = declaringType();
         return enclosing.findType(signature);
     }
 
@@ -113,7 +113,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
     }
 
     TypeImpl argumentType(int index) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = (ReferenceTypeImpl)declaringType();
+        ReferenceTypeImpl enclosing = declaringType();
         String signature = argumentSignatures().get(index);
         return enclosing.findType(signature);
     }
@@ -205,7 +205,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
 
     // From interface Comparable
     public int compareTo(MethodImpl method) {
-        ReferenceTypeImpl declaringType = (ReferenceTypeImpl)declaringType();
+        ReferenceTypeImpl declaringType = declaringType();
          int rc = declaringType.compareTo(method.declaringType());
          if (rc == 0) {
            rc = declaringType.indexOf(this) -

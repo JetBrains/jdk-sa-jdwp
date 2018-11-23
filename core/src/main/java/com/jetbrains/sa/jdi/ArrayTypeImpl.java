@@ -150,7 +150,7 @@ public class ArrayTypeImpl extends ReferenceTypeImpl {
                 return false;
             }
         } else {
-            String typeName = ((ReferenceTypeImpl)destType).name();
+            String typeName = destType.name();
             if (destType instanceof InterfaceType) {
                 // Every array TypeImpl implements java.io.Serializable and
                 // java.lang.Cloneable. fixme in JVMDI-JDI, includes only

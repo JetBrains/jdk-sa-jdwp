@@ -79,7 +79,7 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
     }
 
     public int compareTo(LocalVariableImpl localVar) {
-        LocalVariableImpl other = (LocalVariableImpl) localVar;
+        LocalVariableImpl other = localVar;
         int rc = method.compareTo(other.method);
         if (rc == 0) {
             rc = slot() - other.slot();
@@ -105,7 +105,7 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
     }
 
     public TypeImpl findType(String signature) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = (ReferenceTypeImpl)method.declaringType();
+        ReferenceTypeImpl enclosing = method.declaringType();
         return enclosing.findType(signature);
     }
 
@@ -139,7 +139,7 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
 
     public boolean isArgument() {
 //        try {
-            MethodImpl method = (MethodImpl)scopeStart.method();
+            MethodImpl method = scopeStart.method();
             return (slot < method.argSlotCount());
 //        } catch (AbsentInformationException e) {
 //             If this variable object exists, there shouldn't be absent info
@@ -164,7 +164,7 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
      * with its name when both variables are visible.
      */
     boolean hides(LocalVariableImpl other) {
-        LocalVariableImpl otherImpl = (LocalVariableImpl)other;
+        LocalVariableImpl otherImpl = other;
         if (!method.equals(otherImpl.method) ||
             !name.equals(otherImpl.name)) {
             return false;

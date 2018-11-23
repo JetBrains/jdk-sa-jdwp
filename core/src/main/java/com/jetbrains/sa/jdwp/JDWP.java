@@ -134,7 +134,7 @@ public class JDWP {
                 List<ReferenceTypeImpl> referenceTypes = vm.vm.findReferenceTypes(signature);
                 answer.writeInt(referenceTypes.size());
                 for (ReferenceTypeImpl referenceType : referenceTypes) {
-                    ClassInfo.write(((ReferenceTypeImpl) referenceType), vm, answer);
+                    ClassInfo.write(referenceType, vm, answer);
                 }
 //                //int classesCount = answer.readInt();
                 //classes = new ClassInfo[classesCount];
@@ -197,7 +197,7 @@ public class JDWP {
                 List<ReferenceTypeImpl> referenceTypes = vm.vm.allClasses();
                 answer.writeInt(referenceTypes.size());
                 for (ReferenceTypeImpl referenceType : referenceTypes) {
-                    ClassInfo.write((ReferenceTypeImpl) referenceType, vm, answer);
+                    ClassInfo.write(referenceType, vm, answer);
                 }
 //                //int classesCount = answer.readInt();
                 //classes = new ClassInfo[classesCount];
@@ -1083,7 +1083,7 @@ public class JDWP {
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl referenceType = command.readReferenceType();
                 //classLoader = answer.readClassLoaderReference();
-                answer.writeClassLoaderReference((ClassLoaderReferenceImpl) referenceType.classLoader());
+                answer.writeClassLoaderReference(referenceType.classLoader());
             }
         }
 
@@ -1174,7 +1174,7 @@ public class JDWP {
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(fields.size());
                 for (FieldImpl field : fields) {
-                    FieldInfo.write((FieldImpl) field, vm, answer);
+                    FieldInfo.write(field, vm, answer);
                 }
 //                //int declaredCount = answer.readInt();
                 //declared = new FieldInfo[declaredCount];
@@ -1248,7 +1248,7 @@ public class JDWP {
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(methods.size());
                 for (MethodImpl method : methods) {
-                    MethodInfo.write((MethodImpl) method, vm, answer);
+                    MethodInfo.write(method, vm, answer);
                 }
 //                //int declaredCount = answer.readInt();
                 //declared = new MethodInfo[declaredCount];
@@ -1355,7 +1355,7 @@ public class JDWP {
 //                //int classesCount = answer.readInt();
                 answer.writeInt(nestedTypes.size());
                 for (ReferenceTypeImpl nestedType : nestedTypes) {
-                    TypeInfo.write((ReferenceTypeImpl) nestedType, vm, answer);
+                    TypeInfo.write(nestedType, vm, answer);
                 }
                 //classes = new TypeInfo[classesCount];
                 //for (int i = 0; i < classesCount; i++) {;
@@ -1423,7 +1423,7 @@ public class JDWP {
 //                //int interfacesCount = answer.readInt();
                 answer.writeInt(interfaces.size());
                 for (InterfaceTypeImpl iface : interfaces) {
-                    answer.writeClassRef(((InterfaceTypeImpl) iface).uniqueID());
+                    answer.writeClassRef(iface.uniqueID());
                 }
                 //interfaces = new InterfaceTypeImpl[interfacesCount];
                 //for (int i = 0; i < interfacesCount; i++) {;
@@ -1447,7 +1447,7 @@ public class JDWP {
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ReferenceTypeImpl type = command.readReferenceType();
                 //classObject = answer.readClassObjectReference();
-                answer.writeClassObjectReference((ClassObjectReferenceImpl) type.classObject());
+                answer.writeClassObjectReference(type.classObject());
             }
         }
 
@@ -1585,7 +1585,7 @@ public class JDWP {
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(fields.size());
                 for (FieldImpl field : fields) {
-                    FieldInfo.write((FieldImpl) field, vm, answer);
+                    FieldInfo.write(field, vm, answer);
                 }
                 //declared = new FieldInfo[declaredCount];
                 //for (int i = 0; i < declaredCount; i++) {;
@@ -1671,7 +1671,7 @@ public class JDWP {
 //                //int declaredCount = answer.readInt();
                 answer.writeInt(methods.size());
                 for (MethodImpl method : methods) {
-                    MethodInfo.write((MethodImpl) method, vm, answer);
+                    MethodInfo.write(method, vm, answer);
                 }
                 //declared = new MethodInfo[declaredCount];
                 //for (int i = 0; i < declaredCount; i++) {;
@@ -1817,7 +1817,7 @@ public class JDWP {
                     //superclass = vm.classType(answer.readClassRef());
                     ClassTypeImpl superclass = ((ClassTypeImpl) type).superclass();
                     if (superclass != null) {
-                        answer.writeClassRef(((ClassTypeImpl) superclass).uniqueID());
+                        answer.writeClassRef(superclass.uniqueID());
                     }
                     else {
                         answer.writeNullObjectRef();
@@ -2275,7 +2275,7 @@ public class JDWP {
                     //int slotsCount = answer.readInt();
                     answer.writeInt(variables.size());
                     for (LocalVariableImpl variable : variables) {
-                        SlotInfo.write((LocalVariableImpl) variable, vm, answer);
+                        SlotInfo.write(variable, vm, answer);
                     }
                     //slots = new SlotInfo[slotsCount];
                     //for (int i = 0; i < slotsCount; i++) {;
@@ -2440,7 +2440,7 @@ public class JDWP {
                     //int slotsCount = answer.readInt();
                     answer.writeInt(variables.size());
                     for (LocalVariableImpl variable : variables) {
-                        SlotInfo.write((LocalVariableImpl) variable, vm, answer);
+                        SlotInfo.write(variable, vm, answer);
                     }
                     //slots = new SlotInfo[slotsCount];
                     //for (int i = 0; i < slotsCount; i++) {;
@@ -2485,7 +2485,7 @@ public class JDWP {
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ObjectReferenceImpl objectReference = vm.vm.objectMirror(command.readObjectRef());
                 //refTypeTag = answer.readByte();
-                ReferenceTypeImpl referenceType = (ReferenceTypeImpl) objectReference.referenceType();
+                ReferenceTypeImpl referenceType = objectReference.referenceType();
                 answer.writeByte(referenceType.tag());
                 //typeID = answer.readClassRef();
                 answer.writeClassRef(referenceType.uniqueID());
@@ -2513,7 +2513,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ObjectReferenceImpl objectReference = vm.vm.objectMirror(command.readObjectRef());
-                ReferenceTypeImpl referenceType = (ReferenceTypeImpl) objectReference.referenceType();
+                ReferenceTypeImpl referenceType = objectReference.referenceType();
                 int count = command.readInt();
                 answer.writeInt(count);
                 for (int i = 0; i < count; i++) {
@@ -2945,9 +2945,9 @@ public class JDWP {
 
                 public static void write(StackFrameImpl frame, VirtualMachineImpl vm, PacketStream answer) {
                     //frameID = answer.readFrameRef();
-                    answer.writeFrameRef(((StackFrameImpl) frame).id());
+                    answer.writeFrameRef(frame.id());
                     //location = answer.readLocation();
-                    answer.writeLocation((LocationImpl) frame.location());
+                    answer.writeLocation(frame.location());
                 }
             }
 
@@ -3366,7 +3366,7 @@ public class JDWP {
 
                 byte tag;
                 try {
-                    tag = ((TypeImpl)((ArrayTypeImpl) arrayReference.type()).componentType()).tag();
+                    tag = ((ArrayTypeImpl) arrayReference.type()).componentType().tag();
                 } catch (ClassNotLoadedException e) { // fallback to the first element type
                     tag = ValueImpl.typeValueKey(arrayReference.getValue(0));
                 }
@@ -3449,9 +3449,9 @@ public class JDWP {
                 answer.writeInt(visibleClasses.size());
                 for (ReferenceTypeImpl visibleClass : visibleClasses) {
                     //refTypeTag = answer.readByte();
-                    answer.writeByte(((ReferenceTypeImpl) visibleClass).tag());
+                    answer.writeByte(visibleClass.tag());
                     //typeID = answer.readClassRef();
-                    answer.writeClassRef(((ReferenceTypeImpl) visibleClass).uniqueID());
+                    answer.writeClassRef(visibleClass.uniqueID());
                 }
                 //classes = new ClassInfo[classesCount];
                 //for (int i = 0; i < classesCount; i++) {;
@@ -3664,7 +3664,7 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ClassObjectReferenceImpl reference = command.readClassObjectReference();
-                ReferenceTypeImpl type = (ReferenceTypeImpl) reference.reflectedType();
+                ReferenceTypeImpl type = reference.reflectedType();
                 //refTypeTag = answer.readByte();
                 answer.writeByte(type.tag());
                 //typeID = answer.readClassRef();

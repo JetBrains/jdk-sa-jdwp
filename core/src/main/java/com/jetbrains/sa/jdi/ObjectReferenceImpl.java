@@ -95,10 +95,10 @@ public class ObjectReferenceImpl extends ValueImpl {
         List<FieldImpl> instanceFields = new ArrayList<FieldImpl>(size);
 
         for (int i=0; i<size; i++) {
-            FieldImpl field = (FieldImpl) theFields.get(i);
+            FieldImpl field = theFields.get(i);
 
             // Make sure the field is valid
-            ((ReferenceTypeImpl)referenceType()).validateFieldAccess(field);
+            referenceType().validateFieldAccess(field);
 
             // FIX ME! We need to do some sanity checking
             // here; make sure the field belongs to this

@@ -78,11 +78,11 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
         list.addAll(hashList);
 
         for (InterfaceTypeImpl o : immediate) {
-            InterfaceTypeImpl interfaze = (InterfaceTypeImpl) o;
+            InterfaceTypeImpl interfaze = o;
             interfaze.addSuperinterfaces(list);
         }
 
-        ClassTypeImpl superclass = (ClassTypeImpl)superclass();
+        ClassTypeImpl superclass = superclass();
         if (superclass != null) {
             superclass.addInterfaces(list);
         }
@@ -156,7 +156,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
     }
 
     public boolean isEnum() {
-        ClassTypeImpl superclass = (ClassTypeImpl) superclass();
+        ClassTypeImpl superclass = superclass();
         if (superclass != null) {
             return vm.javaLangEnum.equals(superclass.name());
         } else {
@@ -190,11 +190,11 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
          */
 
         for (InterfaceTypeImpl interfaceType : interfaces()) {
-            InterfaceTypeImpl interfaze = (InterfaceTypeImpl) interfaceType;
+            InterfaceTypeImpl interfaze = interfaceType;
             interfaze.addVisibleMethods(methodMap);
         }
 
-        ClassTypeImpl clazz = (ClassTypeImpl)superclass();
+        ClassTypeImpl clazz = superclass();
         if (clazz != null) {
             clazz.addVisibleMethods(methodMap);
         }
@@ -203,7 +203,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
     }
 
     boolean isAssignableTo(ReferenceTypeImpl type) {
-        ClassTypeImpl superclazz = (ClassTypeImpl)superclass();
+        ClassTypeImpl superclazz = superclass();
         if (this.equals(type)) {
             return true;
         } else if ((superclazz != null) && superclazz.isAssignableTo(type)) {
@@ -211,7 +211,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
         } else {
             List<InterfaceTypeImpl> interfaces = interfaces();
             for (InterfaceTypeImpl anInterface : interfaces) {
-                InterfaceTypeImpl interfaze = (InterfaceTypeImpl) anInterface;
+                InterfaceTypeImpl interfaze = anInterface;
                 if (interfaze.isAssignableTo(type)) {
                     return true;
                 }

@@ -389,7 +389,7 @@ public class VirtualMachineImpl extends MirrorImpl {
         if (topLevelGroups == null) {
             topLevelGroups = new ArrayList<ThreadGroupReferenceImpl>(1);
             for (ThreadReferenceImpl threadReference : getAllThreads()) {
-                ThreadReferenceImpl myThread = (ThreadReferenceImpl) threadReference;
+                ThreadReferenceImpl myThread = threadReference;
                 ThreadGroupReferenceImpl myGroup = myThread.threadGroup();
                 ThreadGroupReferenceImpl myParent = myGroup.parent();
                 if (myGroup.parent() == null) {
@@ -617,7 +617,7 @@ public class VirtualMachineImpl extends MirrorImpl {
 
         final long[] retValue = new long[size] ;
         for (int i = 0; i < retValue.length; i++) {
-            retValue[i] = instanceMap.get(CompatibilityHelper.INSTANCE.getAddress(((ReferenceTypeImpl)classes.get(i)).ref()));
+            retValue[i] = instanceMap.get(CompatibilityHelper.INSTANCE.getAddress(classes.get(i).ref()));
         }
 
         return retValue;
@@ -726,7 +726,7 @@ public class VirtualMachineImpl extends MirrorImpl {
     // returns objects of type exactly equal to given type
     private List<ObjectReferenceImpl> objectsByExactType(ReferenceTypeImpl type) {
         final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
-        final Klass givenKls = ((ReferenceTypeImpl) type).ref();
+        final Klass givenKls = type.ref();
         saObjectHeap.iterate(new DefaultHeapVisitor() {
             public boolean doObj(Oop oop) {
                 if (givenKls.equals(oop.getKlass())) {
@@ -757,7 +757,7 @@ public class VirtualMachineImpl extends MirrorImpl {
     // includeSubtypes - do you want to include subclass/subtype instances of given
     // ReferenceType or do we want objects of exact type only?
     public List<ObjectReferenceImpl> objectsByType(ReferenceTypeImpl type, boolean includeSubtypes) {
-        Klass kls = ((ReferenceTypeImpl)type).ref();
+        Klass kls = type.ref();
         if (kls instanceof InstanceKlass) {
             InstanceKlass ik = (InstanceKlass) kls;
             // if the Klass is final or if there are no subklasses loaded yet
@@ -996,7 +996,7 @@ public class VirtualMachineImpl extends MirrorImpl {
     public ThreadReferenceImpl getThreadById(long id) {
         for (ThreadReferenceImpl thread : allThreads()) {
             if (thread.uniqueID() == id) {
-                return (ThreadReferenceImpl) thread;
+                return thread;
             }
         }
         throw new IllegalStateException("Thread with id " + id + " not found");
@@ -1014,7 +1014,7 @@ public class VirtualMachineImpl extends MirrorImpl {
         for (ThreadReferenceImpl thread : allThreads()) {
             ThreadGroupReferenceImpl threadGroup = thread.threadGroup();
             if (threadGroup.uniqueID() == id) {
-                return (ThreadGroupReferenceImpl) threadGroup;
+                return threadGroup;
             }
         }
         throw new IllegalStateException("ThreadGroup with id " + id + " not found");

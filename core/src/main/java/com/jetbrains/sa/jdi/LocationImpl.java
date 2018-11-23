@@ -52,7 +52,7 @@ public class LocationImpl extends MirrorImpl {
 
         this.method = method;
         this.codeIndex = method.isNative()? -1 : codeIndex;
-        this.declaringType = (ReferenceTypeImpl)method.declaringType();
+        this.declaringType = method.declaringType();
     }
 
     /*
@@ -66,7 +66,7 @@ public class LocationImpl extends MirrorImpl {
 
         this.method = null;
         this.codeIndex = codeIndex;
-        this.declaringType = (ReferenceTypeImpl)declaringType;
+        this.declaringType = declaringType;
         this.methodRef = methodRef;
     }
 
@@ -130,7 +130,7 @@ public class LocationImpl extends MirrorImpl {
         }
 
         /* compute the line info */
-        MethodImpl methodImpl = (MethodImpl)method();
+        MethodImpl methodImpl = method();
          lineInfo = methodImpl.codeIndexToLineInfo(stratum,
                                                    codeIndex());
 
@@ -165,7 +165,7 @@ public class LocationImpl extends MirrorImpl {
                                            lineStratum.sourcePath());
         } else {
             /* find best match */
-            MethodImpl methodImpl = (MethodImpl)method();
+            MethodImpl methodImpl = method();
             lineInfo = methodImpl.codeIndexToLineInfo(stratum,
                                                       codeIndex());
         }

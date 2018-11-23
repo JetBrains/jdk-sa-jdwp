@@ -165,7 +165,7 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl {
          */
         iter = immediate.iterator();
         while (iter.hasNext()) {
-            InterfaceTypeImpl interfaze = (InterfaceTypeImpl)iter.next();
+            InterfaceTypeImpl interfaze = iter.next();
             interfaze.addSuperinterfaces(list);
         }
     }
@@ -178,7 +178,7 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl {
         } else {
             // Try superinterfaces.
             for (InterfaceTypeImpl aSuper : superinterfaces()) {
-                InterfaceTypeImpl interfaze = (InterfaceTypeImpl) aSuper;
+                InterfaceTypeImpl interfaze = aSuper;
                 if (interfaze.isAssignableTo(type)) {
                     return true;
                 }

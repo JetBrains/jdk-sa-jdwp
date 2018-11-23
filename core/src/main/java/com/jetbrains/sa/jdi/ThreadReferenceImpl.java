@@ -194,7 +194,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
     }
 
     public StackFrameImpl frame(int index) throws IncompatibleThreadStateException  {
-        return (StackFrameImpl) privateFrames(index, 1).get(0);
+        return privateFrames(index, 1).get(0);
     }
 
     public List<StackFrameImpl> frames(int start, int length)

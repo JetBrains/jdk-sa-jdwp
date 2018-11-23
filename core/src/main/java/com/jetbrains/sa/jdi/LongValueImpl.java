@@ -36,18 +36,13 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.LongValue;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-import com.jetbrains.sa.jdwp.JDWP;
 
-public class LongValueImpl extends PrimitiveValueImpl
-                           implements LongValue {
+public class LongValueImpl extends PrimitiveValueImpl implements LongValue {
     private long value;
 
-    LongValueImpl(VirtualMachine aVm,long aValue) {
-        super(aVm);
+    LongValueImpl(VirtualMachineImpl aVm,long aValue) {
+        super(aVm, aVm.theLongType);
 
         value = aValue;
     }
@@ -77,10 +72,6 @@ public class LongValueImpl extends PrimitiveValueImpl
         } else {
             return 1;
         }
-    }
-
-    public Type type() {
-        return vm.theLongType();
     }
 
     public long value() {
@@ -119,44 +110,7 @@ public class LongValueImpl extends PrimitiveValueImpl
         return(double)value;
     }
 
-    byte checkedByteValue() throws InvalidTypeException {
-        if ((value > Byte.MAX_VALUE) || (value < Byte.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to byte");
-        } else {
-            return super.checkedByteValue();
-        }
-    }
-
-    char checkedCharValue() throws InvalidTypeException {
-        if ((value > Character.MAX_VALUE) || (value < Character.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to char");
-        } else {
-            return super.checkedCharValue();
-        }
-    }
-
-    short checkedShortValue() throws InvalidTypeException {
-        if ((value > Short.MAX_VALUE) || (value < Short.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to short");
-        } else {
-            return super.checkedShortValue();
-        }
-    }
-
-    int checkedIntValue() throws InvalidTypeException {
-        if ((value > Integer.MAX_VALUE) || (value < Integer.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to int");
-        } else {
-            return super.checkedIntValue();
-        }
-    }
-
     public String toString() {
         return "" + value;
-    }
-
-    @Override
-    byte typeValueKey() {
-        return JDWP.Tag.LONG;
     }
 }

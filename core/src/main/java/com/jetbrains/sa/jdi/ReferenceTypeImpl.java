@@ -66,8 +66,8 @@ implements ReferenceType {
     /* to mark when no info available */
     static final SDE NO_SDE_INFO_MARK = new SDE();
 
-    protected ReferenceTypeImpl(VirtualMachine aVm, Klass klass) {
-        super(aVm);
+    protected ReferenceTypeImpl(VirtualMachine aVm, Klass klass, byte tag) {
+        super(aVm, tag);
         saKlass = klass;
     }
 
@@ -913,7 +913,7 @@ implements ReferenceType {
             /* OTI FIX: Must be a primitive type or the void type */
             char sig = signature.charAt(0);
             if (sig == 'V') {
-                type = vm.theVoidType();
+                type = vm.theVoidType;
             } else {
                 type = vm.primitiveTypeMirror(sig);
             }
@@ -1003,6 +1003,4 @@ implements ReferenceType {
             return bs.toByteArray();
         }
     }
-
-    public abstract byte tag();
 }

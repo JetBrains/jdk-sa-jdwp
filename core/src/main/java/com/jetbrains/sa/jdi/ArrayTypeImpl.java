@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
-  protected ArrayTypeImpl(VirtualMachine aVm, ArrayKlass aRef) {
-        super(aVm, aRef);
+    ArrayTypeImpl(VirtualMachine aVm, ArrayKlass aRef) {
+        super(aVm, aRef, JDWP.TypeTag.ARRAY);
     }
 
     public ArrayReference newInstance(int length) {
@@ -159,11 +159,6 @@ public class ArrayTypeImpl extends ReferenceTypeImpl implements ArrayType {
                 return vm.javaLangObject.equals(typeName);
             }
         }
-    }
-
-    @Override
-    public byte tag() {
-        return JDWP.TypeTag.ARRAY;
     }
 
     List<ReferenceType> inheritedTypes() {

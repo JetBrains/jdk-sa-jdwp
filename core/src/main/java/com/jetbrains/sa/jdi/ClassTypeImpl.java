@@ -51,7 +51,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl
     private SoftReference<List<ClassType>> subclassesCache    = null;
 
     protected ClassTypeImpl(VirtualMachine aVm, InstanceKlass aRef) {
-        super(aVm, aRef);
+        super(aVm, aRef, JDWP.TypeTag.CLASS);
     }
 
     public ClassType superclass() {
@@ -221,11 +221,6 @@ public class ClassTypeImpl extends ReferenceTypeImpl
             }
             return false;
         }
-    }
-
-    @Override
-    public byte tag() {
-        return JDWP.TypeTag.CLASS;
     }
 
     public String toString() {

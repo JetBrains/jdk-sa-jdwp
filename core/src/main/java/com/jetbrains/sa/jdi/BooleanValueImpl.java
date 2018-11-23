@@ -37,16 +37,12 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.BooleanValue;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-import com.jetbrains.sa.jdwp.JDWP;
 
-public class BooleanValueImpl extends PrimitiveValueImpl
-                              implements BooleanValue {
+public class BooleanValueImpl extends PrimitiveValueImpl implements BooleanValue {
     private boolean value;
 
-    BooleanValueImpl(VirtualMachine aVm,boolean aValue) {
-        super(aVm);
+    BooleanValueImpl(VirtualMachineImpl aVm, boolean aValue) {
+        super(aVm, aVm.theBooleanType);
 
         value = aValue;
     }
@@ -65,10 +61,6 @@ public class BooleanValueImpl extends PrimitiveValueImpl
          * TO DO: Better hash code
          */
         return intValue();
-    }
-
-    public Type type() {
-        return vm.theBooleanType();
     }
 
     public boolean value() {
@@ -109,10 +101,5 @@ public class BooleanValueImpl extends PrimitiveValueImpl
 
     public String toString() {
         return "" + value;
-    }
-
-    @Override
-    byte typeValueKey() {
-        return JDWP.Tag.BOOLEAN;
     }
 }

@@ -232,7 +232,7 @@ public class StackFrameImpl extends MirrorImpl
 
         int slot = mmm.isStatic()? 0 : 1;
         for (int ii = 0; ii < count; ++slot, ++ii) {
-            char sigChar = ((String)argSigs.get(ii)).charAt(0);
+            char sigChar = argSigs.get(ii).charAt(0);
             BasicType variableType = BasicType.charToBasicType(sigChar);
             res.add(getSlotValue(values, variableType, slot));
             if (sigChar == 'J' || sigChar == 'D') {
@@ -255,21 +255,21 @@ public class StackFrameImpl extends MirrorImpl
         if (values.get(ss).getType() == BasicType.getTConflict()) {
           // Dead locals, so just represent them as a zero of the appropriate type
           if (variableType == BasicType.T_BOOLEAN) {
-            valueImpl = (BooleanValueImpl) vm.mirrorOf(false);
+            valueImpl = vm.mirrorOf(false);
           } else if (variableType == BasicType.T_CHAR) {
-            valueImpl = (CharValueImpl) vm.mirrorOf((char)0);
+            valueImpl = vm.mirrorOf((char)0);
           } else if (variableType == BasicType.T_FLOAT) {
-            valueImpl = (FloatValueImpl) vm.mirrorOf((float)0);
+            valueImpl = vm.mirrorOf((float)0);
           } else if (variableType == BasicType.T_DOUBLE) {
-            valueImpl = (DoubleValueImpl) vm.mirrorOf((double)0);
+            valueImpl = vm.mirrorOf((double)0);
           } else if (variableType == BasicType.T_BYTE) {
-            valueImpl = (ByteValueImpl) vm.mirrorOf((byte)0);
+            valueImpl = vm.mirrorOf((byte)0);
           } else if (variableType == BasicType.T_SHORT) {
-            valueImpl = (ShortValueImpl) vm.mirrorOf((short)0);
+            valueImpl = vm.mirrorOf((short)0);
           } else if (variableType == BasicType.T_INT) {
-            valueImpl = (IntegerValueImpl) vm.mirrorOf(0);
+            valueImpl = vm.mirrorOf(0);
           } else if (variableType == BasicType.T_LONG) {
-            valueImpl = (LongValueImpl) vm.mirrorOf((long)0);
+            valueImpl = vm.mirrorOf((long)0);
           } else if (variableType == BasicType.T_OBJECT) {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
@@ -285,21 +285,21 @@ public class StackFrameImpl extends MirrorImpl
           }
         } else {
           if (variableType == BasicType.T_BOOLEAN) {
-            valueImpl = (BooleanValueImpl) vm.mirrorOf(values.booleanAt(ss));
+            valueImpl = vm.mirrorOf(values.booleanAt(ss));
           } else if (variableType == BasicType.T_CHAR) {
-            valueImpl = (CharValueImpl) vm.mirrorOf(values.charAt(ss));
+            valueImpl = vm.mirrorOf(values.charAt(ss));
           } else if (variableType == BasicType.T_FLOAT) {
-            valueImpl = (FloatValueImpl) vm.mirrorOf(values.floatAt(ss));
+            valueImpl = vm.mirrorOf(values.floatAt(ss));
           } else if (variableType == BasicType.T_DOUBLE) {
-            valueImpl = (DoubleValueImpl) vm.mirrorOf(values.doubleAt(ss));
+            valueImpl = vm.mirrorOf(values.doubleAt(ss));
           } else if (variableType == BasicType.T_BYTE) {
-            valueImpl = (ByteValueImpl) vm.mirrorOf(values.byteAt(ss));
+            valueImpl = vm.mirrorOf(values.byteAt(ss));
           } else if (variableType == BasicType.T_SHORT) {
-            valueImpl = (ShortValueImpl) vm.mirrorOf(values.shortAt(ss));
+            valueImpl = vm.mirrorOf(values.shortAt(ss));
           } else if (variableType == BasicType.T_INT) {
-            valueImpl = (IntegerValueImpl) vm.mirrorOf(values.intAt(ss));
+            valueImpl = vm.mirrorOf(values.intAt(ss));
           } else if (variableType == BasicType.T_LONG) {
-            valueImpl = (LongValueImpl) vm.mirrorOf(values.longAt(ss));
+            valueImpl = vm.mirrorOf(values.longAt(ss));
           } else if (variableType == BasicType.T_OBJECT) {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.

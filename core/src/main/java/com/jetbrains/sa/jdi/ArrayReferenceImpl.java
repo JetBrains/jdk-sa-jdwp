@@ -123,21 +123,21 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl
         for (int ii = index; ii < limit; ii++) {
             ValueImpl valueImpl;
             if (variableType == BasicType.T_BOOLEAN) {
-                valueImpl = (BooleanValueImpl) vm.mirrorOf(typeArray.getBooleanAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getBooleanAt(ii));
             } else if (variableType == BasicType.T_CHAR) {
-                valueImpl = (CharValueImpl) vm.mirrorOf(typeArray.getCharAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getCharAt(ii));
             } else if (variableType == BasicType.T_FLOAT) {
-                valueImpl = (FloatValueImpl) vm.mirrorOf(typeArray.getFloatAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getFloatAt(ii));
             } else if (variableType == BasicType.T_DOUBLE) {
-                valueImpl =  (DoubleValueImpl) vm.mirrorOf(typeArray.getDoubleAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getDoubleAt(ii));
             } else if (variableType == BasicType.T_BYTE) {
-                valueImpl =  (ByteValueImpl) vm.mirrorOf(typeArray.getByteAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getByteAt(ii));
             } else if (variableType == BasicType.T_SHORT) {
-                valueImpl =  (ShortValueImpl) vm.mirrorOf(typeArray.getShortAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getShortAt(ii));
             } else if (variableType == BasicType.T_INT) {
-                valueImpl =  (IntegerValueImpl) vm.mirrorOf(typeArray.getIntAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getIntAt(ii));
             } else if (variableType == BasicType.T_LONG) {
-                valueImpl =  (LongValueImpl) vm.mirrorOf(typeArray.getLongAt(ii));
+                valueImpl = vm.mirrorOf(typeArray.getLongAt(ii));
             } else if (variableType == BasicType.T_OBJECT) {
                 // we may have an [Ljava/lang/Object; - i.e., Object[] with the
                 // elements themselves may be arrays because every array is an Object.

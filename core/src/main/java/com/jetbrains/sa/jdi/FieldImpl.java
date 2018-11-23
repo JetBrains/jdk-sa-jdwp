@@ -90,28 +90,28 @@ public class FieldImpl extends TypeComponentImpl implements Field {
             valueImpl = vm.objectMirror(of.getValue(target));
         } else if (ft.isByte()) {
             sun.jvm.hotspot.oops.ByteField bf = (sun.jvm.hotspot.oops.ByteField)saField;
-            valueImpl = (ByteValueImpl) vm.mirrorOf(bf.getValue(target));
+            valueImpl = vm.mirrorOf(bf.getValue(target));
         } else if (ft.isChar()) {
             sun.jvm.hotspot.oops.CharField cf = (sun.jvm.hotspot.oops.CharField)saField;
-            valueImpl = (CharValueImpl) vm.mirrorOf(cf.getValue(target));
+            valueImpl = vm.mirrorOf(cf.getValue(target));
         } else if (ft.isDouble()) {
             sun.jvm.hotspot.oops.DoubleField df = (sun.jvm.hotspot.oops.DoubleField)saField;
-            valueImpl = (DoubleValueImpl) vm.mirrorOf(df.getValue(target));
+            valueImpl = vm.mirrorOf(df.getValue(target));
         } else if (ft.isFloat()) {
             sun.jvm.hotspot.oops.FloatField ff = (sun.jvm.hotspot.oops.FloatField)saField;
-            valueImpl = (FloatValueImpl) vm.mirrorOf(ff.getValue(target));
+            valueImpl = vm.mirrorOf(ff.getValue(target));
         } else if (ft.isInt()) {
             sun.jvm.hotspot.oops.IntField iif = (sun.jvm.hotspot.oops.IntField)saField;
-            valueImpl = (IntegerValueImpl) vm.mirrorOf(iif.getValue(target));
+            valueImpl = vm.mirrorOf(iif.getValue(target));
         } else if (ft.isLong()) {
             sun.jvm.hotspot.oops.LongField lf = (sun.jvm.hotspot.oops.LongField)saField;
-            valueImpl = (LongValueImpl) vm.mirrorOf(lf.getValue(target));
+            valueImpl = vm.mirrorOf(lf.getValue(target));
         } else if (ft.isShort()) {
             sun.jvm.hotspot.oops.ShortField sf = (sun.jvm.hotspot.oops.ShortField)saField;
-            valueImpl = (ShortValueImpl) vm.mirrorOf(sf.getValue(target));
+            valueImpl = vm.mirrorOf(sf.getValue(target));
         } else if (ft.isBoolean()) {
             sun.jvm.hotspot.oops.BooleanField bf = (sun.jvm.hotspot.oops.BooleanField)saField;
-            valueImpl = (BooleanValueImpl) vm.mirrorOf(bf.getValue(target));
+            valueImpl = vm.mirrorOf(bf.getValue(target));
         } else {
             throw new RuntimeException("Should not reach here");
         }

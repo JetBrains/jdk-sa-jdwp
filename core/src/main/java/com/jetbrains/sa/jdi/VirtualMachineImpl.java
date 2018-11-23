@@ -82,19 +82,19 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
     private final ThreadGroup             threadGroupForJDI;
 
     // Per-vm singletons for primitive types and for void.
-    // singleton-ness protected by "synchronized(this)".
-    private BooleanType theBooleanType;
-    private ByteType    theByteType;
-    private CharType    theCharType;
-    private ShortType   theShortType;
-    private IntegerType theIntegerType;
-    private LongType    theLongType;
-    private FloatType   theFloatType;
-    private DoubleType  theDoubleType;
+    final PrimitiveTypeImpl theBooleanType;
+    final PrimitiveTypeImpl theByteType;
+    final PrimitiveTypeImpl theCharType;
+    final PrimitiveTypeImpl theShortType;
+    final PrimitiveTypeImpl theIntegerType;
+    final PrimitiveTypeImpl theLongType;
+    final PrimitiveTypeImpl theFloatType;
+    final PrimitiveTypeImpl theDoubleType;
 
-    private VoidType    theVoidType;
+    final VoidType theVoidType;
 
-    private VoidValue voidVal;
+    private final VoidValueImpl voidVal;
+
     private final Map<Klass, ReferenceTypeImpl> typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
@@ -217,6 +217,18 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         // attaching to SA agent.
 
         System.setProperty("sun.jvm.hotspot.debugger.useWindbgDebugger", "true");
+
+        theBooleanType = new PrimitiveTypeImpl.Boolean(this);
+        theByteType = new PrimitiveTypeImpl.Byte(this);
+        theCharType = new PrimitiveTypeImpl.Char(this);
+        theShortType = new PrimitiveTypeImpl.Short(this);
+        theIntegerType = new PrimitiveTypeImpl.Integer(this);
+        theLongType = new PrimitiveTypeImpl.Long(this);
+        theFloatType = new PrimitiveTypeImpl.Float(this);
+        theDoubleType = new PrimitiveTypeImpl.Double(this);
+
+        theVoidType = new VoidTypeImpl(this);
+        voidVal = new VoidValueImpl(this);
     }
 
     // we reflectively use newly spec'ed class because our ALT_BOOTDIR
@@ -416,35 +428,35 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return null;
     }
 
-    public BooleanValue mirrorOf(boolean value) {
+    public BooleanValueImpl mirrorOf(boolean value) {
         return new BooleanValueImpl(this,value);
     }
 
-    public ByteValue mirrorOf(byte value) {
+    public ByteValueImpl mirrorOf(byte value) {
         return new ByteValueImpl(this,value);
     }
 
-    public CharValue mirrorOf(char value) {
+    public CharValueImpl mirrorOf(char value) {
         return new CharValueImpl(this,value);
     }
 
-    public ShortValue mirrorOf(short value) {
+    public ShortValueImpl mirrorOf(short value) {
         return new ShortValueImpl(this,value);
     }
 
-    public IntegerValue mirrorOf(int value) {
+    public IntegerValueImpl mirrorOf(int value) {
         return new IntegerValueImpl(this,value);
     }
 
-    public LongValue mirrorOf(long value) {
+    public LongValueImpl mirrorOf(long value) {
         return new LongValueImpl(this,value);
     }
 
-    public FloatValue mirrorOf(float value) {
+    public FloatValueImpl mirrorOf(float value) {
         return new FloatValueImpl(this,value);
     }
 
-    public DoubleValue mirrorOf(double value) {
+    public DoubleValueImpl mirrorOf(double value) {
         return new DoubleValueImpl(this,value);
     }
 
@@ -453,10 +465,7 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         return null;
     }
 
-    public VoidValue mirrorOfVoid() {
-        if (voidVal == null) {
-            voidVal = new VoidValueImpl(this);
-        }
+    public VoidValueImpl mirrorOfVoid() {
         return voidVal;
     }
 
@@ -802,123 +811,24 @@ public class VirtualMachineImpl extends MirrorImpl implements PathSearchingVirtu
         throw new ClassNotLoadedException(parser.typeName(), "Type " + parser.typeName() + " not loaded");
     }
 
-    BooleanType theBooleanType() {
-        if (theBooleanType == null) {
-            synchronized(this) {
-                if (theBooleanType == null) {
-                    theBooleanType = new BooleanTypeImpl(this);
-                }
-            }
-        }
-        return theBooleanType;
-    }
-
-    ByteType theByteType() {
-        if (theByteType == null) {
-            synchronized(this) {
-                if (theByteType == null) {
-                    theByteType = new ByteTypeImpl(this);
-                }
-            }
-        }
-        return theByteType;
-    }
-
-    CharType theCharType() {
-        if (theCharType == null) {
-            synchronized(this) {
-                if (theCharType == null) {
-                    theCharType = new CharTypeImpl(this);
-                }
-            }
-        }
-        return theCharType;
-    }
-
-    ShortType theShortType() {
-        if (theShortType == null) {
-            synchronized(this) {
-                if (theShortType == null) {
-                    theShortType = new ShortTypeImpl(this);
-                }
-            }
-        }
-        return theShortType;
-    }
-
-    IntegerType theIntegerType() {
-        if (theIntegerType == null) {
-            synchronized(this) {
-                if (theIntegerType == null) {
-                    theIntegerType = new IntegerTypeImpl(this);
-                }
-            }
-        }
-        return theIntegerType;
-    }
-
-    LongType theLongType() {
-        if (theLongType == null) {
-            synchronized(this) {
-                if (theLongType == null) {
-                    theLongType = new LongTypeImpl(this);
-                }
-            }
-        }
-        return theLongType;
-    }
-
-    FloatType theFloatType() {
-        if (theFloatType == null) {
-            synchronized(this) {
-                if (theFloatType == null) {
-                    theFloatType = new FloatTypeImpl(this);
-                }
-            }
-        }
-        return theFloatType;
-    }
-
-    DoubleType theDoubleType() {
-        if (theDoubleType == null) {
-            synchronized(this) {
-                if (theDoubleType == null) {
-                    theDoubleType = new DoubleTypeImpl(this);
-                }
-            }
-        }
-        return theDoubleType;
-    }
-
-    VoidType theVoidType() {
-        if (theVoidType == null) {
-            synchronized(this) {
-                if (theVoidType == null) {
-                    theVoidType = new VoidTypeImpl(this);
-                }
-            }
-        }
-        return theVoidType;
-    }
-
     PrimitiveType primitiveTypeMirror(char tag) {
         switch (tag) {
         case 'Z':
-                return theBooleanType();
+                return theBooleanType;
         case 'B':
-                return theByteType();
+                return theByteType;
         case 'C':
-                return theCharType();
+                return theCharType;
         case 'S':
-                return theShortType();
+                return theShortType;
         case 'I':
-                return theIntegerType();
+                return theIntegerType;
         case 'J':
-                return theLongType();
+                return theLongType;
         case 'F':
-                return theFloatType();
+                return theFloatType;
         case 'D':
-                return theDoubleType();
+                return theDoubleType;
         default:
                 throw new IllegalArgumentException("Unrecognized primitive tag " + tag);
         }

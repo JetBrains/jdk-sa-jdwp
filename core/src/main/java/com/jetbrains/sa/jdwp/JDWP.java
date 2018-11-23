@@ -4784,28 +4784,28 @@ public class JDWP {
     }
 
     public interface TypeTag {
-        int CLASS = 1;
-        int INTERFACE = 2;
-        int ARRAY = 3;
+        byte CLASS = 1;
+        byte INTERFACE = 2;
+        byte ARRAY = 3;
     }
 
     public interface Tag {
-        int ARRAY = 91;
-        int BYTE = 66;
-        int CHAR = 67;
-        int OBJECT = 76;
-        int FLOAT = 70;
-        int DOUBLE = 68;
-        int INT = 73;
-        int LONG = 74;
-        int SHORT = 83;
-        int VOID = 86;
-        int BOOLEAN = 90;
-        int STRING = 115;
-        int THREAD = 116;
-        int THREAD_GROUP = 103;
-        int CLASS_LOADER = 108;
-        int CLASS_OBJECT = 99;
+        byte ARRAY = 91;
+        byte BYTE = 66;
+        byte CHAR = 67;
+        byte OBJECT = 76;
+        byte FLOAT = 70;
+        byte DOUBLE = 68;
+        byte INT = 73;
+        byte LONG = 74;
+        byte SHORT = 83;
+        byte VOID = 86;
+        byte BOOLEAN = 90;
+        byte STRING = 115;
+        byte THREAD = 116;
+        byte THREAD_GROUP = 103;
+        byte CLASS_LOADER = 108;
+        byte CLASS_OBJECT = 99;
     }
 
     interface StepDepth {

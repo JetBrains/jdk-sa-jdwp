@@ -41,10 +41,12 @@ import com.sun.jdi.VirtualMachine;
 
 public abstract class TypeImpl extends MirrorImpl implements Type
 {
+    private final byte tag;
     private String typeName;
 
-    TypeImpl(VirtualMachine aVm) {
+    TypeImpl(VirtualMachine aVm, byte tag) {
         super(aVm);
+        this.tag = tag;
     }
 
     public abstract String signature();
@@ -74,5 +76,7 @@ public abstract class TypeImpl extends MirrorImpl implements Type
         return signature().hashCode();
     }
 
-    public abstract byte tag();
+    public final byte tag() {
+        return tag;
+    }
 }

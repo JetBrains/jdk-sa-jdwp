@@ -37,17 +37,12 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.DoubleValue;
-import com.sun.jdi.InvalidTypeException;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-import com.jetbrains.sa.jdwp.JDWP;
 
-public class DoubleValueImpl extends PrimitiveValueImpl
-                             implements DoubleValue {
+public class DoubleValueImpl extends PrimitiveValueImpl implements DoubleValue {
     private double value;
 
-    DoubleValueImpl(VirtualMachine aVm,double aValue) {
-        super(aVm);
+    DoubleValueImpl(VirtualMachineImpl aVm, double aValue) {
+        super(aVm, aVm.theDoubleType);
 
         value = aValue;
     }
@@ -70,10 +65,6 @@ public class DoubleValueImpl extends PrimitiveValueImpl
          * TO DO: Better hash code
          */
         return intValue();
-    }
-
-    public Type type() {
-        return vm.theDoubleType();
     }
 
     public double value() {
@@ -112,62 +103,7 @@ public class DoubleValueImpl extends PrimitiveValueImpl
         return value;
     }
 
-    byte checkedByteValue() throws InvalidTypeException {
-        if ((value > Byte.MAX_VALUE) || (value < Byte.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to byte");
-        } else {
-            return super.checkedByteValue();
-        }
-    }
-
-    char checkedCharValue() throws InvalidTypeException {
-        if ((value > Character.MAX_VALUE) || (value < Character.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to char");
-        } else {
-            return super.checkedCharValue();
-        }
-    }
-
-    short checkedShortValue() throws InvalidTypeException {
-        if ((value > Short.MAX_VALUE) || (value < Short.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to short");
-        } else {
-            return super.checkedShortValue();
-        }
-    }
-
-    int checkedIntValue() throws InvalidTypeException {
-        if ((value > Integer.MAX_VALUE) || (value < Integer.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to int");
-        } else {
-            return super.checkedIntValue();
-        }
-    }
-
-    long checkedLongValue() throws InvalidTypeException {
-        long longValue = (long)value;
-        if (longValue != value) {
-            throw new InvalidTypeException("Can't convert " + value + " to long");
-        } else {
-            return super.checkedLongValue();
-        }
-    }
-
-    float checkedFloatValue() throws InvalidTypeException {
-        float floatValue = (float)value;
-        if (floatValue != value) {
-            throw new InvalidTypeException("Can't convert " + value + " to float");
-        } else {
-            return super.checkedFloatValue();
-        }
-    }
-
     public String toString() {
         return "" + value;
-    }
-
-    @Override
-    byte typeValueKey() {
-        return JDWP.Tag.DOUBLE;
     }
 }

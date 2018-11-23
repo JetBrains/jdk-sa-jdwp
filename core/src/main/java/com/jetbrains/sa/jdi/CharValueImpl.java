@@ -37,17 +37,12 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.CharValue;
-import com.sun.jdi.InvalidTypeException;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-import com.jetbrains.sa.jdwp.JDWP;
 
-public class CharValueImpl extends PrimitiveValueImpl
-                           implements CharValue {
+public class CharValueImpl extends PrimitiveValueImpl implements CharValue {
     private char value;
 
-    CharValueImpl(VirtualMachine aVm,char aValue) {
-        super(aVm);
+    CharValueImpl(VirtualMachineImpl aVm, char aValue) {
+        super(aVm, aVm.theCharType);
 
         value = aValue;
     }
@@ -70,10 +65,6 @@ public class CharValueImpl extends PrimitiveValueImpl
 
     public int compareTo(CharValue charVal) {
         return value() - charVal.value();
-    }
-
-    public Type type() {
-        return vm.theCharType();
     }
 
     public char value() {
@@ -114,28 +105,5 @@ public class CharValueImpl extends PrimitiveValueImpl
 
     public String toString() {
         return "" + value;
-    }
-
-    byte checkedByteValue() throws InvalidTypeException {
-        // Note: since char is unsigned, don't check against MIN_VALUE
-        if (value > Byte.MAX_VALUE) {
-            throw new InvalidTypeException("Can't convert " + value + " to byte");
-        } else {
-            return super.checkedByteValue();
-        }
-    }
-
-    short checkedShortValue() throws InvalidTypeException {
-        // Note: since char is unsigned, don't check against MIN_VALUE
-        if (value > Short.MAX_VALUE) {
-            throw new InvalidTypeException("Can't convert " + value + " to short");
-        } else {
-            return super.checkedShortValue();
-        }
-    }
-
-    @Override
-    byte typeValueKey() {
-        return JDWP.Tag.CHAR;
     }
 }

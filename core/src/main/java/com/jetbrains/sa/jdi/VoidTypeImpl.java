@@ -42,16 +42,11 @@ import com.jetbrains.sa.jdwp.JDWP;
 
 public class VoidTypeImpl extends TypeImpl implements VoidType {
     VoidTypeImpl(VirtualMachine vm) {
-        super(vm);
+        super(vm, JDWP.Tag.VOID);
     }
 
     public String signature() {
         return "V";
-    }
-
-    @Override
-    public byte tag() {
-        return JDWP.Tag.VOID;
     }
 
     public String toString() {

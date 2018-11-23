@@ -50,7 +50,7 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
     private SoftReference<List<ClassType>> implementorsCache = null;
 
     protected InterfaceTypeImpl(VirtualMachine aVm, InstanceKlass aRef) {
-        super(aVm, aRef);
+        super(aVm, aRef, JDWP.TypeTag.INTERFACE);
     }
 
     public List<InterfaceType> superinterfaces() throws ClassNotPreparedException {
@@ -187,11 +187,6 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
 
             return false;
         }
-    }
-
-    @Override
-    public byte tag() {
-        return JDWP.TypeTag.INTERFACE;
     }
 
     List<InterfaceType> inheritedTypes() {

@@ -37,17 +37,12 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.ByteValue;
-import com.sun.jdi.InvalidTypeException;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-import com.jetbrains.sa.jdwp.JDWP;
 
-public class ByteValueImpl extends PrimitiveValueImpl
-                           implements ByteValue {
+public class ByteValueImpl extends PrimitiveValueImpl implements ByteValue {
     private byte value;
 
-    ByteValueImpl(VirtualMachine aVm,byte aValue) {
-        super(aVm);
+    ByteValueImpl(VirtualMachineImpl aVm, byte aValue) {
+        super(aVm, aVm.theByteType);
 
         value = aValue;
     }
@@ -70,10 +65,6 @@ public class ByteValueImpl extends PrimitiveValueImpl
 
     public int compareTo(ByteValue byteVal) {
         return value() - byteVal.value();
-    }
-
-    public Type type() {
-        return vm.theByteType();
     }
 
     public byte value() {
@@ -112,20 +103,7 @@ public class ByteValueImpl extends PrimitiveValueImpl
         return(double)value;
     }
 
-    char checkedCharValue() throws InvalidTypeException {
-        if ((value > Character.MAX_VALUE) || (value < Character.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to char");
-        } else {
-            return super.checkedCharValue();
-        }
-    }
-
     public String toString() {
         return "" + value;
-    }
-
-    @Override
-    byte typeValueKey() {
-        return JDWP.Tag.BYTE;
     }
 }

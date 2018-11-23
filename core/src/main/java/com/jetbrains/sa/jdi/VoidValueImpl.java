@@ -36,11 +36,10 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.InvalidTypeException;
+import com.jetbrains.sa.jdwp.JDWP;
 import com.sun.jdi.Type;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VoidValue;
-import com.jetbrains.sa.jdwp.JDWP;
 
 public class VoidValueImpl extends ValueImpl implements VoidValue {
 
@@ -62,11 +61,7 @@ public class VoidValueImpl extends ValueImpl implements VoidValue {
     }
 
     public Type type() {
-        return vm.theVoidType();
-    }
-
-    ValueImpl prepareForAssignmentTo(ValueContainer destination) throws InvalidTypeException {
-        throw new InvalidTypeException();
+        return vm.theVoidType;
     }
 
     public String toString() {

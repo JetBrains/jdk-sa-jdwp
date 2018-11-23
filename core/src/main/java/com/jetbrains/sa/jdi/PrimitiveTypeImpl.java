@@ -36,23 +36,71 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.InvalidTypeException;
-import com.sun.jdi.PrimitiveType;
-import com.sun.jdi.PrimitiveValue;
-import com.sun.jdi.VirtualMachine;
+import com.jetbrains.sa.jdwp.JDWP;
+import com.sun.jdi.*;
 
-abstract class PrimitiveTypeImpl extends TypeImpl implements PrimitiveType {
+class PrimitiveTypeImpl extends TypeImpl implements PrimitiveType {
+    private final String signature;
 
-    PrimitiveTypeImpl(VirtualMachine vm) {
-        super(vm);
+    PrimitiveTypeImpl(VirtualMachine vm, String signature, byte tag) {
+        super(vm, tag);
+        this.signature = signature;
     }
 
-    /*
-     * Converts the given primitive value to a value of this type.
-     */
-    abstract PrimitiveValue convert(PrimitiveValue value) throws InvalidTypeException;
+    @Override
+    public String signature() {
+        return signature;
+    }
 
     public String toString() {
         return name();
+    }
+
+    static class Boolean extends PrimitiveTypeImpl implements com.sun.jdi.BooleanType {
+        Boolean(VirtualMachine vm) {
+            super(vm, "Z", JDWP.Tag.BOOLEAN);
+        }
+    }
+
+    static class Byte extends PrimitiveTypeImpl implements com.sun.jdi.ByteType {
+        Byte(VirtualMachine vm) {
+            super(vm, "B", JDWP.Tag.BYTE);
+        }
+    }
+
+    static class Char extends PrimitiveTypeImpl implements com.sun.jdi.CharType {
+        Char(VirtualMachine vm) {
+            super(vm, "C", JDWP.Tag.CHAR);
+        }
+    }
+
+    static class Double extends PrimitiveTypeImpl implements DoubleType {
+        Double(VirtualMachine vm) {
+            super(vm, "D", JDWP.Tag.DOUBLE);
+        }
+    }
+
+    static class Float extends PrimitiveTypeImpl implements FloatType {
+        Float(VirtualMachine vm) {
+            super(vm, "F", JDWP.Tag.FLOAT);
+        }
+    }
+
+    static class Integer extends PrimitiveTypeImpl implements IntegerType {
+        Integer(VirtualMachine vm) {
+            super(vm, "I", JDWP.Tag.INT);
+        }
+    }
+
+    static class Long extends PrimitiveTypeImpl implements LongType {
+        Long(VirtualMachine vm) {
+            super(vm, "J", JDWP.Tag.LONG);
+        }
+    }
+
+    static class Short extends PrimitiveTypeImpl implements ShortType {
+        Short(VirtualMachine vm) {
+            super(vm, "S", JDWP.Tag.SHORT);
+        }
     }
 }

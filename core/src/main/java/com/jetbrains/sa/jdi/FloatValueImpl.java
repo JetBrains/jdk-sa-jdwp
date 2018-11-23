@@ -37,17 +37,12 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.FloatValue;
-import com.sun.jdi.InvalidTypeException;
-import com.sun.jdi.Type;
-import com.sun.jdi.VirtualMachine;
-import com.jetbrains.sa.jdwp.JDWP;
 
-public class FloatValueImpl extends PrimitiveValueImpl
-                            implements FloatValue {
+public class FloatValueImpl extends PrimitiveValueImpl implements FloatValue {
     private float value;
 
-    FloatValueImpl(VirtualMachine aVm,float aValue) {
-        super(aVm);
+    FloatValueImpl(VirtualMachineImpl aVm, float aValue) {
+        super(aVm, aVm.theFloatType);
 
         value = aValue;
     }
@@ -70,10 +65,6 @@ public class FloatValueImpl extends PrimitiveValueImpl
 
     public int compareTo(FloatValue floatVal) {
         return Float.compare(value(), floatVal.value());
-    }
-
-    public Type type() {
-        return vm.theFloatType();
     }
 
     public float value() {
@@ -112,54 +103,7 @@ public class FloatValueImpl extends PrimitiveValueImpl
         return(double)value;
     }
 
-    byte checkedByteValue() throws InvalidTypeException {
-        if ((value > Byte.MAX_VALUE) || (value < Byte.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to byte");
-        } else {
-            return super.checkedByteValue();
-        }
-    }
-
-    char checkedCharValue() throws InvalidTypeException {
-        if ((value > Character.MAX_VALUE) || (value < Character.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to char");
-        } else {
-            return super.checkedCharValue();
-        }
-    }
-
-    short checkedShortValue() throws InvalidTypeException {
-        if ((value > Short.MAX_VALUE) || (value < Short.MIN_VALUE)) {
-            throw new InvalidTypeException("Can't convert " + value + " to short");
-        } else {
-            return super.checkedShortValue();
-        }
-    }
-
-    int checkedIntValue() throws InvalidTypeException {
-        int intValue = (int)value;
-        if (intValue != value) {
-            throw new InvalidTypeException("Can't convert " + value + " to int");
-        } else {
-            return super.checkedIntValue();
-        }
-    }
-
-    long checkedLongValue() throws InvalidTypeException {
-        long longValue = (long)value;
-        if (longValue != value) {
-            throw new InvalidTypeException("Can't convert " + value + " to long");
-        } else {
-            return super.checkedLongValue();
-        }
-    }
-
     public String toString() {
         return "" + value;
-    }
-
-    @Override
-    byte typeValueKey() {
-        return JDWP.Tag.FLOAT;
     }
 }

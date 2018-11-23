@@ -37,8 +37,7 @@
 package com.jetbrains.sa.jdi;
 import com.sun.jdi.*;
 
-public class LocalVariableImpl extends MirrorImpl
-                               implements LocalVariable, ValueContainer
+public class LocalVariableImpl extends MirrorImpl implements LocalVariable
 {
     private final Method method;
     private final int slot;

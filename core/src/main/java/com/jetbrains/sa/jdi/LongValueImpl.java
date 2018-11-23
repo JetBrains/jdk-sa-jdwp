@@ -79,7 +79,7 @@ public class LongValueImpl extends PrimitiveValueImpl implements LongValue {
     }
 
     public boolean booleanValue() {
-        return(value == 0)?false:true;
+        return value != 0;
     }
 
     public byte byteValue() {

@@ -122,7 +122,7 @@ public class ObjectReferenceImpl extends ValueImpl implements ObjectReference {
         // Then get instance field(s)
         size = instanceFields.size();
         for (int ii=0; ii<size; ii++){
-            FieldImpl fieldImpl = (FieldImpl)instanceFields.get(ii);
+            FieldImpl fieldImpl = instanceFields.get(ii);
             map.put(fieldImpl, fieldImpl.getValue(saObject));
         }
 

@@ -72,7 +72,7 @@ public class FloatValueImpl extends PrimitiveValueImpl implements FloatValue {
     }
 
     public boolean booleanValue() {
-        return(value == 0.0)?false:true;
+        return value != 0.0;
     }
 
     public byte byteValue() {

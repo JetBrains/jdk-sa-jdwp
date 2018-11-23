@@ -72,7 +72,7 @@ public class ByteValueImpl extends PrimitiveValueImpl implements ByteValue {
     }
 
     public boolean booleanValue() {
-        return(value == 0)?false:true;
+        return value != 0;
     }
 
     public byte byteValue() {

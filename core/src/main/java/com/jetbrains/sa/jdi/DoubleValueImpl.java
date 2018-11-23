@@ -72,7 +72,7 @@ public class DoubleValueImpl extends PrimitiveValueImpl implements DoubleValue {
     }
 
     public boolean booleanValue() {
-        return(value == 0.0)?false:true;
+        return value != 0.0;
     }
 
     public byte byteValue() {

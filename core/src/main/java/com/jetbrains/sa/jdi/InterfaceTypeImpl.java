@@ -150,7 +150,7 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl
         List<InterfaceType> immediate = new ArrayList<InterfaceType>(superinterfaces());
         Iterator<InterfaceType> iter = immediate.iterator();
         while (iter.hasNext()) {
-            InterfaceType interfaze = (InterfaceType)iter.next();
+            InterfaceType interfaze = iter.next();
             if (list.contains(interfaze)) {
                 iter.remove();
             }

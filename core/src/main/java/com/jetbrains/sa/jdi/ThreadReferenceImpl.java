@@ -147,7 +147,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl
         int state = jvmtiGetThreadState();
         int status = THREAD_STATUS_UNKNOWN;
         // refer to map2jdwpThreadStatus in util.c (back-end)
-        if (! ((state & JVMTI_THREAD_STATE_ALIVE) != 0) ) {
+        if ((state & JVMTI_THREAD_STATE_ALIVE) == 0) {
             if ((state & JVMTI_THREAD_STATE_TERMINATED) != 0) {
                 status = THREAD_STATUS_ZOMBIE;
             } else {

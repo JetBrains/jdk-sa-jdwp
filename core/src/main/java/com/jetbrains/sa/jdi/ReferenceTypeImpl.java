@@ -144,8 +144,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
             // optimize for typical case: refs equal and VMs equal
             if (rf1.equals(rf2)) {
                 // sequenceNumbers are always positive
-                comp = vm.sequenceNumber -
-                 other.virtualMachine().sequenceNumber;
+                comp = vm.sequenceNumber - other.vm.sequenceNumber;
             } else {
                 comp = CompatibilityHelper.INSTANCE.getAddress(rf1).minus(CompatibilityHelper.INSTANCE.getAddress(rf2)) < 0? -1 : 1;
             }

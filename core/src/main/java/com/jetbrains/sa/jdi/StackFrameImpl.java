@@ -45,9 +45,7 @@ import sun.jvm.hotspot.runtime.JavaVFrame;
 import sun.jvm.hotspot.runtime.StackValueCollection;
 import sun.jvm.hotspot.utilities.Assert;
 
-import java.util.Map;
-
-public class StackFrameImpl extends MirrorImpl {
+public class StackFrameImpl {
     /* Once false, frame should not be used.
      * access synchronized on (vm.state())
      */
@@ -57,11 +55,11 @@ public class StackFrameImpl extends MirrorImpl {
     private final JavaVFrame saFrame;
     private int id;
     private final LocationImpl location;
-    private Map<String, LocalVariableImpl> visibleVariables =  null;
     private ObjectReferenceImpl thisObject = null;
+    private final VirtualMachineImpl vm;
 
     StackFrameImpl(VirtualMachineImpl vm, ThreadReferenceImpl thread, JavaVFrame jvf, int id) {
-        super(vm);
+        this.vm = vm;
         this.thread = thread;
         this.saFrame = jvf;
         this.id = id;
@@ -70,7 +68,7 @@ public class StackFrameImpl extends MirrorImpl {
 
         ReferenceTypeImpl rt = vm.referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
 
-        this.location = new LocationImpl(vm, rt, SAMethod, (long)jvf.getBCI());
+        this.location = new LocationImpl(rt, SAMethod, (long)jvf.getBCI());
     }
 
     private void validateStackFrame() {
@@ -140,8 +138,7 @@ public class StackFrameImpl extends MirrorImpl {
         return getSlotValue(saFrame.getLocals(), variableType, slot);
     }
 
-    private ValueImpl getSlotValue(StackValueCollection values,
-                       BasicType variableType, int ss) {
+    private ValueImpl getSlotValue(StackValueCollection values, BasicType variableType, int ss) {
         ValueImpl valueImpl;
         OopHandle handle;
         ObjectHeap heap = vm.saObjectHeap();

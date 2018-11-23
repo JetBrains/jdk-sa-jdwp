@@ -200,8 +200,7 @@ public class ConcreteMethodImpl extends MethodImpl {
                 if ((lineNumber < lowestLine) || (lowestLine == -1)) {
                     lowestLine = lineNumber;
                 }
-                LocationImpl loc =
-                    new LocationImpl(virtualMachine(), this, bci);
+                LocationImpl loc = new LocationImpl(this, bci);
                 loc.addBaseLineInfo(
                     new BaseLineInfo(lineNumber, declaringType));
 
@@ -337,11 +336,8 @@ public class ConcreteMethodImpl extends MethodImpl {
                 int slot = local.getSlot();
                 long codeIndex = local.getStartBCI();
                 int length = local.getLength();
-                LocationImpl scopeStart = new LocationImpl(virtualMachine(),
-                        this, codeIndex);
-                LocationImpl scopeEnd =
-                        new LocationImpl(virtualMachine(), this,
-                                codeIndex + length - 1);
+                LocationImpl scopeStart = new LocationImpl(this, codeIndex);
+                LocationImpl scopeEnd = new LocationImpl( this, codeIndex + length - 1);
                 String signature =
                         saMethod.getConstants().getSymbolAt(local.getDescriptorCPIndex()).asString();
 
@@ -352,7 +348,7 @@ public class ConcreteMethodImpl extends MethodImpl {
                 }
 
                 LocalVariableImpl variable =
-                        new LocalVariableImpl(virtualMachine(), this,
+                        new LocalVariableImpl(this,
                                 slot, scopeStart, scopeEnd,
                                 name, signature, genericSignature);
                 // Add to the variable list

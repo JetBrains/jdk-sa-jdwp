@@ -36,7 +36,7 @@
 
 package com.jetbrains.sa.jdi;
 
-public class LocationImpl extends MirrorImpl {
+public class LocationImpl {
     private final ReferenceTypeImpl declaringType;
     private MethodImpl method;
     private sun.jvm.hotspot.oops.Method methodRef;
@@ -44,10 +44,7 @@ public class LocationImpl extends MirrorImpl {
     private LineInfo baseLineInfo = null;
     private LineInfo otherLineInfo = null;
 
-    LocationImpl(VirtualMachineImpl vm,
-                 MethodImpl method, long codeIndex) {
-        super(vm);
-
+    LocationImpl(MethodImpl method, long codeIndex) {
         this.method = method;
         this.codeIndex = method.isNative()? -1 : codeIndex;
         this.declaringType = method.declaringType();
@@ -58,10 +55,7 @@ public class LocationImpl extends MirrorImpl {
      * can be a performance savings if the method mirror does not yet
      * exist.
      */
-    LocationImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
-                 sun.jvm.hotspot.oops.Method methodRef, long codeIndex) {
-        super(vm);
-
+    LocationImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method methodRef, long codeIndex) {
         this.method = null;
         this.codeIndex = codeIndex;
         this.declaringType = declaringType;
@@ -183,7 +177,7 @@ public class LocationImpl extends MirrorImpl {
     }
 
     public int lineNumber() {
-        return lineNumber(vm.getDefaultStratum());
+        return lineNumber((String)null);
     }
 
     public int lineNumber(String stratumID) {

@@ -41,13 +41,14 @@ package com.jetbrains.sa.jdi;
  * all the methods in this class which involve the SA mirror class
  * have to be implemented in the subclasses.
  */
-abstract public class TypeComponentImpl extends MirrorImpl {
+abstract public class TypeComponentImpl {
 
+    protected final VirtualMachineImpl vm;
     protected final ReferenceTypeImpl declaringType;
     protected String signature;
 
     TypeComponentImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType) {
-        super(vm);
+        this.vm = vm;
         this.declaringType = declaringType;
     }
 

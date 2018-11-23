@@ -305,7 +305,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
         Iterator<Integer> stk = stackDepth.iterator();
         for (OopHandle lockedObject : lockedObjects) {
             Oop obj = heap.newOop(lockedObject);
-            ownedMonitorsInfo.add(new MonitorInfoImpl(vm, vm.objectMirror(obj), this, stk.next()));
+            ownedMonitorsInfo.add(new MonitorInfoImpl(vm.objectMirror(obj), this, stk.next()));
         }
     }
 

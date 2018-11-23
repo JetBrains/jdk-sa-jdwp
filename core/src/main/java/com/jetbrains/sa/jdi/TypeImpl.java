@@ -36,12 +36,12 @@
 
 package com.jetbrains.sa.jdi;
 
-public abstract class TypeImpl extends MirrorImpl
-{
+public abstract class TypeImpl {
+    protected final VirtualMachineImpl vm;
     private final byte tag;
 
     TypeImpl(VirtualMachineImpl aVm, byte tag) {
-        super(aVm);
+        this.vm = aVm;
         this.tag = tag;
     }
 

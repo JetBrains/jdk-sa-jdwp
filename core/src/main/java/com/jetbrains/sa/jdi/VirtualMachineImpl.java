@@ -51,7 +51,7 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.util.*;
 
-public class VirtualMachineImpl extends MirrorImpl {
+public class VirtualMachineImpl {
 
     private HotSpotAgent     saAgent = new HotSpotAgent();
     private VM               saVM;
@@ -186,9 +186,6 @@ public class VirtualMachineImpl extends MirrorImpl {
 
 
     VirtualMachineImpl(VirtualMachineManager mgr, int sequenceNumber) {
-        super(null);  // Can't use super(this)
-        vm = this;
-
         this.sequenceNumber = sequenceNumber;
         this.vmmgr = mgr;
 
@@ -555,10 +552,6 @@ public class VirtualMachineImpl extends MirrorImpl {
         return saVM.getSystemProperty("user.dir");
     }
 
-    public String getDefaultStratum() {
-        return null;
-    }
-
     public String description() {
 //        String version_format = ResourceBundle.getBundle("com.sun.tools.jdi.resources.jdi").getString("version_format");
         String version_format = "Java Debug Interface (Reference Implementation) version {0}.{1} \\n{2}";
@@ -626,7 +619,7 @@ public class VirtualMachineImpl extends MirrorImpl {
 
     // Address value is used as uniqueID by ObjectReferenceImpl
     long getAddressValue(Address address) {
-        return vm.saVM.getDebugger().getAddressValue(address);
+        return saVM.getDebugger().getAddressValue(address);
     }
 
     public synchronized ObjectReferenceImpl objectMirror(long id) {

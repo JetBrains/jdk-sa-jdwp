@@ -36,7 +36,7 @@
 
 package com.jetbrains.sa.jdi;
 
-public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVariableImpl> {
+public class LocalVariableImpl implements Comparable<LocalVariableImpl> {
     private final MethodImpl method;
     private final int slot;
     private final LocationImpl scopeStart;
@@ -45,10 +45,9 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
     private final String signature;
     private final String genericSignature;
 
-    LocalVariableImpl(VirtualMachineImpl vm, MethodImpl method,
+    LocalVariableImpl(MethodImpl method,
                       int slot, LocationImpl scopeStart, LocationImpl scopeEnd,
                       String name, String signature, String genericSignature) {
-        super(vm);
         this.method = method;
         this.slot = slot;
         this.scopeStart = scopeStart;

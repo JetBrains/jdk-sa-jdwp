@@ -86,7 +86,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
     }
 
     public final List<LocationImpl> allLineLocations() throws AbsentInformationException {
-        return allLineLocations(declaringType.stratum(vm.getDefaultStratum()));
+        return allLineLocations(declaringType.stratum(null));
     }
 
     LineInfo codeIndexToLineInfo(SDE.Stratum stratum,

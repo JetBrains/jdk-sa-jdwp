@@ -37,7 +37,6 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.ClassNotPreparedException;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.oops.*;
@@ -54,6 +53,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     protected Klass       saKlass;          // This can be an InstanceKlass or an ArrayKlass
     private int           modifiers = -1;
     private String        signature = null;
+    private String        typeName;
     private SoftReference<SDE> sdeRef = null;
     private SoftReference<List<FieldImpl>> fieldsCache;
     private SoftReference<List<FieldImpl>> allFieldsCache;
@@ -70,13 +70,15 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         saKlass = klass;
     }
 
-    @Override
-    protected String computeName() {
-        Symbol typeNameSymbol = saKlass.getName();
-        if (Assert.ASSERTS_ENABLED) {
-            Assert.that(typeNameSymbol != null, "null type name for a Klass");
+    public String name() {
+        if (typeName == null) {
+            Symbol typeNameSymbol = saKlass.getName();
+            if (Assert.ASSERTS_ENABLED) {
+                Assert.that(typeNameSymbol != null, "null type name for a Klass");
+            }
+            typeName = typeNameSymbol.asString();
         }
-        return typeNameSymbol.asString();
+        return typeName;
     }
 
     MethodImpl getMethodMirror(sun.jvm.hotspot.oops.Method ref) {
@@ -115,9 +117,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
 
     public boolean equals(Object obj) {
         if ((obj instanceof ReferenceTypeImpl)) {
-            ReferenceTypeImpl other = (ReferenceTypeImpl)obj;
-            return (ref().equals(other.ref())) &&
-                (vm.equals(other.virtualMachine()));
+            return ref().equals(((ReferenceTypeImpl)obj).ref());
         } else {
             return false;
         }
@@ -176,32 +176,8 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
       return vm.classLoaderMirror(xx);
     }
 
-    public boolean isPublic() {
-        return((modifiers() & VMModifiers.PUBLIC) != 0);
-    }
-
-    public boolean isProtected() {
-        return((modifiers() & VMModifiers.PROTECTED) != 0);
-    }
-
-    public boolean isPrivate() {
-        return((modifiers() & VMModifiers.PRIVATE) != 0);
-    }
-
-    public boolean isPackagePrivate() {
-        return !isPublic() && !isPrivate() && !isProtected();
-    }
-
     public boolean isAbstract() {
         return((modifiers() & VMModifiers.ABSTRACT) != 0);
-    }
-
-    public boolean isFinal() {
-        return((modifiers() & VMModifiers.FINAL) != 0);
-    }
-
-    public boolean isStatic() {
-        return((modifiers() & VMModifiers.STATIC) != 0);
     }
 
     public boolean isPrepared() {
@@ -212,18 +188,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         if (! isPrepared()) {
             throw new ClassNotPreparedException();
         }
-    }
-
-    public boolean isVerified() {
-        return (saKlass.getClassStatus() & JVMDIClassStatus.VERIFIED) != 0;
-    }
-
-    public boolean isInitialized() {
-        return (saKlass.getClassStatus() & JVMDIClassStatus.INITIALIZED) != 0;
-    }
-
-    public boolean failedToInitialize() {
-        return (saKlass.getClassStatus() & JVMDIClassStatus.ERROR) != 0;
     }
 
     private boolean isThrowableBacktraceField(sun.jvm.hotspot.oops.Field fld) {
@@ -322,77 +286,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         return allFields;
     }
 
-    abstract List<? extends ReferenceTypeImpl> inheritedTypes();
-
-    void addVisibleFields(List<FieldImpl> visibleList, Map<String, FieldImpl> visibleTable, List<String> ambiguousNames) {
-        List<FieldImpl> list = visibleFields();
-        for (Object o : list) {
-            FieldImpl field = (FieldImpl) o;
-            String name = field.name();
-            if (!ambiguousNames.contains(name)) {
-                FieldImpl duplicate = visibleTable.get(name);
-                if (duplicate == null) {
-                    visibleList.add(field);
-                    visibleTable.put(name, field);
-                } else if (!field.equals(duplicate)) {
-                    ambiguousNames.add(name);
-                    visibleTable.remove(name);
-                    visibleList.remove(duplicate);
-                } else {
-                    // identical field from two branches; do nothing
-                }
-            }
-        }
-    }
-
-    public final List<FieldImpl> visibleFields() throws ClassNotPreparedException {
-        checkPrepared();
-        /*
-         * Maintain two different collections of visible fields. The
-         * list maintains a reasonable order for return. The
-         * hash map provides an efficient way to lookup visible fields
-         * by name, important for finding hidden or ambiguous fields.
-         */
-        List<FieldImpl> visibleList = new ArrayList<FieldImpl>();
-        Map<String, FieldImpl>  visibleTable = new HashMap<String, FieldImpl>();
-
-        /* Track fields removed from above collection due to ambiguity */
-        List<String> ambiguousNames = new ArrayList<String>();
-
-        /* Add inherited, visible fields */
-        for (ReferenceTypeImpl inheritedType : inheritedTypes()) {
-            /*
-             * TO DO: Be defensive and check for cyclic interface inheritance
-             */
-            inheritedType.addVisibleFields(visibleList, visibleTable, ambiguousNames);
-        }
-
-        /*
-         * Insert fields from this type, removing any inherited fields they
-         * hide.
-         */
-        List<FieldImpl> retList = new ArrayList<FieldImpl>(fields());
-        for (FieldImpl field : retList) {
-            FieldImpl hidden = visibleTable.get(field.name());
-            if (hidden != null) {
-                visibleList.remove(hidden);
-            }
-        }
-        retList.addAll(visibleList);
-        return retList;
-    }
-
-   public final FieldImpl fieldByName(String fieldName) throws ClassNotPreparedException {
-       // visibleFields calls checkPrepared
-       for (FieldImpl f : visibleFields()) {
-           if (f.name().equals(fieldName)) {
-               return f;
-           }
-       }
-        //throw new NoSuchFieldException("Field '" + fieldName + "' not found in " + name());
-        return null;
-    }
-
     public final MethodImpl methodById(long id) throws ClassNotPreparedException {
         for (MethodImpl method : methods()) {
             if (method.uniqueID() == id) {
@@ -424,115 +317,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         }
         return methods;
     }
-
-    abstract List<MethodImpl> getAllMethods();
-
-    public final List<MethodImpl> allMethods() throws ClassNotPreparedException {
-        List<MethodImpl> allMethods = (allMethodsCache != null)? allMethodsCache.get() : null;
-        if (allMethods == null) {
-            checkPrepared();
-            allMethods = Collections.unmodifiableList(getAllMethods());
-            allMethodsCache = new SoftReference<List<MethodImpl>>(allMethods);
-        }
-        return allMethods;
-    }
-
-    /*
-     * Utility method used by subclasses to build lists of visible
-     * methods.
-     */
-    void addToMethodMap(Map<String, MethodImpl> methodMap, List<MethodImpl> methodList) {
-        for (MethodImpl method : methodList) {
-            methodMap.put(method.name().concat(method.signature()), method);
-        }
-    }
-
-    abstract void addVisibleMethods(Map<String, MethodImpl> methodMap);
-
-    public final List<MethodImpl> visibleMethods() throws ClassNotPreparedException {
-        checkPrepared();
-        /*
-         * Build a collection of all visible methods. The hash
-         * map allows us to do this efficiently by keying on the
-         * concatenation of name and signature.
-         */
-        //System.out.println("jj: RTI: Calling addVisibleMethods for:" + this);
-        Map<String, MethodImpl> map = new HashMap<String, MethodImpl>();
-        addVisibleMethods(map);
-
-        /*
-         * ... but the hash map destroys order. Methods should be
-         * returned in a sensible order, as they are in allMethods().
-         * So, start over with allMethods() and use the hash map
-         * to filter that ordered collection.
-         */
-        //System.out.println("jj: RTI: Calling allMethods for:" + this);
-
-        List<MethodImpl> list = new ArrayList<MethodImpl>(allMethods());
-        //System.out.println("jj: allMethods = " + jjstr(list));
-        //System.out.println("jj: map = " + map.toString());
-        //System.out.println("jj: map = " + jjstr(map.values()));
-        list.retainAll(map.values());
-        //System.out.println("jj: map = " + jjstr(list));
-        //System.exit(0);
-        return list;
-    }
-
-    static Object prev;
-
-    static public String jjstr(Collection cc) {
-        StringBuilder buf = new StringBuilder();
-        buf.append("[");
-        Iterator i = cc.iterator();
-        boolean hasNext = i.hasNext();
-        while (hasNext) {
-            Object o = i.next();
-            if (prev == null) {
-                prev = o;
-            } else {
-                System.out.println("prev == curr?" + prev.equals(o));
-                System.out.println("prev == curr?" + (prev == o));
-            }
-            buf.append(o).append("@").append(o.hashCode());
-            //buf.append( ((Object)o).toString());
-            hasNext = i.hasNext();
-            if (hasNext)
-                buf.append(", ");
-        }
-
-        buf.append("]");
-        return buf.toString();
-    }
-
-    public final List<MethodImpl> methodsByName(String name) throws ClassNotPreparedException {
-        // visibleMethods calls checkPrepared
-        List<MethodImpl> methods = visibleMethods();
-        ArrayList<MethodImpl> retList = new ArrayList<MethodImpl>(methods.size());
-        for (Object method : methods) {
-            MethodImpl candidate = (MethodImpl) method;
-            if (candidate.name().equals(name)) {
-                retList.add(candidate);
-            }
-        }
-        retList.trimToSize();
-        return retList;
-    }
-
-    public final List<MethodImpl> methodsByName(String name, String signature) throws ClassNotPreparedException {
-        // visibleMethods calls checkPrepared
-        List<MethodImpl> methods = visibleMethods();
-        ArrayList<MethodImpl> retList = new ArrayList<MethodImpl>(methods.size());
-        for (Object method : methods) {
-            MethodImpl candidate = (MethodImpl) method;
-            if (candidate.name().equals(name) &&
-                    candidate.signature().equals(signature)) {
-                retList.add(candidate);
-            }
-        }
-        retList.trimToSize();
-        return retList;
-    }
-
 
     List<InterfaceTypeImpl> getInterfaces() {
         if (saKlass instanceof ArrayKlass) {
@@ -631,32 +415,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         return sde.stratum(stratumID);
     }
 
-    public String sourceName() throws AbsentInformationException {
-        return (sourceNames(vm.getDefaultStratum()).get(0));
-    }
-
-    public List<String> sourceNames(String stratumID)
-                                throws AbsentInformationException {
-        SDE.Stratum stratum = stratum(stratumID);
-        if (stratum.isJava()) {
-            List<String> result = new ArrayList<String>(1);
-            result.add(baseSourceName());
-            return result;
-        }
-        return stratum.sourceNames(this);
-    }
-
-    public List<String> sourcePaths(String stratumID)
-                                throws AbsentInformationException {
-        SDE.Stratum stratum = stratum(stratumID);
-        if (stratum.isJava()) {
-            List<String> result = new ArrayList<String>(1);
-            result.add(baseSourceDir() + baseSourceName());
-            return result;
-        }
-        return stratum.sourcePaths(this);
-    }
-
     public String baseSourceName() throws AbsentInformationException {
       if (saKlass instanceof ArrayKlass) {
             throw new AbsentInformationException();
@@ -720,29 +478,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         return sde;
     }
 
-    public List<String> availableStrata() {
-        SDE sde = sourceDebugExtensionInfo();
-        if (sde.isValid()) {
-            return sde.availableStrata();
-        } else {
-            List<String> strata = new ArrayList<String>();
-            strata.add(SDE.BASE_STRATUM_NAME);
-            return strata;
-        }
-    }
-
-    /**
-     * Always returns non-null stratumID
-     */
-    public String defaultStratum() {
-        SDE sdei = sourceDebugExtensionInfo();
-        if (sdei.isValid()) {
-            return sdei.defaultStratumId;
-        } else {
-            return SDE.BASE_STRATUM_NAME;
-        }
-    }
-
     public final int modifiers() {
         if (modifiers == -1) {
             modifiers = getModifiers();
@@ -787,77 +522,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         return (int) saKlass.getClassModifiers();
     }
 
-    public List<LocationImpl> allLineLocations()
-                            throws AbsentInformationException {
-        return allLineLocations(vm.getDefaultStratum(), null);
-    }
-
-    public List<LocationImpl> allLineLocations(String stratumID, String sourceName)
-                            throws AbsentInformationException {
-        checkPrepared();
-        boolean someAbsent = false; // A method that should have info, didn't
-        SDE.Stratum stratum = stratum(stratumID);
-        List<LocationImpl> list = new ArrayList<LocationImpl>();  // location list
-
-        for (MethodImpl method1 : methods()) {
-            MethodImpl method = method1;
-            try {
-                list.addAll(method.allLineLocations(stratum.id(), sourceName));
-            } catch (AbsentInformationException exc) {
-                someAbsent = true;
-            }
-        }
-
-        // If we retrieved no line info, and at least one of the methods
-        // should have had some (as determined by an
-        // AbsentInformationException being thrown) then we rethrow
-        // the AbsentInformationException.
-        if (someAbsent && list.size() == 0) {
-            throw new AbsentInformationException();
-        }
-        return list;
-    }
-
-    public List<LocationImpl> locationsOfLine(int lineNumber)
-                           throws AbsentInformationException {
-        return locationsOfLine(vm.getDefaultStratum(),
-                               null,
-                               lineNumber);
-    }
-
-    public List<LocationImpl> locationsOfLine(String stratumID,
-                                String sourceName,
-                                int lineNumber)
-                           throws AbsentInformationException {
-        checkPrepared();
-        // A method that should have info, didn't
-        boolean someAbsent = false;
-        // A method that should have info, did
-        boolean somePresent = false;
-        List<MethodImpl> methods = methods();
-        SDE.Stratum stratum = stratum(stratumID);
-
-        List<LocationImpl> list = new ArrayList<LocationImpl>();
-
-        for (Object method1 : methods) {
-            MethodImpl method = (MethodImpl) method1;
-            // eliminate native and abstract to eliminate
-            // false positives
-            if (!method.isAbstract() && !method.isNative()) {
-                try {
-                    list.addAll(method.locationsOfLine(stratum.id(), sourceName, lineNumber));
-                    somePresent = true;
-                } catch (AbsentInformationException exc) {
-                    someAbsent = true;
-                }
-            }
-        }
-        if (someAbsent && !somePresent) {
-            throw new AbsentInformationException();
-        }
-        return list;
-    }
-
     public Klass ref() {
         return saKlass;
     }
@@ -872,19 +536,10 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         return type.isAssignableTo(this);
     }
 
-    boolean isAssignableFrom(ObjectReferenceImpl object) {
-        return object == null || isAssignableFrom(object.referenceType());
-    }
-
     int indexOf(MethodImpl method) {
         // Make sure they're all here - the obsolete method
         // won't be found and so will have index -1
         return methods().indexOf(method);
-    }
-
-    int indexOf(FieldImpl field) {
-        // Make sure they're all here
-        return fields().indexOf(field);
     }
 
     private static boolean isPrimitiveArray(String signature) {
@@ -903,33 +558,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
             isPA = (c != 'L');
         }
         return isPA;
-    }
-
-    TypeImpl findType(String signature) throws ClassNotLoadedException {
-        TypeImpl type;
-        if (signature.length() == 1) {
-            /* OTI FIX: Must be a primitive type or the void type */
-            char sig = signature.charAt(0);
-            if (sig == 'V') {
-                type = vm.theVoidType;
-            } else {
-                type = vm.primitiveTypeMirror(sig);
-            }
-        } else {
-            // Must be a reference type.
-            ClassLoaderReferenceImpl loader =
-                    classLoader();
-            if ((loader == null) ||
-                (isPrimitiveArray(signature)) //Work around 4450091
-                ) {
-                // Caller wants type of boot class field
-                type = vm.findBootType(signature);
-            } else {
-                // Caller wants type of non-boot class field
-                type = loader.findType(signature);
-            }
-        }
-        return type;
     }
 
     String loaderString() {

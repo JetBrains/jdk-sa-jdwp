@@ -36,81 +36,23 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.LongValue;
+import com.jetbrains.sa.jdwp.JDWP;
+import com.jetbrains.sa.jdwp.PacketStream;
 
 public class LongValueImpl extends PrimitiveValueImpl {
     private long value;
 
-    LongValueImpl(VirtualMachineImpl aVm,long aValue) {
-        super(aVm, aVm.theLongType);
-
+    LongValueImpl(long aValue) {
+        super(JDWP.Tag.LONG);
         value = aValue;
-    }
-
-    public boolean equals(Object obj) {
-        if ((obj instanceof LongValue)) {
-            return (value == ((LongValue)obj).value()) &&
-                   super.equals(obj);
-        } else {
-            return false;
-        }
-    }
-
-    public int hashCode() {
-        /*
-         * TO DO: Better hash code
-         */
-        return intValue();
-    }
-
-    public int compareTo(LongValue longVal) {
-        long other = longVal.value();
-        if (value() < other) {
-            return -1;
-        } else if (value() == other) {
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-
-    public long value() {
-        return value;
-    }
-
-    public boolean booleanValue() {
-        return value != 0;
-    }
-
-    public byte byteValue() {
-        return(byte)value;
-    }
-
-    public char charValue() {
-        return(char)value;
-    }
-
-    public short shortValue() {
-        return(short)value;
-    }
-
-    public int intValue() {
-        return(int)value;
-    }
-
-    public long longValue() {
-        return value;
-    }
-
-    public float floatValue() {
-        return(float)value;
-    }
-
-    public double doubleValue() {
-        return(double)value;
     }
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    public void writeUntaggedValue(PacketStream packetStream) {
+        packetStream.writeLong(value);
     }
 }

@@ -40,7 +40,6 @@ package com.jetbrains.sa.jdwp;
 
 import com.jetbrains.sa.jdi.*;
 import com.sun.jdi.InternalException;
-import com.sun.jdi.InvalidTypeException;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -90,7 +89,7 @@ public class PacketStream {
 //        }
 //    }
 
-    void writeBoolean(boolean data) {
+    public void writeBoolean(boolean data) {
         if (data) {
             dataStream.write(1);
         } else {
@@ -98,28 +97,28 @@ public class PacketStream {
         }
     }
 
-    void writeByte(byte data) {
+    public void writeByte(byte data) {
         dataStream.write(data);
     }
 
-    void writeChar(char data) {
+    public void writeChar(char data) {
         dataStream.write((byte) ((data >>> 8) & 0xFF));
         dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
-    void writeShort(short data) {
+    public void writeShort(short data) {
         dataStream.write((byte) ((data >>> 8) & 0xFF));
         dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
-    void writeInt(int data) {
+    public void writeInt(int data) {
         dataStream.write((byte) ((data >>> 24) & 0xFF));
         dataStream.write((byte) ((data >>> 16) & 0xFF));
         dataStream.write((byte) ((data >>> 8) & 0xFF));
         dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
-    void writeLong(long data) {
+    public void writeLong(long data) {
         dataStream.write((byte) ((data >>> 56) & 0xFF));
         dataStream.write((byte) ((data >>> 48) & 0xFF));
         dataStream.write((byte) ((data >>> 40) & 0xFF));
@@ -131,11 +130,11 @@ public class PacketStream {
         dataStream.write((byte) ((data >>> 0) & 0xFF));
     }
 
-    void writeFloat(float data) {
+    public void writeFloat(float data) {
         writeInt(Float.floatToIntBits(data));
     }
 
-    void writeDouble(double data) {
+    public void writeDouble(double data) {
         writeLong(Double.doubleToLongBits(data));
     }
 
@@ -159,7 +158,7 @@ public class PacketStream {
         writeObjectRef(0);
     }
 
-    void writeObjectRef(long data) {
+    public void writeObjectRef(long data) {
         writeID(vm.sizeofObjectRef, data);
     }
 
@@ -232,83 +231,15 @@ public class PacketStream {
     }
 
     void writeUntaggedValue(ValueImpl val) {
-        try {
-            writeUntaggedValueChecked(val);
-        } catch (InvalidTypeException exc) {  // should never happen
-            throw new RuntimeException(
-                    "Internal error: Invalid Tag/Type pair");
-        }
+        writeUntaggedValueChecked(val);
     }
 
-    void writeUntaggedValueChecked(ValueImpl val) throws InvalidTypeException {
-        byte tag = ValueImpl.typeValueKey(val);
-        if (isObjectTag(tag)) {
-            if (val == null) {
-                writeNullObjectRef();
-            } else {
-                if (!(val instanceof ObjectReferenceImpl)) {
-                    throw new InvalidTypeException();
-                }
-                writeObjectRef(((ObjectReferenceImpl)val).uniqueID());
-            }
-        } else {
-            switch (tag) {
-                case JDWP.Tag.BYTE:
-                    if(!(val instanceof ByteValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeByte(((PrimitiveValueImpl)val).byteValue());
-                    break;
-
-                case JDWP.Tag.CHAR:
-                    if(!(val instanceof CharValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeChar(((PrimitiveValueImpl)val).charValue());
-                    break;
-
-                case JDWP.Tag.FLOAT:
-                    if(!(val instanceof FloatValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeFloat(((PrimitiveValueImpl)val).floatValue());
-                    break;
-
-                case JDWP.Tag.DOUBLE:
-                    if(!(val instanceof DoubleValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeDouble(((PrimitiveValueImpl)val).doubleValue());
-                    break;
-
-                case JDWP.Tag.INT:
-                    if(!(val instanceof IntegerValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeInt(((PrimitiveValueImpl)val).intValue());
-                    break;
-
-                case JDWP.Tag.LONG:
-                    if(!(val instanceof LongValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeLong(((PrimitiveValueImpl)val).longValue());
-                    break;
-
-                case JDWP.Tag.SHORT:
-                    if(!(val instanceof ShortValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeShort(((PrimitiveValueImpl)val).shortValue());
-                    break;
-
-                case JDWP.Tag.BOOLEAN:
-                    if(!(val instanceof BooleanValueImpl))
-                        throw new InvalidTypeException();
-
-                    writeBoolean(((PrimitiveValueImpl)val).booleanValue());
-                    break;
-            }
+    void writeUntaggedValueChecked(ValueImpl val) {
+        if (val == null) {
+            writeNullObjectRef();
+        }
+        else {
+            val.writeUntaggedValue(this);
         }
     }
 

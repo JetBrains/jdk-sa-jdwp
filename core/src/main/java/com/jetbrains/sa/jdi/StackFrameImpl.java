@@ -36,7 +36,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.InvalidStackFrameException;
 import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.Array;
@@ -46,7 +45,7 @@ import sun.jvm.hotspot.runtime.JavaVFrame;
 import sun.jvm.hotspot.runtime.StackValueCollection;
 import sun.jvm.hotspot.utilities.Assert;
 
-import java.util.*;
+import java.util.Map;
 
 public class StackFrameImpl extends MirrorImpl {
     /* Once false, frame should not be used.
@@ -80,10 +79,6 @@ public class StackFrameImpl extends MirrorImpl {
         }
     }
 
-    JavaVFrame getJavaVFrame() {
-        return saFrame;
-    }
-
 //    public long uniqueID() {
 //        return vm.saVM().getDebugger().getAddressValue(saFrame.getFrame().getID());
 //    }
@@ -99,15 +94,6 @@ public class StackFrameImpl extends MirrorImpl {
     public LocationImpl location() {
         validateStackFrame();
         return location;
-    }
-
-    /**
-     * Return the thread holding the frame.
-     * Need not be synchronized since it cannot be provably stale.
-     */
-    public ThreadReferenceImpl thread() {
-        validateStackFrame();
-        return thread;
     }
 
     public boolean equals(Object obj) {
@@ -149,98 +135,6 @@ public class StackFrameImpl extends MirrorImpl {
         return saFrame.getLocals().size();
     }
 
-    /**
-     * Build the visible variable map.
-     * Need not be synchronized since it cannot be provably stale.
-     */
-    private void createVisibleVariables() throws AbsentInformationException {
-        if (visibleVariables == null) {
-            List<LocalVariableImpl> allVariables = location.method().variables();
-            Map<String, LocalVariableImpl> map = new HashMap<String, LocalVariableImpl>(allVariables.size());
-
-            for (LocalVariableImpl allVariable : allVariables) {
-                LocalVariableImpl variable = allVariable;
-                String name = variable.name();
-                if (variable.isVisible(this)) {
-                    LocalVariableImpl existing = map.get(name);
-                    if ((existing == null) || variable.hides(existing)) {
-                        map.put(name, variable);
-                    }
-                }
-            }
-            visibleVariables = map;
-        }
-    }
-
-    /**
-     * Return the list of visible variable in the frame.
-     * Need not be synchronized since it cannot be provably stale.
-     */
-    public List<LocalVariableImpl> visibleVariables() throws AbsentInformationException {
-        validateStackFrame();
-        createVisibleVariables();
-        List<LocalVariableImpl> mapAsList = new ArrayList<LocalVariableImpl>(visibleVariables.values());
-        Collections.sort(mapAsList);
-        return mapAsList;
-    }
-
-    /**
-     * Return a particular variable in the frame.
-     * Need not be synchronized since it cannot be provably stale.
-     */
-    public LocalVariableImpl visibleVariableByName(String name) throws AbsentInformationException  {
-        validateStackFrame();
-        createVisibleVariables();
-        return visibleVariables.get(name);
-    }
-
-    public ValueImpl getValue(LocalVariableImpl variable) {
-        return getValues(Collections.singletonList(variable)).get(variable);
-    }
-
-    public Map<LocalVariableImpl, ValueImpl> getValues(List<? extends LocalVariableImpl> variables) {
-        validateStackFrame();
-        StackValueCollection values = saFrame.getLocals();
-
-        int count = variables.size();
-        Map<LocalVariableImpl, ValueImpl> map = new HashMap<LocalVariableImpl, ValueImpl>(count);
-        for (Object variable1 : variables) {
-            LocalVariableImpl variable = (LocalVariableImpl) variable1;
-            if (!variable.isVisible(this)) {
-                throw new IllegalArgumentException(variable.name() + " is not valid at this frame location");
-            }
-            ValueImpl valueImpl;
-            int ss = variable.slot();
-            char c = variable.signature().charAt(0);
-            BasicType variableType = BasicType.charToBasicType(c);
-            valueImpl = getSlotValue(values, variableType, ss);
-            map.put(variable, valueImpl);
-        }
-        return map;
-    }
-
-    public List<ValueImpl> getArgumentValues() {
-        validateStackFrame();
-        StackValueCollection values = saFrame.getLocals();
-        MethodImpl mmm = location.method();
-        if (mmm.isNative())
-            return null;
-        List<String> argSigs = mmm.argumentSignatures();
-        int count = argSigs.size();
-        List<ValueImpl> res = new ArrayList<ValueImpl>(0);
-
-        int slot = mmm.isStatic()? 0 : 1;
-        for (int ii = 0; ii < count; ++slot, ++ii) {
-            char sigChar = argSigs.get(ii).charAt(0);
-            BasicType variableType = BasicType.charToBasicType(sigChar);
-            res.add(getSlotValue(values, variableType, slot));
-            if (sigChar == 'J' || sigChar == 'D') {
-                slot++;
-            }
-        }
-        return res;
-    }
-
     public ValueImpl getSlotValue(int slot, byte sigbyte) {
         BasicType variableType = BasicType.charToBasicType((char) sigbyte);
         return getSlotValue(saFrame.getLocals(), variableType, slot);
@@ -278,7 +172,7 @@ public class StackFrameImpl extends MirrorImpl {
             handle = null;
             valueImpl = vm.arrayMirror((Array)heap.newOop(handle));
           } else if (variableType == BasicType.T_VOID) {
-            valueImpl = new VoidValueImpl(vm);
+            valueImpl = vm.voidVal;
           } else {
             throw new RuntimeException("Should not read here");
           }
@@ -308,18 +202,13 @@ public class StackFrameImpl extends MirrorImpl {
             handle = values.oopHandleAt(ss);
             valueImpl = vm.arrayMirror((Array)heap.newOop(handle));
           } else if (variableType == BasicType.T_VOID) {
-            valueImpl = new VoidValueImpl(vm);
+            valueImpl = new VoidValueImpl();
           } else {
             throw new RuntimeException("Should not read here");
           }
         }
 
         return valueImpl;
-    }
-
-    public void setValue(LocalVariableImpl variableIntf, ValueImpl valueIntf) {
-
-        vm.throwNotReadOnlyException("StackFrame.setValue()");
     }
 
     public String toString() {

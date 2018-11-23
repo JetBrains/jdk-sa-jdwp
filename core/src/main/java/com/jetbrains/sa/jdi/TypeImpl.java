@@ -36,43 +36,13 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.Type;
-
 public abstract class TypeImpl extends MirrorImpl
 {
     private final byte tag;
-    private String typeName;
 
     TypeImpl(VirtualMachineImpl aVm, byte tag) {
         super(aVm);
         this.tag = tag;
-    }
-
-    public abstract String signature();
-
-    public String name() {
-        if (typeName == null) {
-            typeName = computeName();
-        }
-        return typeName;
-    }
-
-    protected String computeName() {
-        return new JNITypeParser(signature()).typeName();
-    }
-
-    public boolean equals(Object obj) {
-        if ((obj instanceof Type)) {
-            Type other = (Type)obj;
-            return signature().equals(other.signature()) &&
-                   super.equals(obj);
-        } else {
-            return false;
-        }
-    }
-
-    public int hashCode() {
-        return signature().hashCode();
     }
 
     public final byte tag() {

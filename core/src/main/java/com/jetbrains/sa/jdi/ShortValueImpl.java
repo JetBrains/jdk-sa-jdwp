@@ -36,74 +36,23 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ShortValue;
+import com.jetbrains.sa.jdwp.JDWP;
+import com.jetbrains.sa.jdwp.PacketStream;
 
 public class ShortValueImpl extends PrimitiveValueImpl {
     private short value;
 
-    ShortValueImpl(VirtualMachineImpl aVm, short aValue) {
-        super(aVm, aVm.theShortType);
-
+    ShortValueImpl(short aValue) {
+        super(JDWP.Tag.SHORT);
         value = aValue;
-    }
-
-    public boolean equals(Object obj) {
-        if ((obj instanceof ShortValue)) {
-            return (value == ((ShortValue)obj).value()) &&
-                   super.equals(obj);
-        } else {
-            return false;
-        }
-    }
-
-    public int hashCode() {
-        /*
-         * TO DO: Better hash code
-         */
-        return intValue();
-    }
-
-    public int compareTo(ShortValue shortVal) {
-        return value() - shortVal.value();
-    }
-
-    public short value() {
-        return value;
-    }
-
-    public boolean booleanValue() {
-        return value != 0;
-    }
-
-    public byte byteValue() {
-        return(byte)value;
-    }
-
-    public char charValue() {
-        return(char)value;
-    }
-
-    public short shortValue() {
-        return value;
-    }
-
-    public int intValue() {
-        return(int)value;
-    }
-
-    public long longValue() {
-        return(long)value;
-    }
-
-    public float floatValue() {
-        return(float)value;
-    }
-
-    public double doubleValue() {
-        return(double)value;
     }
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    public void writeUntaggedValue(PacketStream packetStream) {
+        packetStream.writeShort(value);
     }
 }

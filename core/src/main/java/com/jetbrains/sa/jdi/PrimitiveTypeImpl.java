@@ -39,67 +39,55 @@ package com.jetbrains.sa.jdi;
 import com.jetbrains.sa.jdwp.JDWP;
 
 class PrimitiveTypeImpl extends TypeImpl {
-    private final String signature;
-
-    PrimitiveTypeImpl(VirtualMachineImpl vm, String signature, byte tag) {
+    PrimitiveTypeImpl(VirtualMachineImpl vm, byte tag) {
         super(vm, tag);
-        this.signature = signature;
-    }
-
-    @Override
-    public String signature() {
-        return signature;
-    }
-
-    public String toString() {
-        return name();
     }
 
     static class Boolean extends PrimitiveTypeImpl {
         Boolean(VirtualMachineImpl vm) {
-            super(vm, "Z", JDWP.Tag.BOOLEAN);
+            super(vm, JDWP.Tag.BOOLEAN);
         }
     }
 
     static class Byte extends PrimitiveTypeImpl {
         Byte(VirtualMachineImpl vm) {
-            super(vm, "B", JDWP.Tag.BYTE);
+            super(vm, JDWP.Tag.BYTE);
         }
     }
 
     static class Char extends PrimitiveTypeImpl {
         Char(VirtualMachineImpl vm) {
-            super(vm, "C", JDWP.Tag.CHAR);
+            super(vm, JDWP.Tag.CHAR);
         }
     }
 
     static class Double extends PrimitiveTypeImpl {
         Double(VirtualMachineImpl vm) {
-            super(vm, "D", JDWP.Tag.DOUBLE);
+            super(vm, JDWP.Tag.DOUBLE);
         }
     }
 
     static class Float extends PrimitiveTypeImpl {
         Float(VirtualMachineImpl vm) {
-            super(vm, "F", JDWP.Tag.FLOAT);
+            super(vm, JDWP.Tag.FLOAT);
         }
     }
 
     static class Integer extends PrimitiveTypeImpl {
         Integer(VirtualMachineImpl vm) {
-            super(vm, "I", JDWP.Tag.INT);
+            super(vm, JDWP.Tag.INT);
         }
     }
 
     static class Long extends PrimitiveTypeImpl {
         Long(VirtualMachineImpl vm) {
-            super(vm, "J", JDWP.Tag.LONG);
+            super(vm, JDWP.Tag.LONG);
         }
     }
 
     static class Short extends PrimitiveTypeImpl {
         Short(VirtualMachineImpl vm) {
-            super(vm, "S", JDWP.Tag.SHORT);
+            super(vm, JDWP.Tag.SHORT);
         }
     }
 }

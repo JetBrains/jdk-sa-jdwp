@@ -36,29 +36,18 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ClassNotLoadedException;
 import sun.jvm.hotspot.oops.Array;
 import sun.jvm.hotspot.oops.FieldIdentifier;
 import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.oops.Symbol;
 
 public class FieldImpl extends TypeComponentImpl {
-    private JNITypeParser signatureParser;
     private sun.jvm.hotspot.oops.Field saField;
 
-    FieldImpl( VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
-               sun.jvm.hotspot.oops.Field saField) {
+    FieldImpl( VirtualMachineImpl vm, ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Field saField) {
         super(vm, declaringType);
         this.saField = saField;
-        getParser();
-    }
-
-    private void getParser() {
-        if (signatureParser == null) {
-            Symbol sig1 = saField.getSignature();
-            signature = sig1.asString();
-            signatureParser = new JNITypeParser(signature);
-        }
+        signature = saField.getSignature().asString();
     }
 
     sun.jvm.hotspot.oops.Field ref() {
@@ -126,42 +115,9 @@ public class FieldImpl extends TypeComponentImpl {
         }
     }
 
-    public boolean isTransient() {
-        return saField.isTransient();
-    }
-
-    public boolean isVolatile() {
-        return saField.isVolatile();
-    }
-
-    public boolean isEnumConstant() {
-        return saField.isEnumConstant();
-    }
-
-    public TypeImpl type() throws ClassNotLoadedException {
-        // So, we do it just like JDI does by searching the enclosing type.
-        return findType(signature());
-    }
-
-    public String typeName() { //fixme jjh: jpda version creates redundant JNITypeParsers
-        getParser();
-        return signatureParser.typeName();
-    }
-
     public String genericSignature() {
         Symbol genSig = saField.getGenericSignature();
         return (genSig != null)? genSig.asString() : null;
-    }
-
-    // From interface Comparable
-    public int compareTo(FieldImpl field) {
-        ReferenceTypeImpl declaringType = declaringType();
-        int rc = declaringType.compareTo(field.declaringType());
-        if (rc == 0) {
-            rc = declaringType.indexOf(this) -
-                declaringType.indexOf(field);
-        }
-        return rc;
     }
 
     // from interface Mirror
@@ -179,42 +135,11 @@ public class FieldImpl extends TypeComponentImpl {
         return saField.getAccessFlagsObj().getStandardFlags();
     }
 
-    public boolean isPackagePrivate() {
-        return saField.isPackagePrivate();
-    }
-
-    public boolean isPrivate() {
-        return saField.isPrivate();
-    }
-
-    public boolean isProtected() {
-        return saField.isProtected();
-    }
-
-    public boolean isPublic() {
-        return saField.isPublic();
-    }
-
     public boolean isStatic() {
         return saField.isStatic();
-    }
-
-    public boolean isFinal() {
-        return saField.isFinal();
-    }
-
-    public boolean isSynthetic() {
-        return saField.isSynthetic();
     }
 
     public int hashCode() {
         return saField.hashCode();
     }
-
-
-    private TypeImpl findType(String signature) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = declaringType();
-        return enclosing.findType(signature);
-    }
-
 }

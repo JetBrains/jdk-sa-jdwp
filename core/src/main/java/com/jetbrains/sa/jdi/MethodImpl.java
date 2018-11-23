@@ -37,19 +37,15 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.AbsentInformationException;
-import com.sun.jdi.ClassNotLoadedException;
 import sun.jvm.hotspot.oops.Symbol;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class MethodImpl extends TypeComponentImpl {
-    private JNITypeParser signatureParser;
     protected sun.jvm.hotspot.oops.Method saMethod;
 
     public abstract int argSlotCount();
-    abstract List<LocationImpl> allLineLocations(SDE.Stratum stratum, String sourceName) throws AbsentInformationException;
-    abstract List<LocationImpl> locationsOfLine(SDE.Stratum stratum, String sourceName, int lineNumber) throws AbsentInformationException;
+    abstract List<LocationImpl> allLineLocations(SDE.Stratum stratum) throws AbsentInformationException;
 
     static MethodImpl createMethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
                                        sun.jvm.hotspot.oops.Method saMethod) {
@@ -61,20 +57,10 @@ public abstract class MethodImpl extends TypeComponentImpl {
         }
     }
 
-    MethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
-               sun.jvm.hotspot.oops.Method saMethod ) {
+    MethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod ) {
         super(vm, declaringType);
         this.saMethod = saMethod;
-        getParser();
-    }
-
-    private JNITypeParser getParser() {
-        if (signatureParser == null) {
-            Symbol sig1 = saMethod.getSignature();
-            signature = sig1.asString();
-            signatureParser = new JNITypeParser(signature);
-        }
-        return signatureParser;
+        signature = saMethod.getSignature().asString();
     }
 
     // Object ref() {
@@ -91,96 +77,16 @@ public abstract class MethodImpl extends TypeComponentImpl {
         return (genSig != null)? genSig.asString() : null;
     }
 
-    public String returnTypeName() {
-        return getParser().typeName();
-    }
-
-    public TypeImpl returnType() throws ClassNotLoadedException {
-        return findType(getParser().signature());
-    }
-
-    private TypeImpl findType(String signature) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = declaringType();
-        return enclosing.findType(signature);
-    }
-
-    public List<String> argumentTypeNames() {
-        return getParser().argumentTypeNames();
-    }
-
-    List<String> argumentSignatures() {
-        return getParser().argumentSignatures();
-    }
-
-    TypeImpl argumentType(int index) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = declaringType();
-        String signature = argumentSignatures().get(index);
-        return enclosing.findType(signature);
-    }
-
-    public List<TypeImpl> argumentTypes() throws ClassNotLoadedException {
-        int size = argumentSignatures().size();
-        ArrayList<TypeImpl> types = new ArrayList<TypeImpl>(size);
-        for (int i = 0; i < size; i++) {
-            TypeImpl type = argumentType(i);
-            types.add(type);
-        }
-        return types;
-    }
-
-    public boolean isAbstract() {
-        return saMethod.isAbstract();
-    }
-
-    public boolean isBridge() {
-        return saMethod.isBridge();
-    }
-
-    public boolean isSynchronized() {
-        return saMethod.isSynchronized();
-    }
-
     public boolean isNative() {
         return saMethod.isNative();
-    }
-
-    public boolean isVarArgs() {
-        return saMethod.isVarArgs();
-    }
-
-    public boolean isConstructor() {
-        return saMethod.isConstructor();
-    }
-
-    public boolean isStaticInitializer() {
-        return saMethod.isStaticInitializer();
     }
 
     public boolean isObsolete() {
         return saMethod.isObsolete();
     }
 
-    public final List<LocationImpl> allLineLocations()
-                           throws AbsentInformationException {
-        return allLineLocations(vm.getDefaultStratum(), null);
-    }
-
-    public List<LocationImpl> allLineLocations(String stratumID,
-                                 String sourceName)
-                           throws AbsentInformationException {
-        return allLineLocations(declaringType.stratum(stratumID), sourceName);
-    }
-
-    public final List<LocationImpl> locationsOfLine(int lineNumber)
-                           throws AbsentInformationException {
-        return locationsOfLine(vm.getDefaultStratum(), null, lineNumber);
-    }
-
-    public List<LocationImpl> locationsOfLine(String stratumID,
-                                String sourceName,
-                                int lineNumber)
-                           throws AbsentInformationException {
-        return locationsOfLine(declaringType.stratum(stratumID), sourceName, lineNumber);
+    public final List<LocationImpl> allLineLocations() throws AbsentInformationException {
+        return allLineLocations(declaringType.stratum(vm.getDefaultStratum()));
     }
 
     LineInfo codeIndexToLineInfo(SDE.Stratum stratum,
@@ -216,21 +122,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
 
     // from interface Mirror
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(declaringType().name());
-        sb.append(".");
-        sb.append(name());
-        sb.append("(");
-        boolean first = true;
-        for (Object o : argumentTypeNames()) {
-            if (!first) {
-                sb.append(", ");
-            }
-            sb.append((String) o);
-            first = false;
-        }
-        sb.append(")");
-        return sb.toString();
+        return declaringType().name() + "." + name() + signature;
     }
 
     public String name() {
@@ -242,32 +134,8 @@ public abstract class MethodImpl extends TypeComponentImpl {
         return saMethod.getAccessFlagsObj().getStandardFlags();
     }
 
-    public boolean isPackagePrivate() {
-        return saMethod.isPackagePrivate();
-    }
-
-    public boolean isPrivate() {
-        return saMethod.isPrivate();
-    }
-
-    public boolean isProtected() {
-        return saMethod.isProtected();
-    }
-
-    public boolean isPublic() {
-        return saMethod.isPublic();
-    }
-
     public boolean isStatic() {
         return saMethod.isStatic();
-    }
-
-    public boolean isSynthetic() {
-        return saMethod.isSynthetic();
-    }
-
-    public boolean isFinal() {
-        return saMethod.isFinal();
     }
 
     public int hashCode() {

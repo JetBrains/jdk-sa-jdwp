@@ -36,74 +36,23 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.FloatValue;
+import com.jetbrains.sa.jdwp.JDWP;
+import com.jetbrains.sa.jdwp.PacketStream;
 
 public class FloatValueImpl extends PrimitiveValueImpl {
     private float value;
 
-    FloatValueImpl(VirtualMachineImpl aVm, float aValue) {
-        super(aVm, aVm.theFloatType);
-
+    FloatValueImpl(float aValue) {
+        super(JDWP.Tag.FLOAT);
         value = aValue;
-    }
-
-    public boolean equals(Object obj) {
-        if ((obj instanceof FloatValue)) {
-            return (value == ((FloatValue)obj).value()) &&
-                   super.equals(obj);
-        } else {
-            return false;
-        }
-    }
-
-    public int hashCode() {
-        /*
-         * TO DO: Better hash code
-         */
-        return intValue();
-    }
-
-    public int compareTo(FloatValue floatVal) {
-        return Float.compare(value(), floatVal.value());
-    }
-
-    public float value() {
-        return value;
-    }
-
-    public boolean booleanValue() {
-        return value != 0.0;
-    }
-
-    public byte byteValue() {
-        return(byte)value;
-    }
-
-    public char charValue() {
-        return(char)value;
-    }
-
-    public short shortValue() {
-        return(short)value;
-    }
-
-    public int intValue() {
-        return(int)value;
-    }
-
-    public long longValue() {
-        return(long)value;
-    }
-
-    public float floatValue() {
-        return value;
-    }
-
-    public double doubleValue() {
-        return(double)value;
     }
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    public void writeUntaggedValue(PacketStream packetStream) {
+        packetStream.writeFloat(value);
     }
 }

@@ -37,33 +37,18 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.ArrayReference;
 import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.InterfaceType;
 import com.sun.jdi.PrimitiveType;
 import sun.jvm.hotspot.oops.*;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class ArrayTypeImpl extends ReferenceTypeImpl {
     ArrayTypeImpl(VirtualMachineImpl aVm, ArrayKlass aRef) {
         super(aVm, aRef, JDWP.TypeTag.ARRAY);
     }
 
-    public ArrayReference newInstance(int length) {
-        vm.throwNotReadOnlyException("ArrayType.newInstance(int)");
-        return null;
-    }
-
     public String componentSignature() {
         return signature().substring(1); // Just skip the leading '['
-    }
-
-    public String componentTypeName() {
-        JNITypeParser parser = new JNITypeParser(componentSignature());
-        return parser.typeName();
     }
 
     public ClassLoaderReferenceImpl classLoader() {
@@ -82,18 +67,6 @@ public class ArrayTypeImpl extends ReferenceTypeImpl {
                 return vm.classLoaderMirror(xx);
             }
         }
-    }
-
-    void addVisibleMethods(Map<String, MethodImpl> methodMap) {
-        // arrays don't have methods
-    }
-
-    List<MethodImpl> getAllMethods() {
-        // arrays don't have methods
-        // JLS says arrays have methods of java.lang.Object. But
-        // JVMDI-JDI returns zero size list. We do the same here
-        // for consistency.
-        return Collections.emptyList();
     }
 
     /*
@@ -163,14 +136,6 @@ public class ArrayTypeImpl extends ReferenceTypeImpl {
         }
     }
 
-    List<ReferenceTypeImpl> inheritedTypes() {
-        // arrays are derived from java.lang.Object and
-        // B[] is derived from A[] if B is derived from A.
-        // But JVMDI-JDI returns zero sized list and we do the
-        // same for consistency.
-        return Collections.emptyList();
-    }
-
     int getModifiers() {
         /*
          * For object arrays, the return values for Interface
@@ -207,13 +172,6 @@ public class ArrayTypeImpl extends ReferenceTypeImpl {
      * which have undefined results for arrays.
      */
     public boolean isPrepared() { return true; }
-    public boolean isVerified() { return true; }
-    public boolean isInitialized() { return true; }
-    public boolean failedToInitialize() { return false; }
     public boolean isAbstract() { return false; }
 
-    /*
-     * Defined always to be true for arrays
-     */
-    public boolean isFinal() { return true; }
 }

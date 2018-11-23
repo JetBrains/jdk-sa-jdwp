@@ -36,8 +36,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.AbsentInformationException;
-
 public class LocationImpl extends MirrorImpl {
     private final ReferenceTypeImpl declaringType;
     private MethodImpl method;
@@ -182,34 +180,6 @@ public class LocationImpl extends MirrorImpl {
 
     void addBaseLineInfo(LineInfo lineInfo) {
         baseLineInfo = lineInfo;
-    }
-
-    public String sourceName() throws AbsentInformationException {
-        return sourceName(vm.getDefaultStratum());
-    }
-
-    public String sourceName(String stratumID)
-                               throws AbsentInformationException {
-        return sourceName(declaringType.stratum(stratumID));
-    }
-
-    String sourceName(SDE.Stratum stratum)
-                               throws AbsentInformationException {
-        return getLineInfo(stratum).liSourceName();
-    }
-
-    public String sourcePath() throws AbsentInformationException {
-        return sourcePath(vm.getDefaultStratum());
-    }
-
-    public String sourcePath(String stratumID)
-                               throws AbsentInformationException {
-        return sourcePath(declaringType.stratum(stratumID));
-    }
-
-    String sourcePath(SDE.Stratum stratum)
-                               throws AbsentInformationException {
-        return getLineInfo(stratum).liSourcePath();
     }
 
     public int lineNumber() {

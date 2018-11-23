@@ -37,14 +37,9 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
+import com.jetbrains.sa.jdwp.PacketStream;
 
-public abstract class ValueImpl extends MirrorImpl {
-    ValueImpl(VirtualMachineImpl aVm) {
-        super(aVm);
-    }
-
-    // type() is in the subclasses
-
+public abstract class ValueImpl {
     public static byte typeValueKey(ValueImpl val) {
         if (val == null) {
             return JDWP.Tag.OBJECT;
@@ -54,4 +49,6 @@ public abstract class ValueImpl extends MirrorImpl {
     }
 
     abstract byte typeValueKey();
+
+    public abstract void writeUntaggedValue(PacketStream packetStream);
 }

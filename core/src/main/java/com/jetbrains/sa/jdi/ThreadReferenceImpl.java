@@ -62,16 +62,6 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
     private List<MonitorInfoImpl> ownedMonitorsInfo; // List<MonitorInfo>
     private ObjectReferenceImpl currentContendingMonitor;
 
-    ThreadReferenceImpl(VirtualMachineImpl aVm, JavaThread aRef) {
-        // We are given a JavaThread and save it in our myJavaThread field.
-        // But, our parent class is an ObjectReferenceImpl so we need an Oop
-        // for it.  JavaThread is a wrapper around a Thread Oop so we get
-        // that Oop and give it to our super.
-        // We can get it back again by calling ref().
-        super(aVm, aRef.getThreadObj());
-        myJavaThread = aRef;
-    }
-
     ThreadReferenceImpl(VirtualMachineImpl vm, Instance oRef) {
         // Instance must be of type java.lang.Thread
         super(vm, oRef);
@@ -99,26 +89,10 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
         return OopUtilities.threadOopGetName(ref());
     }
 
-    public void suspend() {
-        vm.throwNotReadOnlyException("ThreadReference.suspend()");
-    }
-
-    public void resume() {
-        vm.throwNotReadOnlyException("ThreadReference.resume()");
-    }
-
     public int suspendCount() {
         // all threads are "suspended" when we attach to process or core.
         // we interpret this as one suspend.
         return 1;
-    }
-
-    public void stop(ObjectReferenceImpl throwable) {
-        vm.throwNotReadOnlyException("ThreadReference.stop()");
-    }
-
-    public void interrupt() {
-        vm.throwNotReadOnlyException("ThreadReference.interrupt()");
     }
 
     // refer to jvmtiEnv::GetThreadState
@@ -166,20 +140,6 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
         return status;
     }
 
-    public boolean isSuspended() { //fixme jjh
-        // If we want to support doing this for a VM which was being
-        // debugged, then we need to fix this.
-        // In the meantime, we will say all threads are suspended,
-        // otherwise, some things won't work, like the jdb 'up' cmd.
-        return true;
-    }
-
-    public boolean isAtBreakpoint() { //fixme jjh
-        // If we want to support doing this for a VM which was being
-        // debugged, then we need to fix this.
-        return false;
-    }
-
     public ThreadGroupReferenceImpl threadGroup() {
         return vm.threadGroupMirror((Instance)OopUtilities.threadOopGetThreadGroup(ref()));
     }
@@ -195,14 +155,6 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
 
     public StackFrameImpl frame(int index) throws IncompatibleThreadStateException  {
         return privateFrames(index, 1).get(0);
-    }
-
-    public List<StackFrameImpl> frames(int start, int length)
-                              throws IncompatibleThreadStateException  {
-        if (length < 0) {
-            throw new IndexOutOfBoundsException("length must be greater than or equal to zero");
-        }
-        return privateFrames(start, length);
     }
 
     /**
@@ -389,15 +341,6 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
            Oop obj = vm.saObjectHeap().newOop(handle);
            return vm.objectMirror(obj);
         }
-    }
-
-
-    public void popFrames(StackFrameImpl frame) {
-        vm.throwNotReadOnlyException("ThreadReference.popFrames()");
-    }
-
-    public void forceEarlyReturn(ValueImpl returnValue) {
-        vm.throwNotReadOnlyException("ThreadReference.forceEarlyReturn()");
     }
 
     public String toString() {

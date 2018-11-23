@@ -37,28 +37,14 @@
 package com.jetbrains.sa.jdi;
 
 public abstract class PrimitiveValueImpl extends ValueImpl {
-    private final PrimitiveTypeImpl type;
+    private final byte typeTag;
 
-    PrimitiveValueImpl(VirtualMachineImpl aVm, PrimitiveTypeImpl type) {
-        super(aVm);
-        this.type = type;
-    }
-
-    public final TypeImpl type() {
-        return type;
+    PrimitiveValueImpl(byte typeTag) {
+        this.typeTag = typeTag;
     }
 
     @Override
     final byte typeValueKey() {
-        return type.tag();
+        return typeTag;
     }
-
-    abstract public boolean booleanValue();
-    abstract public byte byteValue();
-    abstract public char charValue();
-    abstract public short shortValue();
-    abstract public int intValue();
-    abstract public long longValue();
-    abstract public float floatValue();
-    abstract public double doubleValue();
 }

@@ -47,68 +47,17 @@ import java.util.List;
  * Private to MethodImpl.
  */
 public class NonConcreteMethodImpl extends MethodImpl {
-
-    private LocationImpl location = null;
-
     NonConcreteMethodImpl(VirtualMachineImpl vm,
                           ReferenceTypeImpl declaringType,
                           sun.jvm.hotspot.oops.Method saMethod) {
         super(vm, declaringType, saMethod);
     }
 
-    public LocationImpl location() {
-        if (isAbstract()) {
-            return null;
-        }
-        if (location == null) {
-            location = new LocationImpl(vm, this, -1);
-        }
-        return location;
-    }
-
-    public List<LocationImpl> allLineLocations(String stratumID,
-                                 String sourceName) {
+    public List<LocationImpl> allLineLocations(SDE.Stratum stratum) {
         return Collections.emptyList();
-    }
-
-    public List<LocationImpl> allLineLocations(SDE.Stratum stratum,
-                                               String sourceName) {
-        return Collections.emptyList();
-    }
-
-    public List<LocationImpl> locationsOfLine(String stratumID,
-                                String sourceName,
-                                int lineNumber) {
-        return Collections.emptyList();
-    }
-
-    public List<LocationImpl> locationsOfLine(SDE.Stratum stratum,
-                                String sourceName,
-                                int lineNumber) {
-        return Collections.emptyList();
-    }
-
-    public LocationImpl locationOfCodeIndex(long codeIndex) {
-        return null;
-    }
-
-    LineInfo codeIndexToLineInfo(SDE.Stratum stratum, long codeIndex) {
-        if (stratum.isJava()) {
-            return new BaseLineInfo(-1, declaringType);
-        } else {
-            return new StratumLineInfo(stratum.id(), -1, null, null);
-        }
     }
 
     public List<LocalVariableImpl> variables() throws AbsentInformationException {
-        throw new AbsentInformationException();
-    }
-
-    public List<LocalVariableImpl> variablesByName(String name) throws AbsentInformationException {
-        throw new AbsentInformationException();
-    }
-
-    public List<LocalVariableImpl> arguments() throws AbsentInformationException {
         throw new AbsentInformationException();
     }
 

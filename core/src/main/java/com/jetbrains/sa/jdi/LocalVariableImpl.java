@@ -36,8 +36,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ClassNotLoadedException;
-
 public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVariableImpl> {
     private final MethodImpl method;
     private final int slot;
@@ -79,34 +77,15 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
     }
 
     public int compareTo(LocalVariableImpl localVar) {
-        LocalVariableImpl other = localVar;
-        int rc = method.compareTo(other.method);
+        int rc = method.compareTo(localVar.method);
         if (rc == 0) {
-            rc = slot() - other.slot();
+            rc = slot() - localVar.slot();
         }
         return rc;
     }
 
     public String name() {
         return name;
-    }
-
-    /**
-     * @return a text representation of the declared type
-     * of this variable.
-     */
-    public String typeName() {
-        JNITypeParser parser = new JNITypeParser(signature);
-        return parser.typeName();
-    }
-
-    public TypeImpl type() throws ClassNotLoadedException {
-        return findType(signature());
-    }
-
-    public TypeImpl findType(String signature) throws ClassNotLoadedException {
-        ReferenceTypeImpl enclosing = method.declaringType();
-        return enclosing.findType(signature);
     }
 
     public String signature() {
@@ -117,60 +96,8 @@ public class LocalVariableImpl extends MirrorImpl implements Comparable<LocalVar
         return genericSignature;
     }
 
-    public boolean isVisible(StackFrameImpl frame) {
-        //validateMirror(frame);
-        MethodImpl frameMethod = frame.location().method();
-
-        if (!frameMethod.equals(method)) {
-            throw new IllegalArgumentException(
-                       "frame method different than variable's method");
-        }
-
-        // this is here to cover the possibility that we will
-        // allow LocalVariables for native methods.  If we do
-        // so we will have to re-examinine this.
-        if (frameMethod.isNative()) {
-            return false;
-        }
-
-        return ((scopeStart.compareTo(frame.location()) <= 0)
-             && (scopeEnd.compareTo(frame.location()) >= 0));
-    }
-
-    public boolean isArgument() {
-//        try {
-            MethodImpl method = scopeStart.method();
-            return (slot < method.argSlotCount());
-//        } catch (AbsentInformationException e) {
-//             If this variable object exists, there shouldn't be absent info
-//            throw (InternalException) new InternalException().initCause(e);
-//        }
-    }
-
     public int slot() {
         return slot;
-    }
-
-    /*
-     * Compilers/VMs can have byte code ranges for variables of the
-     * same names that overlap. This is because the byte code ranges
-     * aren't necessarily scopes; they may have more to do with the
-     * lifetime of the variable's slot, depending on implementation.
-     *
-     * This method determines whether this variable hides an
-     * identically named variable; ie, their byte code ranges overlap
-     * this one starts after the given one. If it returns true this
-     * variable should be preferred when looking for a single variable
-     * with its name when both variables are visible.
-     */
-    boolean hides(LocalVariableImpl other) {
-        LocalVariableImpl otherImpl = other;
-        if (!method.equals(otherImpl.method) ||
-            !name.equals(otherImpl.name)) {
-            return false;
-        } else {
-            return (scopeStart.compareTo(otherImpl.scopeStart) > 0);
-        }
     }
 
     public String toString() {

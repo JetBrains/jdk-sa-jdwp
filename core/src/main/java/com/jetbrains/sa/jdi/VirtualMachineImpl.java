@@ -36,10 +36,7 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.VirtualMachineManager;
-import com.sun.jdi.event.EventQueue;
-import com.sun.jdi.request.EventRequestManager;
 import sun.jvm.hotspot.HotSpotAgent;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
@@ -90,9 +87,7 @@ public class VirtualMachineImpl extends MirrorImpl {
     final PrimitiveTypeImpl theFloatType;
     final PrimitiveTypeImpl theDoubleType;
 
-    final VoidTypeImpl theVoidType;
-
-    private final VoidValueImpl voidVal;
+    final VoidValueImpl voidVal;
 
     private final Map<Klass, ReferenceTypeImpl> typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
@@ -122,12 +117,6 @@ public class VirtualMachineImpl extends MirrorImpl {
     final String javaLangObject = "java/lang/Object";
     final String javaLangCloneable = "java/lang/Cloneable";
     final String javaIoSerializable = "java/io/Serializable";
-
-    // symbol used in ClassTypeImpl.isEnum check
-    final String javaLangEnum = "java/lang/Enum";
-
-    // name of the current default stratum
-    private String defaultStratum;
 
     private void init() {
         saVM = VM.getVM();
@@ -175,9 +164,10 @@ public class VirtualMachineImpl extends MirrorImpl {
         return myvm;
     }
 
+    @SuppressWarnings("unused")
     static public VirtualMachineImpl createVirtualMachineForServer(VirtualMachineManager mgr,
-                                                                String server,
-                                                                int sequenceNumber)
+                                                                   String server,
+                                                                   int sequenceNumber)
         throws Exception {
         if (Assert.ASSERTS_ENABLED) {
             Assert.that(server != null, "SA VirtualMachineImpl: DebugServer = null is not yet implemented");
@@ -218,28 +208,7 @@ public class VirtualMachineImpl extends MirrorImpl {
         theFloatType = new PrimitiveTypeImpl.Float(this);
         theDoubleType = new PrimitiveTypeImpl.Double(this);
 
-        theVoidType = new VoidTypeImpl(this);
-        voidVal = new VoidValueImpl(this);
-    }
-
-    // we reflectively use newly spec'ed class because our ALT_BOOTDIR
-    // is 1.4.2 and not 1.5.
-    private static Class vmCannotBeModifiedExceptionClass = null;
-    void throwNotReadOnlyException(String operation) {
-        RuntimeException re;
-        if (vmCannotBeModifiedExceptionClass == null) {
-            try {
-                vmCannotBeModifiedExceptionClass = Class.forName("com.sun.jdi.VMCannotBeModifiedException");
-            } catch (ClassNotFoundException cnfe) {
-                vmCannotBeModifiedExceptionClass = UnsupportedOperationException.class;
-            }
-        }
-        try {
-            re = (RuntimeException) vmCannotBeModifiedExceptionClass.newInstance();
-        } catch (Exception exp) {
-            re = new RuntimeException(exp.getMessage());
-        }
-        throw re;
+        voidVal = new VoidValueImpl();
     }
 
     public boolean equals(Object obj) {
@@ -251,16 +220,6 @@ public class VirtualMachineImpl extends MirrorImpl {
     public int hashCode() {
         // big recursion if we don't have this. See MirrorImpl.hashCode
         return System.identityHashCode(this);
-    }
-
-    public List<ReferenceTypeImpl> classesByName(String className) {
-        String signature = JNITypeParser.typeNameToSignature(className);
-        List<ReferenceTypeImpl> list;
-        if (!retrievedAllTypes) {
-            retrieveAllClasses();
-        }
-        list = findReferenceTypes(signature);
-        return Collections.unmodifiableList(list);
     }
 
     public List<ReferenceTypeImpl> allClasses() {
@@ -371,14 +330,6 @@ public class VirtualMachineImpl extends MirrorImpl {
         return Collections.unmodifiableList(getAllThreads());
     }
 
-    public void suspend() {
-        throwNotReadOnlyException("VirtualMachineImpl.suspend()");
-    }
-
-    public void resume() {
-        throwNotReadOnlyException("VirtualMachineImpl.resume()");
-    }
-
     public List<ThreadGroupReferenceImpl> topLevelThreadGroups() { //fixme jjh
         // The doc for ThreadGroup says that The top-level thread group
         // is the only thread group whose parent is null.  This means there is
@@ -389,9 +340,7 @@ public class VirtualMachineImpl extends MirrorImpl {
         if (topLevelGroups == null) {
             topLevelGroups = new ArrayList<ThreadGroupReferenceImpl>(1);
             for (ThreadReferenceImpl threadReference : getAllThreads()) {
-                ThreadReferenceImpl myThread = threadReference;
-                ThreadGroupReferenceImpl myGroup = myThread.threadGroup();
-                ThreadGroupReferenceImpl myParent = myGroup.parent();
+                ThreadGroupReferenceImpl myGroup = threadReference.threadGroup();
                 if (myGroup.parent() == null) {
                     topLevelGroups.add(myGroup);
                     break;
@@ -401,74 +350,41 @@ public class VirtualMachineImpl extends MirrorImpl {
         return  Collections.unmodifiableList(topLevelGroups);
     }
 
-    public EventQueue eventQueue() {
-        throwNotReadOnlyException("VirtualMachine.eventQueue()");
-        return null;
-    }
-
-    public EventRequestManager eventRequestManager() {
-        throwNotReadOnlyException("VirtualMachineImpl.eventRequestManager()");
-        return null;
-    }
-
     public BooleanValueImpl mirrorOf(boolean value) {
-        return new BooleanValueImpl(this,value);
+        return new BooleanValueImpl(value);
     }
 
     public ByteValueImpl mirrorOf(byte value) {
-        return new ByteValueImpl(this,value);
+        return new ByteValueImpl(value);
     }
 
     public CharValueImpl mirrorOf(char value) {
-        return new CharValueImpl(this,value);
+        return new CharValueImpl(value);
     }
 
     public ShortValueImpl mirrorOf(short value) {
-        return new ShortValueImpl(this,value);
+        return new ShortValueImpl(value);
     }
 
     public IntegerValueImpl mirrorOf(int value) {
-        return new IntegerValueImpl(this,value);
+        return new IntegerValueImpl(value);
     }
 
     public LongValueImpl mirrorOf(long value) {
-        return new LongValueImpl(this,value);
+        return new LongValueImpl(value);
     }
 
     public FloatValueImpl mirrorOf(float value) {
-        return new FloatValueImpl(this,value);
+        return new FloatValueImpl(value);
     }
 
     public DoubleValueImpl mirrorOf(double value) {
-        return new DoubleValueImpl(this,value);
-    }
-
-    public StringReferenceImpl mirrorOf(String value) {
-        throwNotReadOnlyException("VirtualMachinestop.mirrorOf(String)");
-        return null;
-    }
-
-    public VoidValueImpl mirrorOfVoid() {
-        return voidVal;
-    }
-
-
-    public Process process() {
-        throwNotReadOnlyException("VirtualMachine.process");
-        return null;
+        return new DoubleValueImpl(value);
     }
 
     public void dispose() {
         saAgent.detach();
 //        notifyDispose();
-    }
-
-    public void exit(int exitCode) {
-        throwNotReadOnlyException("VirtualMachine.exit(int)");
-    }
-
-    public boolean canBeModified() {
-        return false;
     }
 
     public boolean canWatchFieldModification() {
@@ -498,12 +414,6 @@ public class VirtualMachineImpl extends MirrorImpl {
 
     public boolean canGetMonitorInfo() {
         return false;
-    }
-
-    // because this SA works only with 1.5 and update releases
-    // this should always succeed unlike JVMDI/JDI.
-    public boolean canGet1_5LanguageFeatures() {
-        return true;
     }
 
     public boolean canUseInstanceFilters() {
@@ -552,11 +462,6 @@ public class VirtualMachineImpl extends MirrorImpl {
     // new method since 1.6
     public boolean canGetClassFileVersion() {
         return true;
-    }
-
-    // new method since 1.6.
-    public boolean canGetMethodReturnValues() {
-        return false;
     }
 
     // new method since 1.6
@@ -650,12 +555,8 @@ public class VirtualMachineImpl extends MirrorImpl {
         return saVM.getSystemProperty("user.dir");
     }
 
-    public void setDefaultStratum(String stratum) {
-        defaultStratum = stratum;
-    }
-
     public String getDefaultStratum() {
-        return defaultStratum;
+        return null;
     }
 
     public String description() {
@@ -691,107 +592,6 @@ public class VirtualMachineImpl extends MirrorImpl {
 
     public String toString() {
         return name();
-    }
-
-    public void setDebugTraceMode(int traceFlags) {
-        // spec. says output is implementation dependent
-        // and trace mode may be ignored. we ignore it :-)
-    }
-
-    // heap walking API
-
-    // capability check
-    public boolean canWalkHeap() {
-        return true;
-    }
-
-    // return a list of all objects in heap
-    public List<ObjectReferenceImpl> allObjects() {
-        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
-        saObjectHeap.iterate(
-                new DefaultHeapVisitor() {
-                    public boolean doObj(Oop oop) {
-                        objects.add(objectMirror(oop));
-                        return false;
-                    }
-                });
-        return objects;
-    }
-
-    // equivalent to objectsByType(type, true)
-    public List<ObjectReferenceImpl> objectsByType(ReferenceTypeImpl type) {
-        return objectsByType(type, true);
-    }
-
-    // returns objects of type exactly equal to given type
-    private List<ObjectReferenceImpl> objectsByExactType(ReferenceTypeImpl type) {
-        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
-        final Klass givenKls = type.ref();
-        saObjectHeap.iterate(new DefaultHeapVisitor() {
-            public boolean doObj(Oop oop) {
-                if (givenKls.equals(oop.getKlass())) {
-                    objects.add(objectMirror(oop));
-                }
-                return false;
-            }
-        });
-        return objects;
-    }
-
-    // returns objects of given type as well as it's subtypes
-    private List<ObjectReferenceImpl> objectsBySubType(ReferenceTypeImpl type) {
-        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
-        final ReferenceTypeImpl givenType = type;
-        saObjectHeap.iterate(new DefaultHeapVisitor() {
-            public boolean doObj(Oop oop) {
-                ReferenceTypeImpl curType = referenceType(oop.getKlass());
-                if (curType.isAssignableTo(givenType)) {
-                    objects.add(objectMirror(oop));
-                }
-                return false;
-            }
-        });
-        return objects;
-    }
-
-    // includeSubtypes - do you want to include subclass/subtype instances of given
-    // ReferenceType or do we want objects of exact type only?
-    public List<ObjectReferenceImpl> objectsByType(ReferenceTypeImpl type, boolean includeSubtypes) {
-        Klass kls = type.ref();
-        if (kls instanceof InstanceKlass) {
-            InstanceKlass ik = (InstanceKlass) kls;
-            // if the Klass is final or if there are no subklasses loaded yet
-            if (ik.getAccessFlagsObj().isFinal() || ik.getSubklassKlass() == null) {
-                includeSubtypes = false;
-            }
-        } else {
-            // no subtypes for primitive array types
-            ArrayTypeImpl arrayType = (ArrayTypeImpl) type;
-            try {
-                TypeImpl componentType = arrayType.componentType();
-                if (componentType instanceof PrimitiveTypeImpl) {
-                    includeSubtypes = false;
-                }
-            } catch (ClassNotLoadedException cnle) {
-                // ignore. component type not yet loaded
-            }
-        }
-
-        if (includeSubtypes) {
-            return objectsBySubType(type);
-        } else {
-            return objectsByExactType(type);
-        }
-    }
-
-    TypeImpl findBootType(String signature) throws ClassNotLoadedException {
-        for (ReferenceTypeImpl type : allClasses()) {
-            if ((type.classLoader() == null) && (type.signature().equals(signature))) {
-                return type;
-            }
-        }
-        JNITypeParser parser = new JNITypeParser(signature);
-        throw new ClassNotLoadedException(parser.typeName(), "Type " + parser.typeName() + " not loaded");
     }
 
     PrimitiveTypeImpl primitiveTypeMirror(char tag) {

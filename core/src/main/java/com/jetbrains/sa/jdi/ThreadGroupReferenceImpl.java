@@ -50,10 +50,6 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
         super(aVm, oRef);
     }
 
-    protected String description() {
-        return "ThreadGroupReference " + uniqueID();
-    }
-
     public String name() {
         return OopUtilities.threadGroupOopGetName(ref());
     }
@@ -61,14 +57,6 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
     public ThreadGroupReferenceImpl parent() {
         return vm.threadGroupMirror(
                (Instance)OopUtilities.threadGroupOopGetParent(ref()));
-    }
-
-    public void suspend() {
-        vm.throwNotReadOnlyException("ThreadGroupReference.suspend()");
-    }
-
-    public void resume() {
-        vm.throwNotReadOnlyException("ThreadGroupReference.resume()");
     }
 
     public List<ThreadReferenceImpl> threads() {

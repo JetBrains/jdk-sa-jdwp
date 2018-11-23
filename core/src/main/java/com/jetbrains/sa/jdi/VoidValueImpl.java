@@ -37,32 +37,20 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.VoidValue;
+import com.jetbrains.sa.jdwp.PacketStream;
 
 public class VoidValueImpl extends ValueImpl {
-
-    VoidValueImpl(VirtualMachineImpl aVm) {
-        super(aVm);
-    }
-
     @Override
     byte typeValueKey() {
         return JDWP.Tag.VOID;
     }
 
-    public boolean equals(Object obj) {
-        return (obj instanceof VoidValue) && super.equals(obj);
-    }
-
-    public int hashCode() {
-        return type().hashCode();
-    }
-
-    public TypeImpl type() {
-        return vm.theVoidType;
-    }
-
     public String toString() {
         return "<void value>";
+    }
+
+    @Override
+    public void writeUntaggedValue(PacketStream packetStream) {
+        throw new IllegalStateException("Can not write void value");
     }
 }

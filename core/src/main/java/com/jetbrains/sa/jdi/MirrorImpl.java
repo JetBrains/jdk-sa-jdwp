@@ -46,17 +46,4 @@ abstract class MirrorImpl {
     public VirtualMachineImpl virtualMachine() {
         return vm;
     }
-
-    public boolean equals(Object obj) {
-        if ((obj instanceof MirrorImpl)) {
-            MirrorImpl other = (MirrorImpl)obj;
-            return vm.equals(other.virtualMachine());
-        } else {
-            return false;
-        }
-    }
-
-    public int hashCode() {
-        return vm.hashCode();
-    }
 }

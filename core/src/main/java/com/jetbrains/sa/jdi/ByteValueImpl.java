@@ -36,74 +36,23 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.sun.jdi.ByteValue;
+import com.jetbrains.sa.jdwp.JDWP;
+import com.jetbrains.sa.jdwp.PacketStream;
 
 public class ByteValueImpl extends PrimitiveValueImpl {
     private byte value;
 
-    ByteValueImpl(VirtualMachineImpl aVm, byte aValue) {
-        super(aVm, aVm.theByteType);
-
+    ByteValueImpl(byte aValue) {
+        super(JDWP.Tag.BYTE);
         value = aValue;
-    }
-
-    public boolean equals(Object obj) {
-        if ((obj instanceof ByteValue)) {
-            return (value == ((ByteValue)obj).value())
-                   && super.equals(obj);
-        } else {
-            return false;
-        }
-    }
-
-    public int hashCode() {
-        /*
-         * TO DO: Better hash code
-         */
-        return intValue();
-    }
-
-    public int compareTo(ByteValue byteVal) {
-        return value() - byteVal.value();
-    }
-
-    public byte value() {
-        return value;
-    }
-
-    public boolean booleanValue() {
-        return value != 0;
-    }
-
-    public byte byteValue() {
-        return value;
-    }
-
-    public char charValue() {
-        return(char)value;
-    }
-
-    public short shortValue() {
-        return(short)value;
-    }
-
-    public int intValue() {
-        return(int)value;
-    }
-
-    public long longValue() {
-        return(long)value;
-    }
-
-    public float floatValue() {
-        return(float)value;
-    }
-
-    public double doubleValue() {
-        return(double)value;
     }
 
     public String toString() {
         return "" + value;
+    }
+
+    @Override
+    public void writeUntaggedValue(PacketStream packetStream) {
+        packetStream.writeByte(value);
     }
 }

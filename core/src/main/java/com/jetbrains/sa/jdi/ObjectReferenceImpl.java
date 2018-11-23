@@ -37,6 +37,7 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
+import com.jetbrains.sa.jdwp.PacketStream;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.DefaultHeapVisitor;
@@ -52,6 +53,7 @@ import sun.jvm.hotspot.utilities.Assert;
 import java.util.*;
 
 public class ObjectReferenceImpl extends ValueImpl {
+    protected final VirtualMachineImpl vm;
     private Oop  saObject;
     private long myID;
     private boolean monitorInfoCached = false;
@@ -65,7 +67,7 @@ public class ObjectReferenceImpl extends ValueImpl {
     }
 
     ObjectReferenceImpl(VirtualMachineImpl aVm, Oop oRef) {
-        super(aVm);
+        vm = aVm;
         saObject = oRef;
         myID = nextID();
     }
@@ -126,29 +128,6 @@ public class ObjectReferenceImpl extends ValueImpl {
         }
 
         return map;
-    }
-
-    public void setValue(FieldImpl field, ValueImpl value) {
-        vm.throwNotReadOnlyException("ObjectReference.setValue(...)");
-    }
-
-    public ValueImpl invokeMethod(ThreadReferenceImpl threadIntf, MethodImpl methodIntf,
-                              List<? extends ValueImpl> arguments, int options) {
-        vm.throwNotReadOnlyException("ObjectReference.invokeMethod(...)");
-        return null;
-    }
-
-    public void disableCollection() {
-        vm.throwNotReadOnlyException("ObjectReference.disableCollection()");
-    }
-
-    public void enableCollection() {
-        vm.throwNotReadOnlyException("ObjectReference.enableCollection()");
-    }
-
-    public boolean isCollected() {
-        vm.throwNotReadOnlyException("ObjectReference.isCollected()");
-        return false;
     }
 
     public long uniqueID() {
@@ -361,5 +340,10 @@ public class ObjectReferenceImpl extends ValueImpl {
     @Override
     byte typeValueKey() {
         return JDWP.Tag.OBJECT;
+    }
+
+    @Override
+    public void writeUntaggedValue(PacketStream packetStream) {
+        packetStream.writeObjectRef(uniqueID());
     }
 }

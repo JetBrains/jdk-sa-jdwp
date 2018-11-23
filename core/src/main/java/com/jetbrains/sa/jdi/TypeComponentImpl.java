@@ -61,11 +61,6 @@ abstract public class TypeComponentImpl extends MirrorImpl {
 
     abstract public String name();
     abstract public int modifiers();
-    abstract public boolean isPackagePrivate();
-    abstract public boolean isPrivate();
-    abstract public boolean isProtected();
-    abstract public boolean isPublic();
     abstract public boolean isStatic();
-    abstract public boolean isFinal();
     abstract public int hashCode();
 }

@@ -66,10 +66,6 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl {
         return getValues(index, 1).get(0);
     }
 
-    public List<ValueImpl> getValues() {
-        return getValues(0, -1);
-    }
-
     /**
      * Validate that the range to set/get is valid.
      * length of -1 (meaning rest of array) has been converted
@@ -149,20 +145,8 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl {
         return vals;
     }
 
-    public void setValue(int index, ValueImpl value) {
-        vm.throwNotReadOnlyException("ArrayReference.setValue(...)");
-    }
-
-    public void setValues(List<? extends ValueImpl> values) {
-        setValues(0, values, 0, -1);
-    }
-
-    public void setValues(int index, List<? extends ValueImpl> values, int srcIndex, int length) {
-        vm.throwNotReadOnlyException("ArrayReference.setValue(...)");
-    }
-
     public String toString() {
-        return "instance of " + arrayType().componentTypeName() + "[" + length() + "] (id=" + uniqueID() + ")";
+        return "instance of " + arrayType().componentSignature() + "[" + length() + "] (id=" + uniqueID() + ")";
     }
 
     @Override

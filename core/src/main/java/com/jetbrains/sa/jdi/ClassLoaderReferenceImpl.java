@@ -37,36 +37,17 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
-import com.sun.jdi.ClassNotLoadedException;
 import sun.jvm.hotspot.oops.Instance;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ClassLoaderReferenceImpl extends ObjectReferenceImpl {
      // because we work on process snapshot or core we can
      // cache visibleClasses & definedClasses always (i.e., no suspension)
      private List<ReferenceTypeImpl> visibleClassesCache;
-     private List<ReferenceTypeImpl> definedClassesCache;
 
      ClassLoaderReferenceImpl(VirtualMachineImpl aVm, Instance oRef) {
          super(aVm, oRef);
-     }
-
-     protected String description() {
-         return "ClassLoaderReference " + uniqueID();
-     }
-
-     public List<ReferenceTypeImpl> definedClasses() {
-         if (definedClassesCache == null) {
-             definedClassesCache = new ArrayList<ReferenceTypeImpl>();
-             for (ReferenceTypeImpl type : vm.allClasses()) {
-                 if (equals(type.classLoader())) {  /* thanks OTI */
-                     definedClassesCache.add(type);
-                 }
-             }
-         }
-         return definedClassesCache;
      }
 
      public List<ReferenceTypeImpl> visibleClasses() {
@@ -74,16 +55,6 @@ public class ClassLoaderReferenceImpl extends ObjectReferenceImpl {
              visibleClassesCache = CompatibilityHelper.INSTANCE.visibleClasses(ref(), vm);
          }
          return visibleClassesCache;
-     }
-
-     TypeImpl findType(String signature) throws ClassNotLoadedException {
-         for (ReferenceTypeImpl type : visibleClasses()) {
-             if (type.signature().equals(signature)) {
-                 return type;
-             }
-         }
-         JNITypeParser parser = new JNITypeParser(signature);
-         throw new ClassNotLoadedException(parser.typeName(), "Class " + parser.typeName() + " not loaded");
      }
 
     @Override

@@ -79,7 +79,6 @@ public class ConcreteMethodImpl extends MethodImpl {
     private SoftReference<List<LocalVariableImpl>> variablesRef = null;
     private int firstIndex = -1;
     private int lastIndex = -1;
-    private LocationImpl location;
     private SoftReference<byte[]> bytecodesRef = null;
 
     ConcreteMethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod ) {
@@ -105,14 +104,11 @@ public class ConcreteMethodImpl extends MethodImpl {
         int lowestLine = -1;
         int highestLine = -1;
         SDE.LineStratum lastLineStratum = null;
-        SDE.Stratum baseStratum =
-            declaringType.stratum(SDE.BASE_STRATUM_NAME);
+        SDE.Stratum baseStratum = declaringType.stratum(SDE.BASE_STRATUM_NAME);
         for (Object lineLocation : getBaseLocations().lineLocations) {
             LocationImpl loc = (LocationImpl) lineLocation;
             int baseLineNumber = loc.lineNumber(baseStratum);
-            SDE.LineStratum lineStratum =
-                    stratum.lineStratum(declaringType,
-                            baseLineNumber);
+            SDE.LineStratum lineStratum = stratum.lineStratum(declaringType, baseLineNumber);
 
             if (lineStratum == null) {
                 // location not mapped in this stratum
@@ -122,8 +118,7 @@ public class ConcreteMethodImpl extends MethodImpl {
             int lineNumber = lineStratum.lineNumber();
 
             // remove unmapped and dup lines
-            if ((lineNumber != -1) &&
-                    (!lineStratum.equals(lastLineStratum))) {
+            if ((lineNumber != -1) && (!lineStratum.equals(lastLineStratum))) {
                 lastLineStratum = lineStratum;
                 // Remember the largest/smallest line number
                 if (lineNumber > highestLine) {
@@ -169,10 +164,6 @@ public class ConcreteMethodImpl extends MethodImpl {
         byte[] codeBuf = bytecodes();
         firstIndex = 0;
         lastIndex = codeBuf.length - 1;
-        // This is odd; what is the Location of a Method?
-        // A StackFrame can have a location, but a Method?
-        // I guess it must be the Location for bci 0.
-        location = new LocationImpl(virtualMachine(), this, 0);
 
         boolean hasLineInfo = saMethod.hasLineNumberTable();
         LineNumberTableElement[] lntab = null;
@@ -233,24 +224,7 @@ public class ConcreteMethodImpl extends MethodImpl {
         return info;
     }
 
-    List<LocationImpl> sourceNameFilter(List<LocationImpl> list, SDE.Stratum stratum, String sourceName)
-            throws AbsentInformationException {
-        if (sourceName == null) {
-            return list;
-        } else {
-            /* needs sourceName filteration */
-            List<LocationImpl> locs = new ArrayList<LocationImpl>();
-            for (Object o : list) {
-                LocationImpl loc = (LocationImpl) o;
-                if (loc.sourceName(stratum).equals(sourceName)) {
-                    locs.add(loc);
-                }
-            }
-            return locs;
-        }
-    }
-
-    public List<LocationImpl> allLineLocations(SDE.Stratum stratum, String sourceName)
+    public List<LocationImpl> allLineLocations(SDE.Stratum stratum)
         throws AbsentInformationException {
         List<LocationImpl> lineLocations = getLocations(stratum).lineLocations;
 
@@ -258,27 +232,7 @@ public class ConcreteMethodImpl extends MethodImpl {
             throw new AbsentInformationException();
         }
 
-        return Collections.unmodifiableList(sourceNameFilter(lineLocations, stratum, sourceName));
-    }
-
-    public List<LocationImpl> locationsOfLine(SDE.Stratum stratum, String sourceName,
-                         int lineNumber) throws AbsentInformationException {
-        SoftLocationXRefs info = getLocations(stratum);
-
-        if (info.lineLocations.size() == 0) {
-            throw new AbsentInformationException();
-        }
-
-        /*
-         * Find the locations which match the line number
-         * passed in.
-         */
-        List<LocationImpl> list = info.lineMapper.get(lineNumber);
-
-        if (list == null) {
-            list = new ArrayList<LocationImpl>(0);
-        }
-        return Collections.unmodifiableList(sourceNameFilter(list, stratum, sourceName));
+        return Collections.unmodifiableList(lineLocations);
     }
 
     LineInfo codeIndexToLineInfo(SDE.Stratum stratum,
@@ -324,47 +278,8 @@ public class ConcreteMethodImpl extends MethodImpl {
         return bestMatch.getLineInfo(stratum);
     }
 
-    public LocationImpl locationOfCodeIndex(long codeIndex) {
-        if (firstIndex == -1) {
-            getBaseLocations();
-        }
-
-        /*
-         * Check for invalid code index.
-         */
-        if (codeIndex < firstIndex || codeIndex > lastIndex) {
-            return null;
-        }
-
-        return new LocationImpl(virtualMachine(), this, codeIndex);
-    }
-
     public List<LocalVariableImpl> variables() throws AbsentInformationException {
         return getVariables();
-    }
-
-    public List<LocalVariableImpl> variablesByName(String name) throws AbsentInformationException {
-        List<LocalVariableImpl> retList = new ArrayList<LocalVariableImpl>(2);
-        for (LocalVariableImpl variable : getVariables()) {
-            if (variable.name().equals(name)) {
-                retList.add(variable);
-            }
-        }
-        return retList;
-    }
-
-    public List<LocalVariableImpl> arguments() throws AbsentInformationException {
-        if (argumentTypeNames().size() == 0) {
-            return Collections.emptyList();
-        }
-        List<LocalVariableImpl> variables = getVariables();
-        List<LocalVariableImpl> retList = new ArrayList<LocalVariableImpl>(variables.size());
-        for (LocalVariableImpl variable : variables) {
-            if (variable.isArgument()) {
-                retList.add(variable);
-            }
-        }
-        return retList;
     }
 
     public byte[] bytecodes() {
@@ -384,13 +299,6 @@ public class ConcreteMethodImpl extends MethodImpl {
          * make a clone at the cost of using more memory.
          */
         return bytecodes.clone();
-    }
-
-    public LocationImpl location() {
-        if (location == null) {
-            getBaseLocations();
-        }
-        return location;
     }
 
     private List<LocalVariableImpl> getVariables() throws AbsentInformationException {

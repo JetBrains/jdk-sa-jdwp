@@ -42,7 +42,6 @@ import com.sun.jdi.ThreadReference;
 import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.Instance;
 import sun.jvm.hotspot.oops.ObjectHeap;
-import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.oops.OopUtilities;
 import sun.jvm.hotspot.runtime.*;
 import sun.jvm.hotspot.utilities.Assert;
@@ -304,8 +303,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
         ObjectHeap heap = vm.saObjectHeap();
         Iterator<Integer> stk = stackDepth.iterator();
         for (OopHandle lockedObject : lockedObjects) {
-            Oop obj = heap.newOop(lockedObject);
-            ownedMonitorsInfo.add(new MonitorInfoImpl(vm.objectMirror(obj), this, stk.next()));
+            ownedMonitorsInfo.add(new MonitorInfoImpl(vm.objectMirror(lockedObject), this, stk.next()));
         }
     }
 
@@ -327,7 +325,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
                OopHandle handle = mon.object();
                // If obj == NULL, then ObjectMonitor is raw which doesn't count
                // as contended for this API
-               return vm.objectMirror(vm.saObjectHeap().newOop(handle));
+               return vm.objectMirror(handle);
            } else {
                // no contended ObjectMonitor
                return null;
@@ -338,8 +336,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
            if (Assert.ASSERTS_ENABLED) {
                Assert.that(handle != null, "Object.wait() should have an object");
            }
-           Oop obj = vm.saObjectHeap().newOop(handle);
-           return vm.objectMirror(obj);
+           return vm.objectMirror(handle);
         }
     }
 

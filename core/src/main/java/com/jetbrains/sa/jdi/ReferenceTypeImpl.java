@@ -568,8 +568,12 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         }
     }
 
+    public static long uniqueID(Klass klass, VirtualMachineImpl vm) {
+        return vm.getAddressValue(CompatibilityHelper.INSTANCE.getAddress(klass));
+    }
+
     public long uniqueID() {
-        return vm.getAddressValue(CompatibilityHelper.INSTANCE.getAddress(saKlass));
+        return uniqueID(saKlass, vm);
     }
 
     // new method since 1.6

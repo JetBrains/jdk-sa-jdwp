@@ -36,7 +36,6 @@
 
 package com.jetbrains.sa.jdi;
 
-import sun.jvm.hotspot.oops.Array;
 import sun.jvm.hotspot.oops.FieldIdentifier;
 import sun.jvm.hotspot.oops.Oop;
 import sun.jvm.hotspot.oops.Symbol;
@@ -69,35 +68,25 @@ public class FieldImpl extends TypeComponentImpl {
         sun.jvm.hotspot.oops.Field saField = ref();
         sun.jvm.hotspot.oops.FieldType ft = saField.getFieldType();
         if (ft.isArray()) {
-            sun.jvm.hotspot.oops.OopField of = (sun.jvm.hotspot.oops.OopField)saField;
-            valueImpl = vm.arrayMirror((Array)of.getValue(target));
+            valueImpl = vm.objectMirror(((sun.jvm.hotspot.oops.OopField)saField).getValueAsOopHandle(target));
         } else if (ft.isObject()) {
-            sun.jvm.hotspot.oops.OopField of = (sun.jvm.hotspot.oops.OopField)saField;
-            valueImpl = vm.objectMirror(of.getValue(target));
+            valueImpl = vm.objectMirror(((sun.jvm.hotspot.oops.OopField)saField).getValueAsOopHandle(target));
         } else if (ft.isByte()) {
-            sun.jvm.hotspot.oops.ByteField bf = (sun.jvm.hotspot.oops.ByteField)saField;
-            valueImpl = vm.mirrorOf(bf.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.ByteField)saField).getValue(target));
         } else if (ft.isChar()) {
-            sun.jvm.hotspot.oops.CharField cf = (sun.jvm.hotspot.oops.CharField)saField;
-            valueImpl = vm.mirrorOf(cf.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.CharField)saField).getValue(target));
         } else if (ft.isDouble()) {
-            sun.jvm.hotspot.oops.DoubleField df = (sun.jvm.hotspot.oops.DoubleField)saField;
-            valueImpl = vm.mirrorOf(df.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.DoubleField)saField).getValue(target));
         } else if (ft.isFloat()) {
-            sun.jvm.hotspot.oops.FloatField ff = (sun.jvm.hotspot.oops.FloatField)saField;
-            valueImpl = vm.mirrorOf(ff.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.FloatField)saField).getValue(target));
         } else if (ft.isInt()) {
-            sun.jvm.hotspot.oops.IntField iif = (sun.jvm.hotspot.oops.IntField)saField;
-            valueImpl = vm.mirrorOf(iif.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.IntField)saField).getValue(target));
         } else if (ft.isLong()) {
-            sun.jvm.hotspot.oops.LongField lf = (sun.jvm.hotspot.oops.LongField)saField;
-            valueImpl = vm.mirrorOf(lf.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.LongField)saField).getValue(target));
         } else if (ft.isShort()) {
-            sun.jvm.hotspot.oops.ShortField sf = (sun.jvm.hotspot.oops.ShortField)saField;
-            valueImpl = vm.mirrorOf(sf.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.ShortField)saField).getValue(target));
         } else if (ft.isBoolean()) {
-            sun.jvm.hotspot.oops.BooleanField bf = (sun.jvm.hotspot.oops.BooleanField)saField;
-            valueImpl = vm.mirrorOf(bf.getValue(target));
+            valueImpl = vm.mirrorOf(((sun.jvm.hotspot.oops.BooleanField)saField).getValue(target));
         } else {
             throw new RuntimeException("Should not reach here");
         }

@@ -38,8 +38,6 @@ package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.InvalidStackFrameException;
 import sun.jvm.hotspot.debugger.OopHandle;
-import sun.jvm.hotspot.oops.Array;
-import sun.jvm.hotspot.oops.ObjectHeap;
 import sun.jvm.hotspot.runtime.BasicType;
 import sun.jvm.hotspot.runtime.JavaVFrame;
 import sun.jvm.hotspot.runtime.StackValueCollection;
@@ -122,9 +120,7 @@ public class StackFrameImpl {
             if (values.get(0).getType() == BasicType.getTConflict()) {
               return null;
             }
-            OopHandle handle = values.oopHandleAt(0);
-            ObjectHeap heap = vm.saObjectHeap();
-            thisObject = vm.objectMirror(heap.newOop(handle));
+            thisObject = vm.objectMirror(values.oopHandleAt(0));
         }
         return thisObject;
     }
@@ -141,7 +137,6 @@ public class StackFrameImpl {
     private ValueImpl getSlotValue(StackValueCollection values, BasicType variableType, int ss) {
         ValueImpl valueImpl;
         OopHandle handle;
-        ObjectHeap heap = vm.saObjectHeap();
         if (values.get(ss).getType() == BasicType.getTConflict()) {
           // Dead locals, so just represent them as a zero of the appropriate type
           if (variableType == BasicType.T_BOOLEAN) {
@@ -164,10 +159,10 @@ public class StackFrameImpl {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
             handle = null;
-            valueImpl = vm.objectMirror(heap.newOop(handle));
+            valueImpl = vm.objectMirror(handle);
           } else if (variableType == BasicType.T_ARRAY) {
             handle = null;
-            valueImpl = vm.arrayMirror((Array)heap.newOop(handle));
+            valueImpl = vm.objectMirror(handle);
           } else if (variableType == BasicType.T_VOID) {
             valueImpl = vm.voidVal;
           } else {
@@ -194,10 +189,10 @@ public class StackFrameImpl {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
             handle = values.oopHandleAt(ss);
-            valueImpl = vm.objectMirror(heap.newOop(handle));
+            valueImpl = vm.objectMirror(handle);
           } else if (variableType == BasicType.T_ARRAY) {
             handle = values.oopHandleAt(ss);
-            valueImpl = vm.arrayMirror((Array)heap.newOop(handle));
+            valueImpl = vm.objectMirror(handle);
           } else if (variableType == BasicType.T_VOID) {
             valueImpl = new VoidValueImpl();
           } else {

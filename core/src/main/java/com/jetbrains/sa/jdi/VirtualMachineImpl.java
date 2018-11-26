@@ -39,6 +39,7 @@ package com.jetbrains.sa.jdi;
 import com.sun.jdi.VirtualMachineManager;
 import sun.jvm.hotspot.HotSpotAgent;
 import sun.jvm.hotspot.debugger.Address;
+import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.memory.Universe;
 import sun.jvm.hotspot.oops.*;
@@ -89,7 +90,6 @@ public class VirtualMachineImpl {
 
     final VoidValueImpl voidVal;
 
-    private final Map<Klass, ReferenceTypeImpl> typesByKlass = new HashMap<Klass, ReferenceTypeImpl>();
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
     private List<ReferenceTypeImpl>      bootstrapClasses;      // all bootstrap classes
@@ -99,7 +99,7 @@ public class VirtualMachineImpl {
 
     // ObjectReference cache
     // "objectsByID" protected by "synchronized(this)".
-    private final Map<Oop, SoftObjectReference>            objectsByID = new HashMap<Oop, SoftObjectReference>();
+    private final Map<Long, SoftObjectReference>            objectsByID = new HashMap<Long, SoftObjectReference>();
     private final ReferenceQueue referenceQueue = new ReferenceQueue();
 
     // names of some well-known classes to jdi
@@ -221,13 +221,12 @@ public class VirtualMachineImpl {
 
     public List<ReferenceTypeImpl> allClasses() {
         if (!retrievedAllTypes) {
-            retrieveAllClasses();
+            for (Klass saKlass : CompatibilityHelper.INSTANCE.allClasses(saSystemDictionary, saVM)) {
+                referenceType(saKlass);
+            }
+            retrievedAllTypes = true;
         }
-        ArrayList<ReferenceTypeImpl> a;
-        synchronized (this) {
-            a = new ArrayList<ReferenceTypeImpl>(typesById.values());
-        }
-        return Collections.unmodifiableList(a);
+        return Collections.unmodifiableList(new ArrayList<ReferenceTypeImpl>(typesById.values()));
     }
 
     // classes loaded by bootstrap loader
@@ -244,7 +243,7 @@ public class VirtualMachineImpl {
         return bootstrapClasses;
     }
 
-    public synchronized List<ReferenceTypeImpl> findReferenceTypes(String signature) {
+    public List<ReferenceTypeImpl> findReferenceTypes(String signature) {
         // The signature could be Lx/y/z; or [....
         // If it is Lx/y/z; the internal type name is x/y/x
         // for array klasses internal type name is same as
@@ -257,7 +256,7 @@ public class VirtualMachineImpl {
         }
 
         List<ReferenceTypeImpl> list = new ArrayList<ReferenceTypeImpl>(1);
-        for (ReferenceTypeImpl type : typesById.values()) {
+        for (ReferenceTypeImpl type : allClasses()) {
             if (type.name().equals(typeName)) {
                 list.add(type);
             }
@@ -265,31 +264,15 @@ public class VirtualMachineImpl {
         return list;
     }
 
-    private void retrieveAllClasses() {
-        final Collection<Klass> saKlasses = CompatibilityHelper.INSTANCE.allClasses(saSystemDictionary, saVM);
-
-        // Hold lock during processing to improve performance
-        // and to have safe check/set of retrievedAllTypes
-        synchronized (this) {
-            if (!retrievedAllTypes) {
-                // Number of classes
-                for (Klass saKlass : saKlasses) {
-                    referenceType(saKlass);
-                }
-                retrievedAllTypes = true;
-            }
-        }
-    }
-
-    synchronized ReferenceTypeImpl referenceType(Klass kk) {
-        ReferenceTypeImpl retType = typesByKlass.get(kk);
+    ReferenceTypeImpl referenceType(Klass kk) {
+        ReferenceTypeImpl retType = typesById.get(ReferenceTypeImpl.uniqueID(kk, this));
         if (retType == null) {
             retType = addReferenceType(kk);
         }
         return retType;
     }
 
-    private synchronized ReferenceTypeImpl addReferenceType(Klass kk) {
+    private ReferenceTypeImpl addReferenceType(Klass kk) {
         ReferenceTypeImpl newRefType;
         if (kk instanceof ObjArrayKlass || kk instanceof TypeArrayKlass) {
             newRefType = new ArrayTypeImpl(this, (ArrayKlass)kk);
@@ -303,7 +286,6 @@ public class VirtualMachineImpl {
             throw new RuntimeException("should not reach here:" + kk);
         }
 
-        typesByKlass.put(kk, newRefType);
         typesById.put(newRefType.uniqueID(), newRefType);
         return newRefType;
     }
@@ -622,35 +604,106 @@ public class VirtualMachineImpl {
         return saVM.getDebugger().getAddressValue(address);
     }
 
-    public synchronized ObjectReferenceImpl objectMirror(long id) {
-        for (SoftObjectReference value : objectsByID.values()) {
-            if (value != null) {
-                ObjectReferenceImpl object = value.object();
-                if (object.uniqueID() == id) {
-                    return object;
-                }
-            }
-        }
-        throw new IllegalStateException("Object with id " + id + " not found");
-    }
-
-    synchronized ObjectReferenceImpl objectMirror(Oop key) {
-
+    private ObjectReferenceImpl getCachedObjectMirror(long id) {
         // Handle any queue elements that are not strongly reachable
         processQueue();
 
+        SoftObjectReference ref = objectsByID.get(id);
+        return ref != null ? ref.object() : null;
+    }
+
+    private ObjectReferenceImpl createObjectMirror(long id, Oop key) {
+        ObjectReferenceImpl object = null;
+        if (key instanceof Instance) {
+            // look for well-known classes
+            Klass klass = key.getKlass();
+            Symbol classNameSymbol = klass.getName();
+            if (Assert.ASSERTS_ENABLED) {
+                Assert.that(classNameSymbol != null, "Null class name");
+            }
+            String className = classNameSymbol.asString();
+            Instance inst = (Instance) key;
+            if (className.equals(javaLangString)) {
+                object = new StringReferenceImpl(this, inst);
+            } else if (className.equals(javaLangThread)) {
+                object = new ThreadReferenceImpl(this, inst);
+            } else if (className.equals(javaLangThreadGroup)) {
+                object = new ThreadGroupReferenceImpl(this, inst);
+            } else if (className.equals(javaLangClass)) {
+                object = new ClassObjectReferenceImpl(this, inst);
+            } else if (className.equals(javaLangClassLoader)) {
+                object = new ClassLoaderReferenceImpl(this, inst);
+            } else {
+                // not a well-known class. But the base class may be
+                // one of the known classes.
+                Klass kls = klass.getSuper();
+                while (kls != null) {
+                    className = kls.getName().asString();
+                    // java.lang.Class and java.lang.String are final classes
+                    if (className.equals(javaLangThread)) {
+                        object = new ThreadReferenceImpl(this, inst);
+                        break;
+                    } else if(className.equals(javaLangThreadGroup)) {
+                        object = new ThreadGroupReferenceImpl(this, inst);
+                        break;
+                    } else if (className.equals(javaLangClassLoader)) {
+                        object = new ClassLoaderReferenceImpl(this, inst);
+                        break;
+                    }
+                    kls = kls.getSuper();
+                }
+
+                if (object == null) {
+                    // create generic object reference
+                    object = new ObjectReferenceImpl(this, inst);
+                }
+            }
+        } else if (key instanceof TypeArray) {
+            object = new ArrayReferenceImpl(this, (Array) key);
+        } else if (key instanceof ObjArray) {
+            object = new ArrayReferenceImpl(this, (Array) key);
+        } else {
+            throw new RuntimeException("unexpected object type " + key);
+        }
+
+        /*
+         * If there was no previous entry in the table, we add one here
+         * If the previous entry was cleared, we replace it here.
+         */
+        if (Assert.ASSERTS_ENABLED) {
+            Assert.that(id == object.uniqueID(), "Unique id does not match");
+        }
+        objectsByID.put(id, new SoftObjectReference(id, object, referenceQueue));
+
+        return object;
+    }
+
+    public ObjectReferenceImpl objectMirror(long id) {
+        ObjectReferenceImpl object = getCachedObjectMirror(id);
+        if (object == null) {
+            object = createObjectMirror(id, saObjectHeap.newOop(saVM.getDebugger().parseAddress("0x" + Long.toHexString(id)).addOffsetToAsOopHandle(0)));
+        }
+        return object;
+    }
+
+    ObjectReferenceImpl objectMirror(OopHandle handle) {
+        if (handle == null) {
+            return null;
+        }
+        long id = ObjectReferenceImpl.uniqueID(handle, this);
+        ObjectReferenceImpl object = getCachedObjectMirror(id);
+        if (object == null) {
+            object = createObjectMirror(id, saObjectHeap.newOop(handle));
+        }
+        return object;
+    }
+
+    ObjectReferenceImpl objectMirror(Oop key) {
         if (key == null) {
             return null;
         }
-        ObjectReferenceImpl object = null;
-
-        /*
-         * Attempt to retrieve an existing object object reference
-         */
-        SoftObjectReference ref = objectsByID.get(key);
-        if (ref != null) {
-            object = ref.object();
-        }
+        long id = ObjectReferenceImpl.uniqueID(key.getHandle(), this);
+        ObjectReferenceImpl object = getCachedObjectMirror(id);
 
         /*
          * If the object wasn't in the table, or it's soft reference was
@@ -659,7 +712,8 @@ public class VirtualMachineImpl {
         if (object == null) {
             if (key instanceof Instance) {
                 // look for well-known classes
-                Symbol classNameSymbol = key.getKlass().getName();
+                Klass klass = key.getKlass();
+                Symbol classNameSymbol = klass.getName();
                 if (Assert.ASSERTS_ENABLED) {
                     Assert.that(classNameSymbol != null, "Null class name");
                 }
@@ -678,7 +732,7 @@ public class VirtualMachineImpl {
                 } else {
                     // not a well-known class. But the base class may be
                     // one of the known classes.
-                    Klass kls = key.getKlass().getSuper();
+                    Klass kls = klass.getSuper();
                     while (kls != null) {
                        className = kls.getName().asString();
                        // java.lang.Class and java.lang.String are final classes
@@ -707,38 +761,23 @@ public class VirtualMachineImpl {
             } else {
                 throw new RuntimeException("unexpected object type " + key);
             }
-            ref = new SoftObjectReference(key, object, referenceQueue);
 
             /*
              * If there was no previous entry in the table, we add one here
              * If the previous entry was cleared, we replace it here.
              */
-            objectsByID.put(key, ref);
-        } else {
-            ref.incrementCount();
+            objectsByID.put(id, new SoftObjectReference(id, object, referenceQueue));
         }
 
         return object;
     }
 
-    synchronized void removeObjectMirror(SoftObjectReference ref) {
+    private void removeObjectMirror(SoftObjectReference ref) {
         /*
          * This will remove the soft reference if it has not been
          * replaced in the cache.
          */
         objectsByID.remove(ref.key());
-    }
-
-    StringReferenceImpl stringMirror(Instance id) {
-        return (StringReferenceImpl) objectMirror(id);
-    }
-
-    ArrayReferenceImpl arrayMirror(Array id) {
-       return (ArrayReferenceImpl) objectMirror(id);
-    }
-
-    ThreadReferenceImpl threadMirror(Instance id) {
-        return (ThreadReferenceImpl) objectMirror(id);
     }
 
     ThreadReferenceImpl threadMirror(JavaThread jt) {
@@ -760,24 +799,14 @@ public class VirtualMachineImpl {
     // Use of soft refs and caching stuff here has to be re-examined.
     //  It might not make sense for JDI - SA.
     static private class SoftObjectReference extends SoftReference<ObjectReferenceImpl> {
-       int count;
-       Oop key;
+       Long key;
 
-       SoftObjectReference(Oop key, ObjectReferenceImpl mirror, ReferenceQueue queue) {
+       SoftObjectReference(Long key, ObjectReferenceImpl mirror, ReferenceQueue queue) {
            super(mirror, queue);
-           this.count = 1;
            this.key = key;
        }
 
-       int count() {
-           return count;
-       }
-
-       void incrementCount() {
-           count++;
-       }
-
-       Oop key() {
+        Long key() {
            return key;
        }
 
@@ -795,7 +824,7 @@ public class VirtualMachineImpl {
         throw new IllegalStateException("Thread with id " + id + " not found");
     }
 
-    public synchronized ReferenceTypeImpl getReferenceTypeById(long id) {
+    public ReferenceTypeImpl getReferenceTypeById(long id) {
         ReferenceTypeImpl res = typesById.get(id);
         if (res == null) {
             throw new IllegalStateException("ReferenceType with id " + id + " not found");

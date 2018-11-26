@@ -134,9 +134,9 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl {
             } else if (variableType == BasicType.T_OBJECT) {
                 // we may have an [Ljava/lang/Object; - i.e., Object[] with the
                 // elements themselves may be arrays because every array is an Object.
-                valueImpl = vm.objectMirror(objArray.getObjAt(ii));
+                valueImpl = vm.objectMirror(objArray.getOopHandleAt(ii));
             } else if (variableType == BasicType.T_ARRAY) {
-                valueImpl = vm.arrayMirror((Array) objArray.getObjAt(ii));
+                valueImpl = vm.objectMirror(objArray.getOopHandleAt(ii));
             } else {
                 throw new RuntimeException("should not reach here");
             }

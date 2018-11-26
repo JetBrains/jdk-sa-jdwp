@@ -54,22 +54,15 @@ import java.util.*;
 
 public class ObjectReferenceImpl extends ValueImpl {
     protected final VirtualMachineImpl vm;
-    private Oop  saObject;
-    private long myID;
+    private final Oop saObject;
     private boolean monitorInfoCached = false;
     private ThreadReferenceImpl owningThread = null;
     private List<ThreadReferenceImpl> waitingThreads = null;
     private int entryCount = 0;
 
-    private static long nextID = 0L;
-    private static synchronized long nextID() {
-        return ++nextID;
-    }
-
     ObjectReferenceImpl(VirtualMachineImpl aVm, Oop oRef) {
         vm = aVm;
         saObject = oRef;
-        myID = nextID();
     }
 
     protected Oop ref() {
@@ -130,8 +123,12 @@ public class ObjectReferenceImpl extends ValueImpl {
         return map;
     }
 
+    static long uniqueID(OopHandle handle, VirtualMachineImpl vm) {
+        return vm.getAddressValue(handle);
+    }
+
     public long uniqueID() {
-        return myID;
+        return uniqueID(saObject.getHandle(), vm);
     }
 
     public List<ThreadReferenceImpl> waitingThreads() {

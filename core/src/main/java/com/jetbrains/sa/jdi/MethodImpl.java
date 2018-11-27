@@ -42,23 +42,23 @@ import sun.jvm.hotspot.oops.Symbol;
 import java.util.List;
 
 public abstract class MethodImpl extends TypeComponentImpl {
-    protected sun.jvm.hotspot.oops.Method saMethod;
+    sun.jvm.hotspot.oops.Method saMethod;
 
     public abstract int argSlotCount();
     abstract List<LocationImpl> allLineLocations(SDE.Stratum stratum) throws AbsentInformationException;
 
-    static MethodImpl createMethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType,
+    static MethodImpl createMethodImpl(ReferenceTypeImpl declaringType,
                                        sun.jvm.hotspot.oops.Method saMethod) {
         // Someday might have to add concrete and non-concrete subclasses.
         if (saMethod.isNative() || saMethod.isAbstract()) {
-            return new NonConcreteMethodImpl(vm, declaringType, saMethod);
+            return new NonConcreteMethodImpl(declaringType, saMethod);
         } else {
-            return new ConcreteMethodImpl(vm, declaringType, saMethod);
+            return new ConcreteMethodImpl(declaringType, saMethod);
         }
     }
 
-    MethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod ) {
-        super(vm, declaringType);
+    MethodImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod) {
+        super(declaringType);
         this.saMethod = saMethod;
         signature = saMethod.getSignature().asString();
     }
@@ -69,7 +69,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
     }
 
     public long uniqueID() {
-        return vm.getAddressValue(CompatibilityHelper.INSTANCE.getAddress(saMethod));
+        return vm().getAddressValue(CompatibilityHelper.INSTANCE.getAddress(saMethod));
     }
 
     public String genericSignature() {
@@ -110,7 +110,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
     }
 
     // From interface Comparable
-    public int compareTo(MethodImpl method) {
+    int compareTo(MethodImpl method) {
         ReferenceTypeImpl declaringType = declaringType();
          int rc = declaringType.compareTo(method.declaringType());
          if (rc == 0) {

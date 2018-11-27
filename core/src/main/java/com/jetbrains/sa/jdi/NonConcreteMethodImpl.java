@@ -47,10 +47,8 @@ import java.util.List;
  * Private to MethodImpl.
  */
 public class NonConcreteMethodImpl extends MethodImpl {
-    NonConcreteMethodImpl(VirtualMachineImpl vm,
-                          ReferenceTypeImpl declaringType,
-                          sun.jvm.hotspot.oops.Method saMethod) {
-        super(vm, declaringType, saMethod);
+    NonConcreteMethodImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod) {
+        super(declaringType, saMethod);
     }
 
     public List<LocationImpl> allLineLocations(SDE.Stratum stratum) {

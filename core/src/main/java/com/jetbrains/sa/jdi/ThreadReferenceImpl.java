@@ -172,7 +172,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
             JavaVFrame myvf = myJavaThread.getLastJavaVFrameDbg();
             int id = 0;
             while (myvf != null) {
-                StackFrameImpl myFrame = new StackFrameImpl(vm, this, myvf, id++);
+                StackFrameImpl myFrame = new StackFrameImpl(this, myvf, id++);
                 //fixme jjh null should be a Location
                 frames.add(myFrame);
                 myvf = JvmUtils.getFrameJavaSender(myvf);

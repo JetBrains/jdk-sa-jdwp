@@ -42,22 +42,23 @@ package com.jetbrains.sa.jdi;
  * have to be implemented in the subclasses.
  */
 abstract public class TypeComponentImpl {
+    final ReferenceTypeImpl declaringType;
+    String signature;
 
-    protected final VirtualMachineImpl vm;
-    protected final ReferenceTypeImpl declaringType;
-    protected String signature;
-
-    TypeComponentImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType) {
-        this.vm = vm;
+    TypeComponentImpl(ReferenceTypeImpl declaringType) {
         this.declaringType = declaringType;
     }
 
-    public ReferenceTypeImpl declaringType() {
+    ReferenceTypeImpl declaringType() {
         return declaringType;
     }
 
     public String signature() {
         return signature;
+    }
+
+    VirtualMachineImpl vm() {
+        return declaringType.vm;
     }
 
     abstract public String name();

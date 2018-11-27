@@ -81,8 +81,8 @@ public class ConcreteMethodImpl extends MethodImpl {
     private int lastIndex = -1;
     private SoftReference<byte[]> bytecodesRef = null;
 
-    ConcreteMethodImpl(VirtualMachineImpl vm, ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod ) {
-        super(vm, declaringType, saMethod);
+    ConcreteMethodImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod) {
+        super(declaringType, saMethod);
     }
 
     public int argSlotCount() {

@@ -54,17 +54,15 @@ public class StackFrameImpl {
     private int id;
     private final LocationImpl location;
     private ObjectReferenceImpl thisObject = null;
-    private final VirtualMachineImpl vm;
 
-    StackFrameImpl(VirtualMachineImpl vm, ThreadReferenceImpl thread, JavaVFrame jvf, int id) {
-        this.vm = vm;
+    StackFrameImpl(ThreadReferenceImpl thread, JavaVFrame jvf, int id) {
         this.thread = thread;
         this.saFrame = jvf;
         this.id = id;
 
         sun.jvm.hotspot.oops.Method SAMethod = jvf.getMethod();
 
-        ReferenceTypeImpl rt = vm.referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
+        ReferenceTypeImpl rt = thread.vm.referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
 
         this.location = new LocationImpl(rt, SAMethod, (long)jvf.getBCI());
     }
@@ -73,6 +71,10 @@ public class StackFrameImpl {
         if (!isValid) {
             throw new InvalidStackFrameException("Thread has been resumed");
         }
+    }
+
+    VirtualMachineImpl vm() {
+        return thread.vm;
     }
 
 //    public long uniqueID() {
@@ -120,7 +122,7 @@ public class StackFrameImpl {
             if (values.get(0).getType() == BasicType.getTConflict()) {
               return null;
             }
-            thisObject = vm.objectMirror(values.oopHandleAt(0));
+            thisObject = vm().objectMirror(values.oopHandleAt(0));
         }
         return thisObject;
     }
@@ -140,59 +142,59 @@ public class StackFrameImpl {
         if (values.get(ss).getType() == BasicType.getTConflict()) {
           // Dead locals, so just represent them as a zero of the appropriate type
           if (variableType == BasicType.T_BOOLEAN) {
-            valueImpl = vm.mirrorOf(false);
+            valueImpl = vm().mirrorOf(false);
           } else if (variableType == BasicType.T_CHAR) {
-            valueImpl = vm.mirrorOf((char)0);
+            valueImpl = vm().mirrorOf((char)0);
           } else if (variableType == BasicType.T_FLOAT) {
-            valueImpl = vm.mirrorOf((float)0);
+            valueImpl = vm().mirrorOf((float)0);
           } else if (variableType == BasicType.T_DOUBLE) {
-            valueImpl = vm.mirrorOf((double)0);
+            valueImpl = vm().mirrorOf((double)0);
           } else if (variableType == BasicType.T_BYTE) {
-            valueImpl = vm.mirrorOf((byte)0);
+            valueImpl = vm().mirrorOf((byte)0);
           } else if (variableType == BasicType.T_SHORT) {
-            valueImpl = vm.mirrorOf((short)0);
+            valueImpl = vm().mirrorOf((short)0);
           } else if (variableType == BasicType.T_INT) {
-            valueImpl = vm.mirrorOf(0);
+            valueImpl = vm().mirrorOf(0);
           } else if (variableType == BasicType.T_LONG) {
-            valueImpl = vm.mirrorOf((long)0);
+            valueImpl = vm().mirrorOf((long)0);
           } else if (variableType == BasicType.T_OBJECT) {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
             handle = null;
-            valueImpl = vm.objectMirror(handle);
+            valueImpl = vm().objectMirror(handle);
           } else if (variableType == BasicType.T_ARRAY) {
             handle = null;
-            valueImpl = vm.objectMirror(handle);
+            valueImpl = vm().objectMirror(handle);
           } else if (variableType == BasicType.T_VOID) {
-            valueImpl = vm.voidVal;
+            valueImpl = vm().voidVal;
           } else {
             throw new RuntimeException("Should not read here");
           }
         } else {
           if (variableType == BasicType.T_BOOLEAN) {
-            valueImpl = vm.mirrorOf(values.booleanAt(ss));
+            valueImpl = vm().mirrorOf(values.booleanAt(ss));
           } else if (variableType == BasicType.T_CHAR) {
-            valueImpl = vm.mirrorOf(values.charAt(ss));
+            valueImpl = vm().mirrorOf(values.charAt(ss));
           } else if (variableType == BasicType.T_FLOAT) {
-            valueImpl = vm.mirrorOf(values.floatAt(ss));
+            valueImpl = vm().mirrorOf(values.floatAt(ss));
           } else if (variableType == BasicType.T_DOUBLE) {
-            valueImpl = vm.mirrorOf(values.doubleAt(ss));
+            valueImpl = vm().mirrorOf(values.doubleAt(ss));
           } else if (variableType == BasicType.T_BYTE) {
-            valueImpl = vm.mirrorOf(values.byteAt(ss));
+            valueImpl = vm().mirrorOf(values.byteAt(ss));
           } else if (variableType == BasicType.T_SHORT) {
-            valueImpl = vm.mirrorOf(values.shortAt(ss));
+            valueImpl = vm().mirrorOf(values.shortAt(ss));
           } else if (variableType == BasicType.T_INT) {
-            valueImpl = vm.mirrorOf(values.intAt(ss));
+            valueImpl = vm().mirrorOf(values.intAt(ss));
           } else if (variableType == BasicType.T_LONG) {
-            valueImpl = vm.mirrorOf(values.longAt(ss));
+            valueImpl = vm().mirrorOf(values.longAt(ss));
           } else if (variableType == BasicType.T_OBJECT) {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
             handle = values.oopHandleAt(ss);
-            valueImpl = vm.objectMirror(handle);
+            valueImpl = vm().objectMirror(handle);
           } else if (variableType == BasicType.T_ARRAY) {
             handle = values.oopHandleAt(ss);
-            valueImpl = vm.objectMirror(handle);
+            valueImpl = vm().objectMirror(handle);
           } else if (variableType == BasicType.T_VOID) {
             valueImpl = new VoidValueImpl();
           } else {

@@ -37,11 +37,9 @@
 package com.jetbrains.sa.jdi;
 
 public abstract class TypeImpl {
-    protected final VirtualMachineImpl vm;
     private final byte tag;
 
-    TypeImpl(VirtualMachineImpl aVm, byte tag) {
-        this.vm = aVm;
+    TypeImpl(byte tag) {
         this.tag = tag;
     }
 

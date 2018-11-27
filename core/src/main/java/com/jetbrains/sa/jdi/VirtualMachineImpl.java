@@ -36,6 +36,7 @@
 
 package com.jetbrains.sa.jdi;
 
+import com.jetbrains.sa.jdwp.JDWP;
 import com.sun.jdi.VirtualMachineManager;
 import sun.jvm.hotspot.HotSpotAgent;
 import sun.jvm.hotspot.debugger.Address;
@@ -79,16 +80,16 @@ public class VirtualMachineImpl {
     VirtualMachineManager vmmgr;
 
     // Per-vm singletons for primitive types and for void.
-    final PrimitiveTypeImpl theBooleanType;
-    final PrimitiveTypeImpl theByteType;
-    final PrimitiveTypeImpl theCharType;
-    final PrimitiveTypeImpl theShortType;
-    final PrimitiveTypeImpl theIntegerType;
-    final PrimitiveTypeImpl theLongType;
-    final PrimitiveTypeImpl theFloatType;
-    final PrimitiveTypeImpl theDoubleType;
+    private final PrimitiveTypeImpl theBooleanType = new PrimitiveTypeImpl(JDWP.Tag.BOOLEAN);
+    private final PrimitiveTypeImpl theByteType = new PrimitiveTypeImpl(JDWP.Tag.BYTE);
+    private final PrimitiveTypeImpl theCharType = new PrimitiveTypeImpl(JDWP.Tag.CHAR);
+    private final PrimitiveTypeImpl theShortType = new PrimitiveTypeImpl(JDWP.Tag.SHORT);
+    private final PrimitiveTypeImpl theIntegerType = new PrimitiveTypeImpl(JDWP.Tag.INT);
+    private final PrimitiveTypeImpl theLongType = new PrimitiveTypeImpl(JDWP.Tag.LONG);
+    private final PrimitiveTypeImpl theFloatType = new PrimitiveTypeImpl(JDWP.Tag.FLOAT);
+    private final PrimitiveTypeImpl theDoubleType = new PrimitiveTypeImpl(JDWP.Tag.DOUBLE);
 
-    final VoidValueImpl voidVal;
+    final VoidValueImpl voidVal = new VoidValueImpl();
 
     private final Map<Long, ReferenceTypeImpl>  typesById = new HashMap<Long, ReferenceTypeImpl>();
     private boolean   retrievedAllTypes = false;
@@ -103,11 +104,11 @@ public class VirtualMachineImpl {
     private final ReferenceQueue referenceQueue = new ReferenceQueue();
 
     // names of some well-known classes to jdi
-    final String javaLangString = "java/lang/String";
-    final String javaLangThread = "java/lang/Thread";
-    final String javaLangThreadGroup = "java/lang/ThreadGroup";
-    final String javaLangClass = "java/lang/Class";
-    final String javaLangClassLoader = "java/lang/ClassLoader";
+    private final String javaLangString = "java/lang/String";
+    private final String javaLangThread = "java/lang/Thread";
+    private final String javaLangThreadGroup = "java/lang/ThreadGroup";
+    private final String javaLangClass = "java/lang/Class";
+    private final String javaLangClassLoader = "java/lang/ClassLoader";
 
     // used in ReferenceTypeImpl.isThrowableBacktraceField
     final String javaLangThrowable = "java/lang/Throwable";
@@ -195,17 +196,6 @@ public class VirtualMachineImpl {
         // attaching to SA agent.
 
         System.setProperty("sun.jvm.hotspot.debugger.useWindbgDebugger", "true");
-
-        theBooleanType = new PrimitiveTypeImpl.Boolean(this);
-        theByteType = new PrimitiveTypeImpl.Byte(this);
-        theCharType = new PrimitiveTypeImpl.Char(this);
-        theShortType = new PrimitiveTypeImpl.Short(this);
-        theIntegerType = new PrimitiveTypeImpl.Integer(this);
-        theLongType = new PrimitiveTypeImpl.Long(this);
-        theFloatType = new PrimitiveTypeImpl.Float(this);
-        theDoubleType = new PrimitiveTypeImpl.Double(this);
-
-        voidVal = new VoidValueImpl();
     }
 
     public boolean equals(Object obj) {
@@ -558,11 +548,6 @@ public class VirtualMachineImpl {
 
     public int jdwpMinor() {
         return vmmgr.minorInterfaceVersion();
-    }
-
-    // from interface Mirror
-    public VirtualMachineImpl virtualMachine() {
-        return this;
     }
 
     public String toString() {

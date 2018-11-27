@@ -36,58 +36,8 @@
 
 package com.jetbrains.sa.jdi;
 
-import com.jetbrains.sa.jdwp.JDWP;
-
 class PrimitiveTypeImpl extends TypeImpl {
-    PrimitiveTypeImpl(VirtualMachineImpl vm, byte tag) {
-        super(vm, tag);
-    }
-
-    static class Boolean extends PrimitiveTypeImpl {
-        Boolean(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.BOOLEAN);
-        }
-    }
-
-    static class Byte extends PrimitiveTypeImpl {
-        Byte(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.BYTE);
-        }
-    }
-
-    static class Char extends PrimitiveTypeImpl {
-        Char(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.CHAR);
-        }
-    }
-
-    static class Double extends PrimitiveTypeImpl {
-        Double(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.DOUBLE);
-        }
-    }
-
-    static class Float extends PrimitiveTypeImpl {
-        Float(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.FLOAT);
-        }
-    }
-
-    static class Integer extends PrimitiveTypeImpl {
-        Integer(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.INT);
-        }
-    }
-
-    static class Long extends PrimitiveTypeImpl {
-        Long(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.LONG);
-        }
-    }
-
-    static class Short extends PrimitiveTypeImpl {
-        Short(VirtualMachineImpl vm) {
-            super(vm, JDWP.Tag.SHORT);
-        }
+    PrimitiveTypeImpl(byte tag) {
+        super(tag);
     }
 }

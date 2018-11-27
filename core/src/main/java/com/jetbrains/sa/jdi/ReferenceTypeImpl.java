@@ -51,7 +51,7 @@ import java.lang.ref.SoftReference;
 import java.util.*;
 
 public abstract class ReferenceTypeImpl extends TypeImpl {
-    protected Klass       saKlass;          // This can be an InstanceKlass or an ArrayKlass
+    private final Klass       saKlass;          // This can be an InstanceKlass or an ArrayKlass
     private int           modifiers = -1;
     private String        signature = null;
     private String        typeName;
@@ -59,15 +59,16 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     private SoftReference<List<FieldImpl>> fieldsCache;
     private SoftReference<List<FieldImpl>> allFieldsCache;
     private SoftReference<List<MethodImpl>> methodsCache;
-    private SoftReference<List<MethodImpl>> allMethodsCache;
     private SoftReference<List<ReferenceTypeImpl>> nestedTypesCache;
     private SoftReference<List<MethodImpl>> methodInvokesCache;
+    protected final VirtualMachineImpl vm;
 
     /* to mark when no info available */
     static final SDE NO_SDE_INFO_MARK = new SDE();
 
     protected ReferenceTypeImpl(VirtualMachineImpl aVm, Klass klass, byte tag) {
-        super(aVm, tag);
+        super(tag);
+        vm = aVm;
         saKlass = klass;
     }
 
@@ -109,7 +110,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                 }
             }
 
-          MethodImpl method = MethodImpl.createMethodImpl(vm, this, ref);
+          MethodImpl method = MethodImpl.createMethodImpl(this, ref);
           mis.add(method);
           return method;
         }
@@ -223,7 +224,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                 for (Object saField : saFields) {
                     sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field) saField;
                     if (!isThrowableBacktraceField(curField)) {
-                        fields.add(new FieldImpl(vm, this, curField));
+                        fields.add(new FieldImpl(this, curField));
                     }
                 }
             }
@@ -276,7 +277,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                 for (Object saField : saFields) {
                     sun.jvm.hotspot.oops.Field curField = (sun.jvm.hotspot.oops.Field) saField;
                     if (!isThrowableBacktraceField(curField)) {
-                        allFields.add(new FieldImpl(vm, vm.referenceType(curField.getFieldHolder()), curField));
+                        allFields.add(new FieldImpl(vm.referenceType(curField.getFieldHolder()), curField));
                     }
                 }
             }
@@ -309,7 +310,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                 int len = saMethods.size();
                 methods = new ArrayList<MethodImpl>(len);
                 for (Object saMethod : saMethods) {
-                    methods.add(MethodImpl.createMethodImpl(vm, this, (sun.jvm.hotspot.oops.Method) saMethod));
+                    methods.add(MethodImpl.createMethodImpl(this, (sun.jvm.hotspot.oops.Method) saMethod));
                 }
             }
             methods = Collections.unmodifiableList(methods);

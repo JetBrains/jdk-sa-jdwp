@@ -37,7 +37,10 @@
 package com.jetbrains.sa.jdi;
 
 import com.jetbrains.sa.jdwp.JDWP;
+import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.Array;
+import sun.jvm.hotspot.oops.ObjArray;
+import sun.jvm.hotspot.oops.TypeArray;
 import sun.jvm.hotspot.runtime.BasicType;
 
 import java.util.ArrayList;
@@ -99,12 +102,12 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl {
         }
         List<ValueImpl> vals = new ArrayList<ValueImpl>(len);
 
-        sun.jvm.hotspot.oops.TypeArray typeArray = null;
-        sun.jvm.hotspot.oops.ObjArray objArray = null;
-        if (ref() instanceof sun.jvm.hotspot.oops.TypeArray) {
-            typeArray = (sun.jvm.hotspot.oops.TypeArray)ref();
-        } else if (ref() instanceof sun.jvm.hotspot.oops.ObjArray) {
-            objArray = (sun.jvm.hotspot.oops.ObjArray)ref();
+        TypeArray typeArray = null;
+        ObjArray objArray = null;
+        if (ref() instanceof TypeArray) {
+            typeArray = (TypeArray)ref();
+        } else if (ref() instanceof ObjArray) {
+            objArray = (ObjArray)ref();
         } else {
             throw new RuntimeException("should not reach here");
         }
@@ -141,6 +144,18 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl {
             vals.add (valueImpl);
         }
         return vals;
+    }
+
+    protected void visitReferences(HandleVisitor visitor) {
+        if (ref() instanceof ObjArray) {
+            ObjArray objArray = (ObjArray) ref();
+            for (int i = 0; i < length; i++) {
+                OopHandle valueHandle = objArray.getOopHandleAt(i);
+                if (valueHandle != null && visitor.visit(valueHandle)) {
+                    return;
+                }
+            }
+        }
     }
 
     public String toString() {

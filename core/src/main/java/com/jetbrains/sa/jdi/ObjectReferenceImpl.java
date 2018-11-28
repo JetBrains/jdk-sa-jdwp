@@ -78,7 +78,7 @@ public class ObjectReferenceImpl extends ValueImpl {
         boolean visit(OopHandle handle);
     }
 
-    private void visitReferences(HandleVisitor visitor) {
+    protected void visitReferences(HandleVisitor visitor) {
         ReferenceTypeImpl referenceType = referenceType();
         Instance typeMirror = referenceType.getJavaMirror();
         for (FieldImpl field : referenceType.allFields()) {

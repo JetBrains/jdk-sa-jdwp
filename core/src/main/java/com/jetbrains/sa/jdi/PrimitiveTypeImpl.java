@@ -36,8 +36,14 @@
 
 package com.jetbrains.sa.jdi;
 
-class PrimitiveTypeImpl extends TypeImpl {
+public class PrimitiveTypeImpl extends TypeImpl {
+    private final byte tag;
+
     PrimitiveTypeImpl(byte tag) {
-        super(tag);
+        this.tag = tag;
+    }
+
+    public final byte tag() {
+        return tag;
     }
 }

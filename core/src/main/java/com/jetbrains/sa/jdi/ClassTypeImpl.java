@@ -45,8 +45,13 @@ import java.util.*;
 public class ClassTypeImpl extends ReferenceTypeImpl {
     private SoftReference<List<InterfaceTypeImpl>> interfacesCache    = null;
 
-    protected ClassTypeImpl(VirtualMachineImpl aVm, InstanceKlass aRef) {
-        super(aVm, aRef, JDWP.TypeTag.CLASS);
+    ClassTypeImpl(VirtualMachineImpl aVm, InstanceKlass aRef) {
+        super(aVm, aRef);
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.TypeTag.CLASS;
     }
 
     public ClassTypeImpl superclass() {

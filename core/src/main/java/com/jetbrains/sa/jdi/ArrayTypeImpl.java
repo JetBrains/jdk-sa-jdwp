@@ -45,7 +45,12 @@ import sun.jvm.hotspot.runtime.ClassConstants;
 
 public class ArrayTypeImpl extends ReferenceTypeImpl {
     ArrayTypeImpl(VirtualMachineImpl aVm, ArrayKlass aRef) {
-        super(aVm, aRef, JDWP.TypeTag.ARRAY);
+        super(aVm, aRef);
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.TypeTag.ARRAY;
     }
 
     public String componentSignature() {

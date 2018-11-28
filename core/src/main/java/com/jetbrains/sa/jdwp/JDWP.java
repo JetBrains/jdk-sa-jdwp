@@ -3366,7 +3366,8 @@ public class JDWP {
 
                 byte tag;
                 try {
-                    tag = arrayReference.arrayType().componentType().tag();
+                    TypeImpl type = arrayReference.arrayType().componentType();
+                    tag = type instanceof PrimitiveTypeImpl ? ((PrimitiveTypeImpl) type).tag() : Tag.OBJECT;
                 } catch (ClassNotLoadedException e) { // fallback to the first element type
                     tag = ValueImpl.typeValueKey(arrayReference.getValue(0));
                 }

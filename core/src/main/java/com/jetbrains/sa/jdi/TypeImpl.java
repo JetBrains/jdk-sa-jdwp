@@ -37,13 +37,4 @@
 package com.jetbrains.sa.jdi;
 
 public abstract class TypeImpl {
-    private final byte tag;
-
-    TypeImpl(byte tag) {
-        this.tag = tag;
-    }
-
-    public final byte tag() {
-        return tag;
-    }
 }

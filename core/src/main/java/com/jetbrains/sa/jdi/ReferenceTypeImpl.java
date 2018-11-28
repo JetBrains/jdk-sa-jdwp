@@ -64,14 +64,16 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     private SoftReference<List<MethodImpl>> methodInvokesCache;
     protected final VirtualMachineImpl vm;
 
+
     /* to mark when no info available */
     static final SDE NO_SDE_INFO_MARK = new SDE();
 
-    protected ReferenceTypeImpl(VirtualMachineImpl aVm, Klass klass, byte tag) {
-        super(tag);
+    protected ReferenceTypeImpl(VirtualMachineImpl aVm, Klass klass) {
         vm = aVm;
         saKlass = klass;
     }
+
+    public abstract byte tag();
 
     public String name() {
         if (typeName == null) {

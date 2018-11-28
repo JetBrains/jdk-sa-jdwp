@@ -46,8 +46,13 @@ import java.util.*;
 public class InterfaceTypeImpl extends ReferenceTypeImpl {
     private SoftReference<List<InterfaceTypeImpl>> superInterfacesCache = null;
 
-    protected InterfaceTypeImpl(VirtualMachineImpl aVm, InstanceKlass aRef) {
-        super(aVm, aRef, JDWP.TypeTag.INTERFACE);
+    InterfaceTypeImpl(VirtualMachineImpl aVm, InstanceKlass aRef) {
+        super(aVm, aRef);
+    }
+
+    @Override
+    public byte tag() {
+        return JDWP.TypeTag.INTERFACE;
     }
 
     public List<InterfaceTypeImpl> superinterfaces() throws ClassNotPreparedException {

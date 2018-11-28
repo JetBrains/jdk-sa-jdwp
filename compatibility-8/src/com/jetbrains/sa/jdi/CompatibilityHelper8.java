@@ -102,31 +102,18 @@ class CompatibilityHelper8 implements Compatibility {
     @Override
     public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
         final List<Klass> saKlasses = new ArrayList<>();
-        SystemDictionary.ClassVisitor visitor = k -> {
-            for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                // for non-array classes filter out un-prepared classes
-                // refer to 'allClasses' in share/back/VirtualMachineImpl.c
-                if (l instanceof ArrayKlass) {
-                    saKlasses.add(l);
-                } else {
-                    int status = l.getClassStatus();
-                    if ((status & JVMDIClassStatus.PREPARED) != 0) {
-                        saKlasses.add(l);
-                    }
+        systemDictionary.allClassesDo(k -> {
+            // for non-array classes filter out un-prepared classes
+            // refer to 'allClasses' in share/back/VirtualMachineImpl.c
+            if (k instanceof ArrayKlass) {
+                saKlasses.add(k);
+            } else {
+                int status = k.getClassStatus();
+                if ((status & JVMDIClassStatus.PREPARED) != 0) {
+                    saKlasses.add(k);
                 }
             }
-        };
-
-        // refer to jvmtiGetLoadedClasses.cpp - getLoadedClasses in VM code.
-
-        // classes from SystemDictionary
-        systemDictionary.classesDo(visitor);
-
-        // From SystemDictionary we do not get primitive single
-        // dimensional array classes. add primitive single dimensional array
-        // klasses from Universe.
-        vm.getUniverse().basicTypeClassesDo(visitor);
-
+        });
         return saKlasses;
     }
 

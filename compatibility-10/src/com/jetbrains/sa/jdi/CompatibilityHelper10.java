@@ -100,16 +100,14 @@ class CompatibilityHelper10 implements Compatibility {
     public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
         List<Klass> saKlasses = new ArrayList<>();
         vm.getClassLoaderDataGraph().classesDo(k -> {
-            for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                // for non-array classes filter out un-prepared classes
-                // refer to 'allClasses' in share/back/VirtualMachineImpl.c
-                if (l instanceof ArrayKlass) {
-                    saKlasses.add(l);
-                } else {
-                    int status = l.getClassStatus();
-                    if ((status & JVMDIClassStatus.PREPARED) != 0) {
-                        saKlasses.add(l);
-                    }
+            // for non-array classes filter out un-prepared classes
+            // refer to 'allClasses' in share/back/VirtualMachineImpl.c
+            if (k instanceof ArrayKlass) {
+                saKlasses.add(k);
+            } else {
+                int status = k.getClassStatus();
+                if ((status & JVMDIClassStatus.PREPARED) != 0) {
+                    saKlasses.add(k);
                 }
             }
         });
@@ -121,9 +119,7 @@ class CompatibilityHelper10 implements Compatibility {
         List<ReferenceTypeImpl> res = new ArrayList<>();
         vm.saVM().getClassLoaderDataGraph().allEntriesDo((k, loader) -> {
             if (ref.equals(loader)) {
-                for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                    res.add(vm.referenceType(l));
-                }
+                res.add(vm.referenceType(k));
             }
         });
         return res;

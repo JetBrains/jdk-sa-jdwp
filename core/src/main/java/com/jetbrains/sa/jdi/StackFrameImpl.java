@@ -62,7 +62,7 @@ public class StackFrameImpl {
 
         sun.jvm.hotspot.oops.Method SAMethod = jvf.getMethod();
 
-        ReferenceTypeImpl rt = thread.vm.referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
+        ReferenceTypeImpl rt = thread.vm().referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
 
         this.location = new LocationImpl(rt, SAMethod, (long)jvf.getBCI());
     }
@@ -74,7 +74,7 @@ public class StackFrameImpl {
     }
 
     VirtualMachineImpl vm() {
-        return thread.vm;
+        return thread.vm();
     }
 
 //    public long uniqueID() {

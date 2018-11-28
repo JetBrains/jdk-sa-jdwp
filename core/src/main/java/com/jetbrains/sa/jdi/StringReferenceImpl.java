@@ -43,8 +43,8 @@ import sun.jvm.hotspot.oops.OopUtilities;
 public class StringReferenceImpl extends ObjectReferenceImpl {
     private String value;
 
-    StringReferenceImpl(VirtualMachineImpl aVm, Instance oRef) {
-        super(aVm,oRef);
+    StringReferenceImpl(ReferenceTypeImpl type, Instance oRef) {
+        super(type,oRef);
     }
 
     public String value() {

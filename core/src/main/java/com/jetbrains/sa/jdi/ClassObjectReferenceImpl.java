@@ -43,14 +43,14 @@ import sun.jvm.hotspot.oops.Klass;
 public class ClassObjectReferenceImpl extends ObjectReferenceImpl {
     private ReferenceTypeImpl reflectedType;
 
-    ClassObjectReferenceImpl(VirtualMachineImpl vm, Instance oRef) {
-        super(vm, oRef);
+    ClassObjectReferenceImpl(ReferenceTypeImpl type, Instance oRef) {
+        super(type, oRef);
     }
 
     public ReferenceTypeImpl reflectedType() {
         if (reflectedType == null) {
             Klass k = CompatibilityHelper.INSTANCE.asKlass(ref());
-            reflectedType = vm.referenceType(k);
+            reflectedType = vm().referenceType(k);
         }
         return reflectedType;
     }

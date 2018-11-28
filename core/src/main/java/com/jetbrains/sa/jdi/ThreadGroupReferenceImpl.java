@@ -46,8 +46,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
-    ThreadGroupReferenceImpl(VirtualMachineImpl aVm, Oop oRef) {
-        super(aVm, oRef);
+    ThreadGroupReferenceImpl(ReferenceTypeImpl type, Oop oRef) {
+        super(type, oRef);
     }
 
     public String name() {
@@ -55,7 +55,7 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
     }
 
     public ThreadGroupReferenceImpl parent() {
-        return vm.threadGroupMirror(
+        return vm().threadGroupMirror(
                (Instance)OopUtilities.threadGroupOopGetParent(ref()));
     }
 
@@ -69,7 +69,7 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
         for (Oop myThread : myThreads) {
             JavaThread jt = OopUtilities.threadOopGetJavaThread(myThread);
             if (jt != null) {
-                myList.add(vm.threadMirror(jt));
+                myList.add(vm().threadMirror(jt));
             }
         }
         return myList;
@@ -79,7 +79,7 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
         Oop[] myGroups = OopUtilities.threadGroupOopGetGroups(ref());
         ArrayList<ThreadGroupReferenceImpl> myList = new ArrayList<ThreadGroupReferenceImpl>(myGroups.length);
         for (Oop myGroup : myGroups) {
-            myList.add(vm.threadGroupMirror((Instance) myGroup));
+            myList.add(vm().threadGroupMirror((Instance) myGroup));
         }
         return myList;
     }

@@ -61,9 +61,9 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
     private List<MonitorInfoImpl> ownedMonitorsInfo; // List<MonitorInfo>
     private ObjectReferenceImpl currentContendingMonitor;
 
-    ThreadReferenceImpl(VirtualMachineImpl vm, Instance oRef) {
+    ThreadReferenceImpl(ReferenceTypeImpl type, Instance oRef) {
         // Instance must be of type java.lang.Thread
-        super(vm, oRef);
+        super(type, oRef);
 
         // JavaThread retrieved from java.lang.Thread instance may be null.
         // This is the case for threads not-started and for zombies. Wherever
@@ -140,7 +140,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
     }
 
     public ThreadGroupReferenceImpl threadGroup() {
-        return vm.threadGroupMirror((Instance)OopUtilities.threadOopGetThreadGroup(ref()));
+        return vm().threadGroupMirror((Instance)OopUtilities.threadOopGetThreadGroup(ref()));
     }
 
     public int frameCount() throws IncompatibleThreadStateException { //fixme jjh
@@ -181,7 +181,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
 
         List<StackFrameImpl> retVal;
         if (frames.size() == 0) {
-            retVal = new ArrayList<StackFrameImpl>(0);
+            retVal = Collections.emptyList();
         } else {
             int toIndex = start + length;
             if (length == -1) {
@@ -194,7 +194,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
 
     // refer to JvmtiEnvBase::get_owned_monitors
     public List<ObjectReferenceImpl> ownedMonitors()  throws IncompatibleThreadStateException {
-        if (!vm.canGetOwnedMonitorInfo()) {
+        if (!vm().canGetOwnedMonitorInfo()) {
             throw new UnsupportedOperationException();
         }
 
@@ -220,7 +220,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
     // new method since 1.6.
     // Real body will be supplied later.
     public List<MonitorInfoImpl> ownedMonitorsAndFrames() throws IncompatibleThreadStateException {
-        if (!vm.canGetMonitorFrameInfo()) {
+        if (!vm().canGetMonitorFrameInfo()) {
             throw new UnsupportedOperationException(
                 "target does not support getting Monitor Frame Info");
         }
@@ -300,17 +300,17 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
         }
 
         // now convert List<OopHandle> to List<ObjectReference>
-        ObjectHeap heap = vm.saObjectHeap();
+        ObjectHeap heap = vm().saObjectHeap();
         Iterator<Integer> stk = stackDepth.iterator();
         for (OopHandle lockedObject : lockedObjects) {
-            ownedMonitorsInfo.add(new MonitorInfoImpl(vm.objectMirror(lockedObject), this, stk.next()));
+            ownedMonitorsInfo.add(new MonitorInfoImpl(vm().objectMirror(lockedObject), this, stk.next()));
         }
     }
 
     // refer to JvmtiEnvBase::get_current_contended_monitor
     public ObjectReferenceImpl currentContendedMonitor()
                               throws IncompatibleThreadStateException  {
-        if (!vm.canGetCurrentContendedMonitor()) {
+        if (!vm().canGetCurrentContendedMonitor()) {
             throw new UnsupportedOperationException();
         }
 
@@ -325,7 +325,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
                OopHandle handle = mon.object();
                // If obj == NULL, then ObjectMonitor is raw which doesn't count
                // as contended for this API
-               return vm.objectMirror(handle);
+               return vm().objectMirror(handle);
            } else {
                // no contended ObjectMonitor
                return null;
@@ -336,7 +336,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
            if (Assert.ASSERTS_ENABLED) {
                Assert.that(handle != null, "Object.wait() should have an object");
            }
-           return vm.objectMirror(handle);
+           return vm().objectMirror(handle);
         }
     }
 

@@ -599,9 +599,10 @@ public class VirtualMachineImpl {
 
     private ObjectReferenceImpl createObjectMirror(long id, Oop key) {
         ObjectReferenceImpl object = null;
+        Klass klass = key.getKlass();
+        ReferenceTypeImpl type = referenceType(klass);
         if (key instanceof Instance) {
             // look for well-known classes
-            Klass klass = key.getKlass();
             Symbol classNameSymbol = klass.getName();
             if (Assert.ASSERTS_ENABLED) {
                 Assert.that(classNameSymbol != null, "Null class name");
@@ -609,15 +610,15 @@ public class VirtualMachineImpl {
             String className = classNameSymbol.asString();
             Instance inst = (Instance) key;
             if (className.equals(javaLangString)) {
-                object = new StringReferenceImpl(this, inst);
+                object = new StringReferenceImpl(type, inst);
             } else if (className.equals(javaLangThread)) {
-                object = new ThreadReferenceImpl(this, inst);
+                object = new ThreadReferenceImpl(type, inst);
             } else if (className.equals(javaLangThreadGroup)) {
-                object = new ThreadGroupReferenceImpl(this, inst);
+                object = new ThreadGroupReferenceImpl(type, inst);
             } else if (className.equals(javaLangClass)) {
-                object = new ClassObjectReferenceImpl(this, inst);
+                object = new ClassObjectReferenceImpl(type, inst);
             } else if (className.equals(javaLangClassLoader)) {
-                object = new ClassLoaderReferenceImpl(this, inst);
+                object = new ClassLoaderReferenceImpl(type, inst);
             } else {
                 // not a well-known class. But the base class may be
                 // one of the known classes.
@@ -626,13 +627,13 @@ public class VirtualMachineImpl {
                     className = kls.getName().asString();
                     // java.lang.Class and java.lang.String are final classes
                     if (className.equals(javaLangThread)) {
-                        object = new ThreadReferenceImpl(this, inst);
+                        object = new ThreadReferenceImpl(type, inst);
                         break;
                     } else if(className.equals(javaLangThreadGroup)) {
-                        object = new ThreadGroupReferenceImpl(this, inst);
+                        object = new ThreadGroupReferenceImpl(type, inst);
                         break;
                     } else if (className.equals(javaLangClassLoader)) {
-                        object = new ClassLoaderReferenceImpl(this, inst);
+                        object = new ClassLoaderReferenceImpl(type, inst);
                         break;
                     }
                     kls = kls.getSuper();
@@ -640,13 +641,11 @@ public class VirtualMachineImpl {
 
                 if (object == null) {
                     // create generic object reference
-                    object = new ObjectReferenceImpl(this, inst);
+                    object = new ObjectReferenceImpl(type, inst);
                 }
             }
-        } else if (key instanceof TypeArray) {
-            object = new ArrayReferenceImpl(this, (Array) key);
-        } else if (key instanceof ObjArray) {
-            object = new ArrayReferenceImpl(this, (Array) key);
+        } else if (key instanceof TypeArray || key instanceof ObjArray) {
+            object = new ArrayReferenceImpl(type, (Array) key);
         } else {
             throw new RuntimeException("unexpected object type " + key);
         }
@@ -689,71 +688,9 @@ public class VirtualMachineImpl {
         }
         long id = ObjectReferenceImpl.uniqueID(key.getHandle(), this);
         ObjectReferenceImpl object = getCachedObjectMirror(id);
-
-        /*
-         * If the object wasn't in the table, or it's soft reference was
-         * cleared, create a new instance.
-         */
         if (object == null) {
-            if (key instanceof Instance) {
-                // look for well-known classes
-                Klass klass = key.getKlass();
-                Symbol classNameSymbol = klass.getName();
-                if (Assert.ASSERTS_ENABLED) {
-                    Assert.that(classNameSymbol != null, "Null class name");
-                }
-                String className = classNameSymbol.asString();
-                Instance inst = (Instance) key;
-                if (className.equals(javaLangString)) {
-                    object = new StringReferenceImpl(this, inst);
-                } else if (className.equals(javaLangThread)) {
-                    object = new ThreadReferenceImpl(this, inst);
-                } else if (className.equals(javaLangThreadGroup)) {
-                    object = new ThreadGroupReferenceImpl(this, inst);
-                } else if (className.equals(javaLangClass)) {
-                    object = new ClassObjectReferenceImpl(this, inst);
-                } else if (className.equals(javaLangClassLoader)) {
-                    object = new ClassLoaderReferenceImpl(this, inst);
-                } else {
-                    // not a well-known class. But the base class may be
-                    // one of the known classes.
-                    Klass kls = klass.getSuper();
-                    while (kls != null) {
-                       className = kls.getName().asString();
-                       // java.lang.Class and java.lang.String are final classes
-                       if (className.equals(javaLangThread)) {
-                          object = new ThreadReferenceImpl(this, inst);
-                          break;
-                       } else if(className.equals(javaLangThreadGroup)) {
-                          object = new ThreadGroupReferenceImpl(this, inst);
-                          break;
-                       } else if (className.equals(javaLangClassLoader)) {
-                          object = new ClassLoaderReferenceImpl(this, inst);
-                          break;
-                       }
-                       kls = kls.getSuper();
-                    }
-
-                    if (object == null) {
-                       // create generic object reference
-                       object = new ObjectReferenceImpl(this, inst);
-                    }
-                }
-            } else if (key instanceof TypeArray) {
-                object = new ArrayReferenceImpl(this, (Array) key);
-            } else if (key instanceof ObjArray) {
-                object = new ArrayReferenceImpl(this, (Array) key);
-            } else {
-                throw new RuntimeException("unexpected object type " + key);
-            }
-
-            /*
-             * If there was no previous entry in the table, we add one here
-             * If the previous entry was cleared, we replace it here.
-             */
-            objectsByID.put(id, new SoftObjectReference(id, object, referenceQueue));
+            object = createObjectMirror(id, key);
         }
-
         return object;
     }
 

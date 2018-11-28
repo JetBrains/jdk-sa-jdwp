@@ -52,6 +52,7 @@ import java.util.*;
 
 public abstract class ReferenceTypeImpl extends TypeImpl {
     private final Klass       saKlass;          // This can be an InstanceKlass or an ArrayKlass
+    private Instance javaMirror;
     private int           modifiers = -1;
     private String        signature = null;
     private String        typeName;
@@ -213,7 +214,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         if (fields == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
-                fields = new ArrayList<FieldImpl>(0);
+                fields = Collections.emptyList();
             } else {
                 // Get a list of the sa Field types
                 List saFields = ((InstanceKlass)saKlass).getImmediateFields();
@@ -241,7 +242,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
             if (saKlass instanceof ArrayKlass) {
                 // is 'length' a field of array klasses? To maintain
                 // consistency with JVMDI-JDI we return 0 size.
-                allFields = new ArrayList<FieldImpl>(0);
+                allFields = Collections.emptyList();
             } else {
 
                 // Get a list of the sa Field types
@@ -301,7 +302,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         if (methods == null) {
             checkPrepared();
             if (saKlass instanceof ArrayKlass) {
-                methods = new ArrayList<MethodImpl>(0);
+                methods = Collections.emptyList();
             } else {
                 // Get a list of the SA Method types
                 List saMethods = ((InstanceKlass)saKlass).getImmediateMethods();
@@ -342,7 +343,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         List<ReferenceTypeImpl> nestedTypes = (nestedTypesCache != null)? nestedTypesCache.get() : null;
         if (nestedTypes == null) {
             if (saKlass instanceof ArrayKlass) {
-                nestedTypes = new ArrayList<ReferenceTypeImpl>(0);
+                nestedTypes = Collections.emptyList();
             } else {
                 ClassLoaderReferenceImpl cl = classLoader();
                 List<ReferenceTypeImpl> classes;
@@ -367,30 +368,15 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     }
 
     public ValueImpl getValue(FieldImpl field) {
-        FieldImpl fieldImpl = field;
-
-        validateFieldAccess(fieldImpl);
+        validateFieldAccess(field);
         // Do more validation specific to ReferenceType field getting
-        if (!fieldImpl.isStatic()) {
+        if (!field.isStatic()) {
             throw new IllegalArgumentException(
               "Attempt to use non-static field with ReferenceType: " +
-                fieldImpl.name());
+                field.name());
         }
 
-        return fieldImpl.getValue();
-    }
-
-    /**
-     * Returns a map of field values
-     */
-    public Map<FieldImpl, ValueImpl> getValues(List<? extends FieldImpl> theFields) {
-        //validateMirrors();
-        int size = theFields.size();
-        Map<FieldImpl, ValueImpl> map = new HashMap<FieldImpl, ValueImpl>(size);
-        for (FieldImpl field : theFields) {
-            map.put(field, getValue(field));
-        }
-        return map;
+        return field.getValue();
     }
 
     void validateFieldAccess(FieldImpl field) {
@@ -404,8 +390,15 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         }
     }
 
+    Instance getJavaMirror() {
+        if (javaMirror == null) {
+            javaMirror = saKlass.getJavaMirror();
+        }
+        return javaMirror;
+    }
+
     public ClassObjectReferenceImpl classObject() {
-        return vm.classObjectMirror(ref().getJavaMirror());
+        return vm.classObjectMirror(getJavaMirror());
     }
 
     SDE.Stratum stratum(String stratumID) {
@@ -499,10 +492,10 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                                               + maxInstances);
         }
 
-        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
         if (isAbstract() || (this instanceof InterfaceTypeImpl)) {
-            return objects;
+            return Collections.emptyList();
         }
+        final List<ObjectReferenceImpl> objects = new ArrayList<ObjectReferenceImpl>(0);
 
         final Address givenKls = CompatibilityHelper.INSTANCE.getAddress(saKlass);
         final long max = maxInstances;

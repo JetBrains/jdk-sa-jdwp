@@ -46,13 +46,13 @@ import java.util.List;
 
 public class ArrayReferenceImpl extends ObjectReferenceImpl {
     private int length;
-    ArrayReferenceImpl(VirtualMachineImpl aVm, Array aRef) {
-        super(aVm, aRef);
+    ArrayReferenceImpl(ReferenceTypeImpl type, Array aRef) {
+        super(type, aRef);
         length = (int) aRef.getLength();
     }
 
-    ArrayTypeImpl arrayType() {
-        return (ArrayTypeImpl)type();
+    public ArrayTypeImpl arrayType() {
+        return (ArrayTypeImpl)referenceType();
     }
 
     /**
@@ -116,27 +116,25 @@ public class ArrayReferenceImpl extends ObjectReferenceImpl {
         for (int ii = index; ii < limit; ii++) {
             ValueImpl valueImpl;
             if (variableType == BasicType.T_BOOLEAN) {
-                valueImpl = vm.mirrorOf(typeArray.getBooleanAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getBooleanAt(ii));
             } else if (variableType == BasicType.T_CHAR) {
-                valueImpl = vm.mirrorOf(typeArray.getCharAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getCharAt(ii));
             } else if (variableType == BasicType.T_FLOAT) {
-                valueImpl = vm.mirrorOf(typeArray.getFloatAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getFloatAt(ii));
             } else if (variableType == BasicType.T_DOUBLE) {
-                valueImpl = vm.mirrorOf(typeArray.getDoubleAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getDoubleAt(ii));
             } else if (variableType == BasicType.T_BYTE) {
-                valueImpl = vm.mirrorOf(typeArray.getByteAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getByteAt(ii));
             } else if (variableType == BasicType.T_SHORT) {
-                valueImpl = vm.mirrorOf(typeArray.getShortAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getShortAt(ii));
             } else if (variableType == BasicType.T_INT) {
-                valueImpl = vm.mirrorOf(typeArray.getIntAt(ii));
+                valueImpl = vm().mirrorOf(typeArray.getIntAt(ii));
             } else if (variableType == BasicType.T_LONG) {
-                valueImpl = vm.mirrorOf(typeArray.getLongAt(ii));
-            } else if (variableType == BasicType.T_OBJECT) {
+                valueImpl = vm().mirrorOf(typeArray.getLongAt(ii));
+            } else if (variableType == BasicType.T_OBJECT || variableType == BasicType.T_ARRAY) {
                 // we may have an [Ljava/lang/Object; - i.e., Object[] with the
                 // elements themselves may be arrays because every array is an Object.
-                valueImpl = vm.objectMirror(objArray.getOopHandleAt(ii));
-            } else if (variableType == BasicType.T_ARRAY) {
-                valueImpl = vm.objectMirror(objArray.getOopHandleAt(ii));
+                valueImpl = vm().objectMirror(objArray.getOopHandleAt(ii));
             } else {
                 throw new RuntimeException("should not reach here");
             }

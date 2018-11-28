@@ -46,13 +46,13 @@ public class ClassLoaderReferenceImpl extends ObjectReferenceImpl {
      // cache visibleClasses & definedClasses always (i.e., no suspension)
      private List<ReferenceTypeImpl> visibleClassesCache;
 
-     ClassLoaderReferenceImpl(VirtualMachineImpl aVm, Instance oRef) {
-         super(aVm, oRef);
+     ClassLoaderReferenceImpl(ReferenceTypeImpl type, Instance oRef) {
+         super(type, oRef);
      }
 
      public List<ReferenceTypeImpl> visibleClasses() {
          if (visibleClassesCache == null) {
-             visibleClassesCache = CompatibilityHelper.INSTANCE.visibleClasses(ref(), vm);
+             visibleClassesCache = CompatibilityHelper.INSTANCE.visibleClasses(ref(), vm());
          }
          return visibleClassesCache;
      }

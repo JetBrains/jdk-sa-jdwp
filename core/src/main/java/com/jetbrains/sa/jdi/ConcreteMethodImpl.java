@@ -309,7 +309,7 @@ public class ConcreteMethodImpl extends MethodImpl {
 
         // if there are no locals, there won't be a LVT
         if (saMethod.getMaxLocals() == 0) {
-           variables = Collections.unmodifiableList(new ArrayList<LocalVariableImpl>(0));
+           variables = Collections.unmodifiableList(Collections.<LocalVariableImpl>emptyList());
            variablesRef = new SoftReference<List<LocalVariableImpl>>(variables);
            return variables;
         }

@@ -50,7 +50,9 @@ public class ClassObjectReferenceImpl extends ObjectReferenceImpl {
     public ReferenceTypeImpl reflectedType() {
         if (reflectedType == null) {
             Klass k = CompatibilityHelper.INSTANCE.asKlass(ref());
-            reflectedType = vm().referenceType(k);
+            if (k != null) {
+                reflectedType = vm().referenceType(k);
+            }
         }
         return reflectedType;
     }

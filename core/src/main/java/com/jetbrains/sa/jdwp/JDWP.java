@@ -3666,10 +3666,16 @@ public class JDWP {
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ClassObjectReferenceImpl reference = command.readClassObjectReference();
                 ReferenceTypeImpl type = reference.reflectedType();
-                //refTypeTag = answer.readByte();
-                answer.writeByte(type.tag());
-                //typeID = answer.readClassRef();
-                answer.writeClassRef(type.uniqueID());
+                if (type == null) {
+                    answer.writeByte(JDWP.TypeTag.CLASS);
+                    answer.writeClassRef(0);
+                }
+                else {
+                    //refTypeTag = answer.readByte();
+                    answer.writeByte(type.tag());
+                    //typeID = answer.readClassRef();
+                    answer.writeClassRef(type.uniqueID());
+                }
             }
         }
     }

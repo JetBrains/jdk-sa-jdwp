@@ -534,7 +534,8 @@ public class VirtualMachineImpl {
     }
 
     public String version() {
-        return saVM.getSystemProperty("java.version");
+        String version = saVM.getSystemProperty("java.version");
+        return version != null ? version : saVM.getVMRelease();
     }
 
     public String name() {

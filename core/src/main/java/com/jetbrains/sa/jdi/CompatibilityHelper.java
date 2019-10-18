@@ -27,16 +27,15 @@ class CompatibilityHelper {
         if (version.equals("1.6") || version.equals("1.7")) {
             instance = new CompatibilityHelper6();
         }
-        else if (version.equals("1.8") || version.equals("9")) {
-            try {
-                instance = (Compatibility) Class.forName("com.jetbrains.sa.jdi.CompatibilityHelper8").newInstance();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
         else {
+            String compatibility = "13";
+            if (version.equals("1.8") || version.equals("9")) {
+                compatibility = "8";
+            } else if (version.equals("10") || version.equals("11") || version.equals("12")) {
+                compatibility = "10";
+            }
             try {
-                instance = (Compatibility) Class.forName("com.jetbrains.sa.jdi.CompatibilityHelper10").newInstance();
+                instance = (Compatibility) Class.forName("com.jetbrains.sa.jdi.CompatibilityHelper" + compatibility).newInstance();
             } catch (Exception e) {
                 e.printStackTrace();
             }

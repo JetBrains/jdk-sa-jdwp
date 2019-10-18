@@ -283,7 +283,7 @@ public class VirtualMachineImpl {
     private List<ThreadReferenceImpl> getAllThreads() {
         if (allThreads == null) {
             allThreads = new ArrayList<ThreadReferenceImpl>(10);  // Might be enough, might not be
-            for (JavaThread thread = saVM.getThreads().first(); thread != null; thread = thread.next()) {
+            for (JavaThread thread : CompatibilityHelper.INSTANCE.getThreads(saVM)) {
                 // refer to JvmtiEnv::GetAllThreads in jvmtiEnv.cpp.
                 // filter out the hidden-from-external-view threads.
                 if (!thread.isHiddenFromExternalView()) {

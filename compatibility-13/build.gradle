@@ -1,0 +1,32 @@
+sourceSets {
+    main {
+        java.srcDirs += "src"
+    }
+}
+
+dependencies {
+    compile(project(":core")) {
+        transitive = false // no need for parent jdk libs
+    }
+}
+
+sourceCompatibility = '13'
+targetCompatibility = '13'
+
+compileJava.options.fork = true
+def jdk13Home = System.getenv("JDK_13")
+if (hasProperty("JDK_13")) {
+    jdk13Home = JDK_13
+}
+if (jdk13Home == null) {
+    throw new GradleException('JDK_13 environment variable is not defined')
+}
+compileJava.options.compilerArgs = ["--add-modules", "jdk.hotspot.agent",
+                                    "--add-exports=jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED",
+                                    "--add-exports=jdk.hotspot.agent/sun.jvm.hotspot.memory=ALL-UNNAMED",
+                                    "--add-exports=jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
+                                    "--add-exports=jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
+                                    "--add-exports=jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
+                                    "--add-exports=jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED"
+]
+compileJava.options.forkOptions.executable = "$jdk13Home/bin/javac"

@@ -18,6 +18,7 @@ package com.jetbrains.sa.jdi;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.*;
+import sun.jvm.hotspot.runtime.JavaThread;
 import sun.jvm.hotspot.runtime.VM;
 
 import java.util.ArrayList;
@@ -160,6 +161,15 @@ class CompatibilityHelper6 implements Compatibility {
                 }
         );
 
+        return res;
+    }
+
+    @Override
+    public List<JavaThread> getThreads(VM vm) {
+        List<JavaThread> res = new ArrayList<JavaThread>();
+        for(JavaThread thread = vm.getThreads().first(); thread != null; thread = thread.next()) {
+            res.add(thread);
+        }
         return res;
     }
 }

@@ -19,17 +19,15 @@ import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.memory.SystemDictionary;
 import sun.jvm.hotspot.oops.*;
 import sun.jvm.hotspot.runtime.JavaThread;
+import sun.jvm.hotspot.runtime.Threads;
 import sun.jvm.hotspot.runtime.VM;
 import sun.jvm.hotspot.utilities.KlassArray;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author egor
- */
 @SuppressWarnings("unused")
-class CompatibilityHelper8 implements Compatibility {
+class CompatibilityHelper13 implements Compatibility {
     @Override
     public Address getAddress(Method method) {
         return method.getAddress();
@@ -80,10 +78,10 @@ class CompatibilityHelper8 implements Compatibility {
         try {
             java.lang.reflect.Field field = Oop.class.getDeclaredField("klass");
             field.setAccessible(true);
-            coff = ((Field) field.get(null)).getOffset();
+            coff = ((MetadataField) field.get(null)).getOffset();
             java.lang.reflect.Field field1 = Oop.class.getDeclaredField("compressedKlass");
             field1.setAccessible(true);
-            koff = ((Field) field1.get(null)).getOffset();
+            koff = ((MetadataField) field1.get(null)).getOffset();
         } catch (IllegalAccessException | NoSuchFieldException e) {
             e.printStackTrace();
         }
@@ -102,8 +100,8 @@ class CompatibilityHelper8 implements Compatibility {
 
     @Override
     public List<Klass> allClasses(SystemDictionary systemDictionary, VM vm) {
-        final List<Klass> saKlasses = new ArrayList<>();
-        systemDictionary.allClassesDo(k -> {
+        List<Klass> saKlasses = new ArrayList<>();
+        vm.getClassLoaderDataGraph().classesDo(k -> {
             // for non-array classes filter out un-prepared classes
             // refer to 'allClasses' in share/back/VirtualMachineImpl.c
             if (k instanceof ArrayKlass) {
@@ -120,38 +118,21 @@ class CompatibilityHelper8 implements Compatibility {
 
     @Override
     public List<ReferenceTypeImpl> visibleClasses(final Oop ref, final VirtualMachineImpl vm) {
-        final List<ReferenceTypeImpl> res = new ArrayList<>();
-
-        // refer to getClassLoaderClasses in jvmtiGetLoadedClasses.cpp
-        //  a. SystemDictionary::classes_do doesn't include arrays of primitive types (any dimensions)
-        SystemDictionary sysDict = vm.saSystemDictionary();
-        sysDict.classesDo((k, loader) -> {
-            if (ref.equals(loader)) {
-                for (Klass l = k; l != null; l = l.arrayKlassOrNull()) {
-                    res.add(vm.referenceType(l));
-                }
-            }
-        });
-
-        // b. multi dimensional arrays of primitive types
-        sysDict.primArrayClassesDo((k, loader) -> {
+        List<ReferenceTypeImpl> res = new ArrayList<>();
+        vm.saVM().getClassLoaderDataGraph().allEntriesDo((k, loader) -> {
             if (ref.equals(loader)) {
                 res.add(vm.referenceType(k));
             }
         });
-
-        // c. single dimensional primitive array klasses from Universe
-        // these are not added to SystemDictionary
-        vm.saUniverse().basicTypeClassesDo(k -> res.add(vm.referenceType(k)));
-
         return res;
     }
 
     @Override
     public List<JavaThread> getThreads(VM vm) {
         List<JavaThread> res = new ArrayList<>();
-        for(JavaThread thread = vm.getThreads().first(); thread != null; thread = thread.next()) {
-            res.add(thread);
+        Threads threads = vm.getThreads();
+        for (int i = 0; i < threads.getNumberOfThreads(); i++) {
+            res.add(threads.getJavaThreadAt(i));
         }
         return res;
     }

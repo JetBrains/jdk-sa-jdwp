@@ -21,6 +21,7 @@ import sun.jvm.hotspot.oops.InstanceKlass;
 import sun.jvm.hotspot.oops.Klass;
 import sun.jvm.hotspot.oops.Method;
 import sun.jvm.hotspot.oops.Oop;
+import sun.jvm.hotspot.runtime.JavaThread;
 import sun.jvm.hotspot.runtime.VM;
 
 import java.util.List;
@@ -48,4 +49,6 @@ public interface Compatibility {
     List<Klass> allClasses(SystemDictionary systemDictionary, VM vm);
 
     List<ReferenceTypeImpl> visibleClasses(final Oop ref, final VirtualMachineImpl vm);
+
+    List<JavaThread> getThreads(VM vm);
 }

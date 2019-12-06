@@ -1043,7 +1043,7 @@ public class JDWP {
         /**
          * Returns the JNI signature of a reference type.
          * JNI signature formats are described in the
-         * <a href="http://java.sun.com/products/jdk/1.2/docs/guide/jni/index.html">Java Native Inteface Specification</a>
+         * <a href="https://docs.oracle.com/en/java/javase/13/docs/specs/jni/index.html">Java Native Inteface Specification</a>
          * <p>
          * For primitive classes
          * the returned signature is the signature of the corresponding primitive

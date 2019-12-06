@@ -1,4 +1,4 @@
-# sa-jdwp [![official JetBrains project](http://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub) [![Download](https://api.bintray.com/packages/jetbrains/intellij-third-party-dependencies/sa-jdwp/images/download.svg) ](https://bintray.com/jetbrains/intellij-third-party-dependencies/sa-jdwp/_latestVersion)
+# sa-jdwp [![official JetBrains project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub) [![Download](https://api.bintray.com/packages/jetbrains/intellij-third-party-dependencies/sa-jdwp/images/download.svg) ](https://bintray.com/jetbrains/intellij-third-party-dependencies/sa-jdwp/_latestVersion)
 Java serviceability agent to jdwp adapter
 
 sa-jdi was removed from jdk 9, this library should replace it and allow to attach to a process from any java debugger

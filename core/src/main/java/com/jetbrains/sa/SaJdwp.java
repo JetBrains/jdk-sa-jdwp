@@ -21,6 +21,8 @@ import java.io.*;
 import java.util.*;
 
 public class SaJdwp {
+    private static final String JDK_HOTSPOT_AGENT = "jdk.hotspot.agent";
+
     // do not allow instance creation
     private SaJdwp() {
     }
@@ -115,28 +117,39 @@ public class SaJdwp {
 
 
     private static void prepare9(List<String> commands, String javaHome, String pathToJar) {
-        // todo: determine if this is a jdk or jre better
-        String javac = "javac";
-        if (isWindows()) {
-            javac += ".exe";
-        }
-        if (!new File(javaHome, "bin/" + javac).exists()) {
-            if (!new File(javaHome, "../bin/" + javac).exists()) {
-                throw new IllegalStateException("JDK not detected in " + javaHome + " , unable to attach");
-            }
+        if (!hasModule(javaHome, JDK_HOTSPOT_AGENT)) {
+            throw new IllegalStateException(JDK_HOTSPOT_AGENT + " module is not available in JDK in " + javaHome + " , unable to attach");
         }
 
         Collections.addAll(commands,javaHome + "/bin/java",
-                "--add-modules", "jdk.hotspot.agent",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.runtime=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.memory=ALL-UNNAMED",
-                "--add-opens",   "jdk.hotspot.agent/sun.jvm.hotspot.oops=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.utilities=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.debugger=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.tools.jcore=ALL-UNNAMED",
-                "--add-exports", "jdk.hotspot.agent/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
+                "--add-modules", JDK_HOTSPOT_AGENT,
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot=ALL-UNNAMED",
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.runtime=ALL-UNNAMED",
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.memory=ALL-UNNAMED",
+                "--add-opens",   JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.oops=ALL-UNNAMED",
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.utilities=ALL-UNNAMED",
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.debugger=ALL-UNNAMED",
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.tools.jcore=ALL-UNNAMED",
+                "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
                 "-cp", pathToJar);
+    }
+
+    private static boolean hasModule(String javaHome, String moduleName) {
+        File releaseFile = new File(javaHome, "release");
+        if (releaseFile.isFile()) {
+            try {
+                FileInputStream stream = new FileInputStream(releaseFile);
+                try {
+                    Properties p = new Properties();
+                    p.load(stream);
+                    return p.getProperty("MODULES").contains(moduleName);
+                } finally {
+                    stream.close();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return false;
     }
 
     private static String getJarPath() {

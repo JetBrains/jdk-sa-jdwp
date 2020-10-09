@@ -35,7 +35,7 @@ publishing {
         MyPublication(MavenPublication) {
             artifactId 'sa-jdwp'
             groupId 'org.jetbrains.intellij.deps'
-            version '1.14'
+            version '1.15'
             artifact mainJar
             artifact sourceJar {
                 classifier "sources"
@@ -56,7 +56,7 @@ bintray {
         userOrg = 'jetbrains'
 
         version {
-            name = '1.14'
+            name = '1.15'
         }
     }
 

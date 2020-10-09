@@ -108,8 +108,13 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
                 state |= JVMTI_THREAD_STATE_IN_NATIVE;
             }
             OSThread osThread = myJavaThread.getOSThread();
-            if (osThread != null && osThread.interrupted()) {
-                state |= JVMTI_THREAD_STATE_INTERRUPTED;
+            try {
+                if (osThread != null && osThread.interrupted()) {
+                    state |= JVMTI_THREAD_STATE_INTERRUPTED;
+                }
+            } catch (NoSuchMethodError ignore) {
+                // check IDEA-252585, it seems that starting from jdk 14 there's no easy way to get this information
+                // so at least do not fail
             }
         }
         return state;

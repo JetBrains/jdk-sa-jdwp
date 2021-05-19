@@ -131,6 +131,7 @@ public class SaJdwp {
                 "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.debugger=ALL-UNNAMED",
                 "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.tools.jcore=ALL-UNNAMED",
                 "--add-exports", JDK_HOTSPOT_AGENT + "/sun.jvm.hotspot.classfile=ALL-UNNAMED", // for jdk 10
+                "--add-exports", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED", // for jdk 16
                 "-cp", pathToJar);
     }
 

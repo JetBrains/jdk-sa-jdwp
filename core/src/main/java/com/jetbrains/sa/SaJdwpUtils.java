@@ -29,7 +29,7 @@ class SaJdwpUtils {
             return VirtualMachineImpl.createVirtualMachineForPID(virtualMachineManager, Integer.parseInt(target), 0);
         } catch (NumberFormatException e) {
             // core attach
-            String javaExeName = System.getProperty("java.home") + "\\bin\\java";
+            String javaExeName = System.getProperty("java.home") + "/bin/java";
             if (isWindows()) {
                 javaExeName += ".exe";
             }

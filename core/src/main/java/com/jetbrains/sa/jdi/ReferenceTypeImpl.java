@@ -97,7 +97,8 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                 return method;
             }
         }
-        if (CompatibilityHelper.INSTANCE.getMethodHolder(ref).equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
+        Klass methodHolder = CompatibilityHelper.INSTANCE.getMethodHolder(ref);
+        if (methodHolder.equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
           // invoke methods are generated as needed, so make mirrors as needed
           List<MethodImpl> mis;
           if (methodInvokesCache == null) {
@@ -117,7 +118,10 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
           mis.add(method);
           return method;
         }
-        throw new IllegalArgumentException("Invalid method: " + ref.nameAsAscii());
+        throw new IllegalArgumentException("Invalid method: "
+                + methodHolder.getName().asString() + " "
+                + OopUtilities.escapeString(ref.getName().asString()) + " "
+                + ref.getSignature().asString());
     }
 
     public boolean equals(Object obj) {

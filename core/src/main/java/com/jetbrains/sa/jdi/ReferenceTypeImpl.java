@@ -117,7 +117,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
           mis.add(method);
           return method;
         }
-        throw new IllegalArgumentException("Invalid method id: " + ref);
+        throw new IllegalArgumentException("Invalid method: " + ref.nameAsAscii());
     }
 
     public boolean equals(Object obj) {

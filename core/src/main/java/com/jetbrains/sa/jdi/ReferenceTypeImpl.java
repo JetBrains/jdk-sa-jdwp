@@ -97,7 +97,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                 return method;
             }
         }
-        if (ref.getMethodHolder().equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
+        if (CompatibilityHelper.INSTANCE.getMethodHolder(ref).equals(CompatibilityHelper.INSTANCE.getMethodHandleKlass())) {
           // invoke methods are generated as needed, so make mirrors as needed
           List<MethodImpl> mis;
           if (methodInvokesCache == null) {

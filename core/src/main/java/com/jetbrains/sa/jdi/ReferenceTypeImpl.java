@@ -120,7 +120,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         }
         throw new IllegalArgumentException("Invalid method: "
                 + methodHolder.getName().asString() + " "
-                + OopUtilities.escapeString(ref.getName().asString()) + " "
+                + ref.getName().asString() + " "
                 + ref.getSignature().asString());
     }
 

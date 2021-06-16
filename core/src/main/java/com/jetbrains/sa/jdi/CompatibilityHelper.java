@@ -35,7 +35,7 @@ class CompatibilityHelper {
                 compatibility = "10";
             }
             try {
-                instance = (Compatibility) Class.forName("com.jetbrains.sa.jdi.CompatibilityHelper" + compatibility).newInstance();
+                instance = (Compatibility) Class.forName("com.jetbrains.sa.jdi.CompatibilityHelper" + compatibility).getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 e.printStackTrace();
             }

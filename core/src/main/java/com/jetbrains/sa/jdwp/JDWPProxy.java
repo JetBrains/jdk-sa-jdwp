@@ -28,7 +28,7 @@ import java.util.Map;
  * @author egor
  */
 public class JDWPProxy {
-    private static Map<Integer, Map<Integer, Command>> COMMANDS = new HashMap<Integer, Map<Integer, Command>>();
+    private static final Map<Integer, Map<Integer, Command>> COMMANDS = new HashMap<Integer, Map<Integer, Command>>();
 
     static {
         try {
@@ -42,7 +42,7 @@ public class JDWPProxy {
                     for (Class<?> commandsClass : commandsClasses) {
                         try {
                             int commandId = (Integer) commandsClass.getDeclaredField("COMMAND").get(null);
-                            commandsMap.put(commandId, (Command) commandsClass.newInstance());
+                            commandsMap.put(commandId, (Command) commandsClass.getDeclaredConstructor().newInstance());
                         } catch (NoSuchFieldException ignored) {
                         }
                     }

@@ -51,6 +51,7 @@ public class StackFrameImpl {
 
     private final ThreadReferenceImpl thread;
     private final JavaVFrame saFrame;
+    private StackValueCollection locals = null;
     private final int id;
     private final LocationImpl location;
     private ObjectReferenceImpl thisObject = null;
@@ -114,7 +115,7 @@ public class StackFrameImpl {
             return null;
         }
         if (thisObject == null) {
-            StackValueCollection values = saFrame.getLocals();
+            StackValueCollection values = getLocals();
             if (Assert.ASSERTS_ENABLED) {
                 Assert.that(values.size() > 0, "this is missing");
             }
@@ -127,13 +128,20 @@ public class StackFrameImpl {
         return thisObject;
     }
 
+    private StackValueCollection getLocals() {
+        if (locals == null) {
+            locals = saFrame.getLocals();
+        }
+        return locals;
+    }
+
     public int getAvailableSlots() {
-        return saFrame.getLocals().size();
+        return getLocals().size();
     }
 
     public ValueImpl getSlotValue(int slot, byte sigbyte) {
         BasicType variableType = BasicType.charToBasicType((char) sigbyte);
-        return getSlotValue(saFrame.getLocals(), variableType, slot);
+        return getSlotValue(getLocals(), variableType, slot);
     }
 
     private ValueImpl getSlotValue(StackValueCollection values, BasicType variableType, int ss) {

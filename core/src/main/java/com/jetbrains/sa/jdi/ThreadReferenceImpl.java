@@ -55,7 +55,7 @@ import java.util.List;
 
 public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* imports */ JVMTIThreadState {
 
-    private JavaThread myJavaThread;
+    private final JavaThread myJavaThread;
     private ArrayList<StackFrameImpl> frames;    // StackFrames
     private List<ObjectReferenceImpl> ownedMonitors;
     private List<MonitorInfoImpl> ownedMonitorsInfo; // List<MonitorInfo>

@@ -43,7 +43,7 @@ public class MonitorInfoImpl {
     /* Once false, monitorInfo should not be used.
      * access synchronized on (vm.state())
      */
-    private boolean isValid = true;
+    private final boolean isValid = true;
 
     ObjectReferenceImpl monitor;
     ThreadReferenceImpl thread;

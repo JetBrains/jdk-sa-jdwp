@@ -69,6 +69,7 @@ public class ArrayTypeImpl extends ReferenceTypeImpl {
             } else {
                 // class loader of any other obj array klass is same as the loader
                 // that loaded the bottom InstanceKlass
+                @SuppressWarnings("RedundantCast")
                 Instance xx = (Instance)(((InstanceKlass) bottomKlass).getClassLoader());
                 return vm.classLoaderMirror(xx);
             }

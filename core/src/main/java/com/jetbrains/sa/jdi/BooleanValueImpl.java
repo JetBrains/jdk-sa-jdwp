@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class BooleanValueImpl extends PrimitiveValueImpl {
-    private boolean value;
+    private final boolean value;
 
     BooleanValueImpl(boolean aValue) {
         super(JDWP.Tag.BOOLEAN);

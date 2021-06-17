@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class ShortValueImpl extends PrimitiveValueImpl {
-    private short value;
+    private final short value;
 
     ShortValueImpl(short aValue) {
         super(JDWP.Tag.SHORT);

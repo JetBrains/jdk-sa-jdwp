@@ -73,8 +73,7 @@ public class InterfaceTypeImpl extends ReferenceTypeImpl {
         } else {
             // Try superinterfaces.
             for (InterfaceTypeImpl aSuper : superinterfaces()) {
-                InterfaceTypeImpl interfaze = aSuper;
-                if (interfaze.isAssignableTo(type)) {
+                if (aSuper.isAssignableTo(type)) {
                     return true;
                 }
             }

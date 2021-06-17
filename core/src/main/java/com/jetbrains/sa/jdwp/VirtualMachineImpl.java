@@ -20,7 +20,7 @@ import com.sun.jdi.connect.spi.Connection;
 import java.io.IOException;
 
 public class VirtualMachineImpl {
-    private Connection myConnection;
+    private final Connection myConnection;
     public com.jetbrains.sa.jdi.VirtualMachineImpl vm;
 
     int sizeofFieldRef = 8;

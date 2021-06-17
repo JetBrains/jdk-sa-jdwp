@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class LongValueImpl extends PrimitiveValueImpl {
-    private long value;
+    private final long value;
 
     LongValueImpl(long aValue) {
         super(JDWP.Tag.LONG);

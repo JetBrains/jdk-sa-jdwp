@@ -47,11 +47,11 @@ public class StackFrameImpl {
     /* Once false, frame should not be used.
      * access synchronized on (vm.state())
      */
-    private boolean isValid = true;
+    private final boolean isValid = true;
 
     private final ThreadReferenceImpl thread;
     private final JavaVFrame saFrame;
-    private int id;
+    private final int id;
     private final LocationImpl location;
     private ObjectReferenceImpl thisObject = null;
 
@@ -64,7 +64,7 @@ public class StackFrameImpl {
 
         ReferenceTypeImpl rt = thread.vm().referenceType(CompatibilityHelper.INSTANCE.getMethodHolder(SAMethod));
 
-        this.location = new LocationImpl(rt, SAMethod, (long)jvf.getBCI());
+        this.location = new LocationImpl(rt, SAMethod, jvf.getBCI());
     }
 
     private void validateStackFrame() {

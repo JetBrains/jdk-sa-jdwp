@@ -357,9 +357,9 @@ public class PacketStream {
             case 8:
                 return readLong();
             case 4:
-                return (long) readInt();
+                return readInt();
             case 2:
-                return (long) readShort();
+                return readShort();
             default:
                 throw new UnsupportedOperationException("JDWP: ID size not supported: " + size);
         }

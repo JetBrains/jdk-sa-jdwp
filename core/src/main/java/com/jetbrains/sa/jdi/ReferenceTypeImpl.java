@@ -91,8 +91,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         // that the incoming object might not be the same object as on our
         // even though it is the same method. So do an address compare by
         // calling equals rather than just reference compare.
-        for (MethodImpl method1 : methods()) {
-            MethodImpl method = method1;
+        for (MethodImpl method : methods()) {
             if (ref.equals(method.ref())) {
                 return method;
             }
@@ -107,8 +106,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
           } else {
             mis = methodInvokesCache.get();
           }
-            for (MethodImpl mi : mis) {
-                MethodImpl method = mi;
+            for (MethodImpl method : mis) {
                 if (ref.equals(method.ref())) {
                     return method;
                 }
@@ -136,7 +134,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
         return saKlass.hashCode();
     }
 
-    public int compareTo(ReferenceTypeImpl refType) {
+    public int compareTo(ReferenceTypeImpl other) {
         /*
          * Note that it is critical that compareTo() == 0
          * implies that equals() == true. Otherwise, TreeSet
@@ -145,7 +143,6 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
          * (Classes of the same name loaded by different class loaders
          * or in different VMs must not return 0).
          */
-        ReferenceTypeImpl other = refType;
         int comp = name().compareTo(other.name());
         if (comp == 0) {
             Klass rf1 = ref();
@@ -180,6 +177,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
     }
 
     public ClassLoaderReferenceImpl classLoader() {
+      @SuppressWarnings("RedundantCast")
       Instance xx = (Instance)(((InstanceKlass)saKlass).getClassLoader());
       return vm.classLoaderMirror(xx);
     }
@@ -359,8 +357,7 @@ public abstract class ReferenceTypeImpl extends TypeImpl {
                    classes = vm.bootstrapClasses();
                 }
                 nestedTypes = new ArrayList<ReferenceTypeImpl>();
-                for (Object aClass : classes) {
-                    ReferenceTypeImpl refType = (ReferenceTypeImpl) aClass;
+                for (ReferenceTypeImpl refType : classes) {
                     Symbol candidateName = refType.ref().getName();
                     if (((InstanceKlass) saKlass).isInnerOrLocalClassName(candidateName)) {
                         nestedTypes.add(refType);

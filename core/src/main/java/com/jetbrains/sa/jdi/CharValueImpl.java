@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class CharValueImpl extends PrimitiveValueImpl {
-    private char value;
+    private final char value;
 
     CharValueImpl(char aValue) {
         super(JDWP.Tag.CHAR);

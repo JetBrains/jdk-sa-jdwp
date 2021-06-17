@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class DoubleValueImpl extends PrimitiveValueImpl {
-    private double value;
+    private final double value;
 
     DoubleValueImpl(double aValue) {
         super(JDWP.Tag.DOUBLE);

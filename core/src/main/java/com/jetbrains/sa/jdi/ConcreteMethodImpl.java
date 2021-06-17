@@ -105,8 +105,7 @@ public class ConcreteMethodImpl extends MethodImpl {
         int highestLine = -1;
         SDE.LineStratum lastLineStratum = null;
         SDE.Stratum baseStratum = declaringType.stratum(SDE.BASE_STRATUM_NAME);
-        for (Object lineLocation : getBaseLocations().lineLocations) {
-            LocationImpl loc = (LocationImpl) lineLocation;
+        for (LocationImpl loc : getBaseLocations().lineLocations) {
             int baseLineNumber = loc.lineNumber(baseStratum);
             SDE.LineStratum lineStratum = stratum.lineStratum(declaringType, baseLineNumber);
 

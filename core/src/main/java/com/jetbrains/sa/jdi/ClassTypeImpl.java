@@ -81,8 +81,7 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
         } else {
             List<InterfaceTypeImpl> interfaces = interfaces();
             for (InterfaceTypeImpl anInterface : interfaces) {
-                InterfaceTypeImpl interfaze = anInterface;
-                if (interfaze.isAssignableTo(type)) {
+                if (anInterface.isAssignableTo(type)) {
                     return true;
                 }
             }

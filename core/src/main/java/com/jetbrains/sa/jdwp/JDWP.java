@@ -968,8 +968,8 @@ public class JDWP {
 //                //int classesCount = answer.readInt();
                 answer.writeInt(allClasses.size());
                 //classes = new ClassInfo[classesCount];
-                for (Object cls : allClasses) {
-                    ClassInfo.write((ReferenceTypeImpl) cls, vm, answer);
+                for (ReferenceTypeImpl cls : allClasses) {
+                    ClassInfo.write(cls, vm, answer);
                 }
                 //for (int i = 0; i < classesCount; i++) {;
                     //classes[i] = new ClassInfo(vm, ps);

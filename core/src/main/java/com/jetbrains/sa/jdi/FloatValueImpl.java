@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class FloatValueImpl extends PrimitiveValueImpl {
-    private float value;
+    private final float value;
 
     FloatValueImpl(float aValue) {
         super(JDWP.Tag.FLOAT);

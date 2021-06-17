@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class IntegerValueImpl extends PrimitiveValueImpl {
-    private int value;
+    private final int value;
 
     IntegerValueImpl(int aValue) {
         super(JDWP.Tag.INT);

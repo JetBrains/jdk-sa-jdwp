@@ -55,7 +55,7 @@ import java.util.*;
 
 public class VirtualMachineImpl {
 
-    private HotSpotAgent     saAgent = new HotSpotAgent();
+    private final HotSpotAgent     saAgent = new HotSpotAgent();
     private VM               saVM;
     private Universe         saUniverse;
     private SystemDictionary saSystemDictionary;
@@ -223,8 +223,7 @@ public class VirtualMachineImpl {
     List<ReferenceTypeImpl> bootstrapClasses() {
         if (bootstrapClasses == null) {
             bootstrapClasses = new ArrayList<ReferenceTypeImpl>();
-            for (Object o : allClasses()) {
-                ReferenceTypeImpl type = (ReferenceTypeImpl) o;
+            for (ReferenceTypeImpl type : allClasses()) {
                 if (type.classLoader() == null) {
                     bootstrapClasses.add(type);
                 }
@@ -466,8 +465,7 @@ public class VirtualMachineImpl {
         final Map<Address, Long> instanceMap = new HashMap<Address, Long>(size);
 
         boolean allAbstractClasses = true;
-        for (Object aClass : classes) {
-            ReferenceTypeImpl rti = (ReferenceTypeImpl) aClass;
+        for (ReferenceTypeImpl rti : classes) {
             instanceMap.put(CompatibilityHelper.INSTANCE.getAddress(rti.ref()), 0L);
             if (!(rti.isAbstract() || (rti instanceof InterfaceTypeImpl))) {
                 allAbstractClasses = false;

@@ -40,7 +40,7 @@ import com.jetbrains.sa.jdwp.JDWP;
 import com.jetbrains.sa.jdwp.PacketStream;
 
 public class ByteValueImpl extends PrimitiveValueImpl {
-    private byte value;
+    private final byte value;
 
     ByteValueImpl(byte aValue) {
         super(JDWP.Tag.BYTE);

@@ -48,7 +48,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ArrayReferenceImpl extends ObjectReferenceImpl {
-    private int length;
+    private final int length;
     ArrayReferenceImpl(ReferenceTypeImpl type, Array aRef) {
         super(type, aRef);
         length = (int) aRef.getLength();

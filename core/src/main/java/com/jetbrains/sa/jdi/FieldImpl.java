@@ -39,7 +39,7 @@ package com.jetbrains.sa.jdi;
 import sun.jvm.hotspot.oops.*;
 
 public class FieldImpl extends TypeComponentImpl {
-    private sun.jvm.hotspot.oops.Field saField;
+    private final sun.jvm.hotspot.oops.Field saField;
 
     FieldImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Field saField) {
         super(declaringType);

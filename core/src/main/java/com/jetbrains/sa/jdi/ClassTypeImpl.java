@@ -73,10 +73,11 @@ public class ClassTypeImpl extends ReferenceTypeImpl {
     }
 
     boolean isAssignableTo(ReferenceTypeImpl type) {
-        ClassTypeImpl superclazz = superclass();
         if (this.equals(type)) {
             return true;
-        } else if ((superclazz != null) && superclazz.isAssignableTo(type)) {
+        }
+        ClassTypeImpl superclazz = superclass();
+        if ((superclazz != null) && superclazz.isAssignableTo(type)) {
             return true;
         } else {
             List<InterfaceTypeImpl> interfaces = interfaces();

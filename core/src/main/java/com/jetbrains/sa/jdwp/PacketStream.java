@@ -212,8 +212,8 @@ public class PacketStream {
         }
         writeByte(tag);
         writeClassRef(refType.uniqueID());
-        writeMethodRef(location.method().uniqueID());
-        writeLong(location.codeIndex());
+        writeMethodRef(location.methodRef());
+        writeLong(location.codeIndexInt());
     }
     //
     void writeValue(ValueImpl val) {

@@ -36,10 +36,12 @@
 
 package com.jetbrains.sa.jdi;
 
+import sun.jvm.hotspot.oops.Method;
+
 public class LocationImpl {
     private final ReferenceTypeImpl declaringType;
     private MethodImpl method;
-    private sun.jvm.hotspot.oops.Method methodRef;
+    private Method methodRef;
     private long codeIndex;
     private LineInfo baseLineInfo = null;
     private LineInfo otherLineInfo = null;
@@ -55,7 +57,7 @@ public class LocationImpl {
      * can be a performance savings if the method mirror does not yet
      * exist.
      */
-    LocationImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method methodRef, long codeIndex) {
+    LocationImpl(ReferenceTypeImpl declaringType, Method methodRef, long codeIndex) {
         this.method = null;
         this.codeIndex = codeIndex;
         this.declaringType = declaringType;
@@ -108,8 +110,21 @@ public class LocationImpl {
         return method;
     }
 
+    public long methodRef() {
+        if (method != null) {
+            return method.uniqueID();
+        }
+        else {
+            return MethodImpl.uniqueID(methodRef, declaringType.vm);
+        }
+    }
+
     public long codeIndex() {
         method();  // be sure information is up-to-date
+        return codeIndex;
+    }
+
+    public long codeIndexInt() {
         return codeIndex;
     }
 

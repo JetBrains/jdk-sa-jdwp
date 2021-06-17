@@ -37,18 +37,19 @@
 package com.jetbrains.sa.jdi;
 
 import com.sun.jdi.AbsentInformationException;
+import sun.jvm.hotspot.oops.Method;
 import sun.jvm.hotspot.oops.Symbol;
 
 import java.util.List;
 
 public abstract class MethodImpl extends TypeComponentImpl {
-    sun.jvm.hotspot.oops.Method saMethod;
+    Method saMethod;
 
     public abstract int argSlotCount();
     abstract List<LocationImpl> allLineLocations(SDE.Stratum stratum) throws AbsentInformationException;
 
     static MethodImpl createMethodImpl(ReferenceTypeImpl declaringType,
-                                       sun.jvm.hotspot.oops.Method saMethod) {
+                                       Method saMethod) {
         // Someday might have to add concrete and non-concrete subclasses.
         if (saMethod.isNative() || saMethod.isAbstract()) {
             return new NonConcreteMethodImpl(declaringType, saMethod);
@@ -57,19 +58,23 @@ public abstract class MethodImpl extends TypeComponentImpl {
         }
     }
 
-    MethodImpl(ReferenceTypeImpl declaringType, sun.jvm.hotspot.oops.Method saMethod) {
+    MethodImpl(ReferenceTypeImpl declaringType, Method saMethod) {
         super(declaringType);
         this.saMethod = saMethod;
         signature = saMethod.getSignature().asString();
     }
 
     // Object ref() {
-    public sun.jvm.hotspot.oops.Method ref() {
+    public Method ref() {
         return saMethod;
     }
 
     public long uniqueID() {
-        return vm().getAddressValue(CompatibilityHelper.INSTANCE.getAddress(saMethod));
+        return uniqueID(saMethod, vm());
+    }
+
+    public static long uniqueID(Method method, VirtualMachineImpl vm) {
+        return vm.getAddressValue(CompatibilityHelper.INSTANCE.getAddress(method));
     }
 
     public String genericSignature() {

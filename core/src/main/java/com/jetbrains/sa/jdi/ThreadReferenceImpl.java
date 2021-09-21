@@ -43,7 +43,10 @@ import sun.jvm.hotspot.debugger.OopHandle;
 import sun.jvm.hotspot.oops.Instance;
 import sun.jvm.hotspot.oops.ObjectHeap;
 import sun.jvm.hotspot.oops.OopUtilities;
-import sun.jvm.hotspot.runtime.*;
+import sun.jvm.hotspot.runtime.JavaThread;
+import sun.jvm.hotspot.runtime.JavaVFrame;
+import sun.jvm.hotspot.runtime.MonitorInfo;
+import sun.jvm.hotspot.runtime.ObjectMonitor;
 import sun.jvm.hotspot.utilities.Assert;
 
 import java.util.ArrayList;
@@ -94,54 +97,27 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
         return 1;
     }
 
-    // refer to jvmtiEnv::GetThreadState
-    private int jvmtiGetThreadState() {
-        // get most state bits
-        int state = OopUtilities.threadOopGetThreadStatus(ref());
-        // add more state bits
-        if (myJavaThread != null) {
-            JavaThreadState jts = myJavaThread.getThreadState();
-            if (myJavaThread.isBeingExtSuspended()) {
-                state |= JVMTI_THREAD_STATE_SUSPENDED;
-            }
-            if (jts == JavaThreadState.IN_NATIVE) {
-                state |= JVMTI_THREAD_STATE_IN_NATIVE;
-            }
-            OSThread osThread = myJavaThread.getOSThread();
-            try {
-                if (osThread != null && osThread.interrupted()) {
-                    state |= JVMTI_THREAD_STATE_INTERRUPTED;
-                }
-            } catch (NoSuchMethodError ignore) {
-                // check IDEA-252585, it seems that starting from jdk 14 there's no easy way to get this information
-                // so at least do not fail
-            }
-        }
-        return state;
-    }
-
     public int status() {
-        int state = jvmtiGetThreadState();
-        int status = ThreadReference.THREAD_STATUS_UNKNOWN;
+        int state = OopUtilities.threadOopGetThreadStatus(ref());
         // refer to map2jdwpThreadStatus in util.c (back-end)
         if ((state & JVMTI_THREAD_STATE_ALIVE) == 0) {
             if ((state & JVMTI_THREAD_STATE_TERMINATED) != 0) {
-                status = ThreadReference.THREAD_STATUS_ZOMBIE;
+                return ThreadReference.THREAD_STATUS_ZOMBIE;
             } else {
-                status = ThreadReference.THREAD_STATUS_NOT_STARTED;
+                return ThreadReference.THREAD_STATUS_NOT_STARTED;
             }
         } else {
             if ((state & JVMTI_THREAD_STATE_SLEEPING) != 0) {
-                status = ThreadReference.THREAD_STATUS_SLEEPING;
+                return ThreadReference.THREAD_STATUS_SLEEPING;
             } else if ((state & JVMTI_THREAD_STATE_BLOCKED_ON_MONITOR_ENTER) != 0) {
-                status = ThreadReference.THREAD_STATUS_MONITOR;
+                return ThreadReference.THREAD_STATUS_MONITOR;
             } else if ((state & JVMTI_THREAD_STATE_WAITING) != 0) {
-                status = ThreadReference.THREAD_STATUS_WAIT;
+                return ThreadReference.THREAD_STATUS_WAIT;
             } else if ((state & JVMTI_THREAD_STATE_RUNNABLE) != 0) {
-                status = ThreadReference.THREAD_STATUS_RUNNING;
+                return ThreadReference.THREAD_STATUS_RUNNING;
             }
         }
-        return status;
+        return ThreadReference.THREAD_STATUS_UNKNOWN;
     }
 
     public ThreadGroupReferenceImpl threadGroup() {

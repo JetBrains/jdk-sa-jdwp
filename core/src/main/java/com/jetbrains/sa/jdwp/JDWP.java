@@ -2959,8 +2959,11 @@ public class JDWP {
 
             public void reply(VirtualMachineImpl vm, PacketStream answer, PacketStream command) {
                 ThreadReferenceImpl thread = command.readThreadReference();
+                int start = command.readInt();
+                int length = command.readInt();
+
                 try {
-                    List<StackFrameImpl> frames = thread.frames();
+                    List<StackFrameImpl> frames = thread.privateFrames(start, length);
 //                //int framesCount = answer.readInt();
                     answer.writeInt(frames.size());
                     for (StackFrameImpl frame : frames) {

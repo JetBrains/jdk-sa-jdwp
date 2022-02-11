@@ -142,7 +142,7 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
      * remaining frames.
      */
 
-    private List<StackFrameImpl> privateFrames(int start, int length)
+    public List<StackFrameImpl> privateFrames(int start, int length)
                               throws IncompatibleThreadStateException  {
         if (myJavaThread == null) {
             // for zombies and yet-to-be-started threads we need to throw exception
@@ -162,12 +162,11 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
 
         List<StackFrameImpl> retVal;
         if (frames.size() == 0) {
-            retVal = Collections.emptyList();
+            return Collections.emptyList();
+        } else if (start == 0 && length == -1) {
+            retVal = frames;
         } else {
-            int toIndex = start + length;
-            if (length == -1) {
-                toIndex = frames.size();
-            }
+            int toIndex = length == -1 ? frames.size() : start + length;
             retVal = frames.subList(start, toIndex);
         }
         return Collections.unmodifiableList(retVal);

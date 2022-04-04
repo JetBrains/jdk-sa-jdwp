@@ -12,6 +12,6 @@ if (jdk16Home == null) {
 compileJava.options.forkOptions.executable = "$jdk16Home/bin/javac"
 
 dependencies {
-    compile files("$jdk16Home/lib/tools.jar")
-    compile files("$jdk16Home/lib/sa-jdi.jar")
+    implementation files("$jdk16Home/lib/tools.jar")
+    implementation files("$jdk16Home/lib/sa-jdi.jar")
 }

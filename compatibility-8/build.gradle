@@ -18,9 +18,9 @@ if (jdk18Home == null) {
 compileJava.options.forkOptions.executable = "$jdk18Home/bin/javac"
 
 dependencies {
-    compile(project(":core")) {
+    implementation(project(":core")) {
         transitive = false // no need for parent jdk libs
     }
-    compile files("$jdk18Home/lib/tools.jar")
-    compile files("$jdk18Home/lib/sa-jdi.jar")
+    implementation files("$jdk18Home/lib/tools.jar")
+    implementation files("$jdk18Home/lib/sa-jdi.jar")
 }

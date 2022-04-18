@@ -8,12 +8,12 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 compileJava.options.fork = true
-def jdk18Home = System.getenv("JDK_18")
-if (hasProperty("JDK_18")) {
-    jdk18Home = JDK_18
+def jdk18Home = System.getenv("JDK_1_8")
+if (hasProperty("JDK_1_8")) {
+    jdk18Home = JDK_1_8
 }
 if (jdk18Home == null) {
-    throw new GradleException('JDK_18 environment variable is not defined')
+    throw new GradleException('JDK_1_8 environment variable is not defined')
 }
 compileJava.options.forkOptions.executable = "$jdk18Home/bin/javac"
 

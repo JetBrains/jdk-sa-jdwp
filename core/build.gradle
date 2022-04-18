@@ -2,12 +2,12 @@ sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
 compileJava.options.fork = true
-def jdk16Home = System.getenv("JDK_16")
-if (hasProperty("JDK_16")) {
-    jdk16Home = JDK_16
+def jdk16Home = System.getenv("JDK_1_6")
+if (hasProperty("JDK_1_6")) {
+    jdk16Home = JDK_1_6
 }
 if (jdk16Home == null) {
-    throw new GradleException('JDK_16 environment variable is not defined')
+    throw new GradleException('JDK_1_6 environment variable is not defined')
 }
 compileJava.options.forkOptions.executable = "$jdk16Home/bin/javac"
 

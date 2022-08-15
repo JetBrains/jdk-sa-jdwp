@@ -93,4 +93,25 @@ public class ThreadGroupReferenceImpl extends ObjectReferenceImpl {
     byte typeValueKey() {
         return JDWP.Tag.THREAD_GROUP;
     }
+
+    public static class DummyTop extends ThreadGroupReferenceImpl {
+        public DummyTop() {
+            super(null, null);
+        }
+
+        @Override
+        public ThreadGroupReferenceImpl parent() {
+            return null;
+        }
+
+        @Override
+        public String name() {
+            return "";
+        }
+
+        @Override
+        public long uniqueID() {
+            return -1;
+        }
+    }
 }

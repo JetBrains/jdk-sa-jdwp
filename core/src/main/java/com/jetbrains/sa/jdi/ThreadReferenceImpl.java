@@ -121,7 +121,11 @@ public class ThreadReferenceImpl extends ObjectReferenceImpl implements /* impor
     }
 
     public ThreadGroupReferenceImpl threadGroup() {
-        return vm().threadGroupMirror((Instance)OopUtilities.threadOopGetThreadGroup(ref()));
+        try {
+            return vm().threadGroupMirror((Instance) OopUtilities.threadOopGetThreadGroup(ref()));
+        } catch (NoSuchMethodError e) {
+            return new ThreadGroupReferenceImpl.DummyTop(); // not supported after jdk 19
+        }
     }
 
     public int frameCount() throws IncompatibleThreadStateException { //fixme jjh

@@ -81,6 +81,7 @@ public class JDWPProxy {
                         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
                         PrintStream printStream = new PrintStream(byteStream, false, "UTF8");
                         e.printStackTrace(printStream);
+                        printStream.write(vm.name().getBytes("UTF-8")); // append jvm name in the end
                         printStream.close();
                         packetStream.writeString(byteStream.toString("UTF8"));
                     } catch (Exception ignored) {

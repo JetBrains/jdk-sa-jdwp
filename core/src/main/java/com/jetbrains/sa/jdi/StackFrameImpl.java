@@ -186,7 +186,7 @@ public class StackFrameImpl {
           } else if (variableType == BasicType.T_FLOAT) {
             valueImpl = vm().mirrorOf(values.floatAt(ss));
           } else if (variableType == BasicType.T_DOUBLE) {
-            valueImpl = vm().mirrorOf(values.doubleAt(ss));
+            valueImpl = vm().mirrorOf(doubleAt(values, ss));
           } else if (variableType == BasicType.T_BYTE) {
             valueImpl = vm().mirrorOf(values.byteAt(ss));
           } else if (variableType == BasicType.T_SHORT) {
@@ -194,7 +194,7 @@ public class StackFrameImpl {
           } else if (variableType == BasicType.T_INT) {
             valueImpl = vm().mirrorOf(values.intAt(ss));
           } else if (variableType == BasicType.T_LONG) {
-            valueImpl = vm().mirrorOf(values.longAt(ss));
+            valueImpl = vm().mirrorOf(longAt(values, ss));
           } else if (variableType == BasicType.T_OBJECT) {
             // we may have an [Ljava/lang/Object; - i.e., Object[] with the
             // elements themselves may be arrays because every array is an Object.
@@ -211,6 +211,22 @@ public class StackFrameImpl {
         }
 
         return valueImpl;
+    }
+
+    private double doubleAt(StackValueCollection values, int slot) {
+        return Double.longBitsToDouble(longAt(values, slot));
+    }
+
+    private long longAt(StackValueCollection values, int slot) {
+        return buildLongFromIntsPD((int) values.get(slot).getInteger(), (int) values.get(slot + 1).getInteger());
+    }
+
+    private long buildLongFromIntsPD(int oneHalf, int otherHalf) {
+        if (vm().saVM().isBigEndian()) {
+            return (((long) otherHalf) << 32) | (((long) oneHalf) & 0x00000000FFFFFFFFL);
+        } else {
+            return (((long) oneHalf) << 32) | (((long) otherHalf) & 0x00000000FFFFFFFFL);
+        }
     }
 
     public String toString() {

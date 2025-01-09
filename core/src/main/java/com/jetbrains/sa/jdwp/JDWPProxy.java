@@ -71,7 +71,7 @@ public class JDWPProxy {
                     command.reply(virtualMachine, packetStream, new PacketStream(virtualMachine, p));
                 } catch (VMDisconnectedException vde) {
                     throw  vde;
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     e.printStackTrace();
                     packetStream.pkt.errorCode = JDWP.Error.INTERNAL;
                     packetStream.dataStream.reset();

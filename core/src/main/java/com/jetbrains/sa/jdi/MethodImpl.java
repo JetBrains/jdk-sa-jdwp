@@ -136,7 +136,7 @@ public abstract class MethodImpl extends TypeComponentImpl {
     }
 
     public int modifiers() {
-        return saMethod.getAccessFlagsObj().getStandardFlags();
+        return (int) saMethod.getAccessFlags();
     }
 
     public boolean isStatic() {

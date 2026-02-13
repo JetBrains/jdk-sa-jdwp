@@ -117,7 +117,7 @@ public class FieldImpl extends TypeComponentImpl {
 
     // From interface Accessible
     public int modifiers() {
-        return saField.getAccessFlagsObj().getStandardFlags();
+        return (int) saField.getAccessFlags();
     }
 
     public boolean isStatic() {
